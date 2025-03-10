@@ -194,6 +194,7 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
   const [selectedSquadMembers, setSelectedSquadMembers] = useState<string[]>(editItem?.squadMembers || []);
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [selectedWeekDate, setSelectedWeekDate] = useState<Date | undefined>(undefined);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const acceptedSquadMembers = useMemo(() => getAcceptedSquadMembers(), [getAcceptedSquadMembers]);
 
@@ -264,6 +265,13 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
       return;
     }
     
+    if (isSubmitting) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    console.log("Form submission started with data:", data);
+    
     const formattedItem = {
       title: data.title,
       destination: data.destination,
@@ -285,20 +293,31 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
     };
     
     try {
+      console.log("Processing submission for item:", formattedItem);
       if (editItem?.id) {
+        console.log("Updating existing item with ID:", editItem.id);
         await updateItem(editItem.id, formattedItem);
         toast.success("Experience updated successfully!");
       } else {
+        console.log("Adding new item");
         const id = await addItem(formattedItem);
         
         if (id) {
+          console.log("Item added successfully with ID:", id);
           toast.success("Experience added successfully!");
+        } else {
+          console.error("No ID returned after adding item");
+          toast.error("Something went wrong. Please try again.");
+          setIsSubmitting(false);
+          return;
         }
       }
+      console.log("Navigating to wishlist page");
       navigate("/wishlist");
     } catch (error) {
       console.error("Error with experience:", error);
       toast.error(`Failed to ${editItem ? 'update' : 'add'} experience. Please try again.`);
+      setIsSubmitting(false);
     }
   };
 
@@ -910,8 +929,14 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
-                {editItem ? "Update Experience" : "Add Experience"}
+              <Button 
+                type="submit" 
+                className="bg-blue-500 hover:bg-blue-600"
+                disabled={isSubmitting}
+              >
+                {isSubmitting 
+                  ? 'Processing...' 
+                  : (editItem ? "Update Experience" : "Add Experience")}
               </Button>
             </div>
           </form>

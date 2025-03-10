@@ -92,11 +92,16 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
   
   addItem: async (newItem) => {
     try {
+      console.log("Starting to add new item:", newItem);
+      
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) {
+        console.error("No active session found");
         toast.error('You must be logged in to add items');
         return;
       }
+      
+      console.log("User is authenticated, preparing database item");
       
       // Transform the item to match our database schema
       const dbItem = {
@@ -120,6 +125,8 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         user_id: session.session.user.id
       };
       
+      console.log("Sending item to database:", dbItem);
+      
       const { data, error } = await supabase
         .from('wishlist_items')
         .insert(dbItem)
@@ -132,11 +139,13 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         return;
       }
       
+      console.log("Item added successfully with response:", data);
+      
       // Refetch the items to ensure we have the latest data
       await get().fetchItems();
       return data.id;
     } catch (error) {
-      console.error('Error adding wishlist item:', error);
+      console.error('Exception in addItem:', error);
       toast.error('Failed to add your experience');
     }
   },
