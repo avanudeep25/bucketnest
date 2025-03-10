@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect } from "react";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useUserStore } from "@/store/userStore";
@@ -43,14 +42,12 @@ const Wishlist = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   
-  // Filters
   const [budgetFilter, setBudgetFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [squadMemberFilter, setSquadMemberFilter] = useState<string>("all");
   const [activityTypeFilter, setActivityTypeFilter] = useState<string>("all");
   const [personalFilter, setPersonalFilter] = useState<boolean>(false);
   
-  // Date filters
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedMonth, setSelectedMonth] = useState<string | undefined>(undefined);
   const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
@@ -62,7 +59,6 @@ const Wishlist = () => {
     fetchItems();
   }, [fetchItems]);
   
-  // Generate month and year options
   const monthOptions = useMemo(() => {
     const months = [];
     for (let i = 0; i < 12; i++) {
@@ -87,7 +83,6 @@ const Wishlist = () => {
     return years;
   }, []);
   
-  // Get all unique tags from items
   const allTags = useMemo(() => {
     const tags = new Set<string>();
     items.forEach(item => {
@@ -98,7 +93,6 @@ const Wishlist = () => {
     return Array.from(tags);
   }, [items]);
   
-  // Get all unique activity types from items
   const allActivityTypes = useMemo(() => {
     const types = new Set<string>();
     items.forEach(item => {
@@ -127,7 +121,6 @@ const Wishlist = () => {
   
   const filteredItems = useMemo(() => {
     return items.filter(item => {
-      // Search term filter
       const matchesSearch = 
         item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -135,7 +128,6 @@ const Wishlist = () => {
         item.destination?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         false;
       
-      // Date filter
       let matchesDate = true;
       if (selectedDate && item.targetDate) {
         const itemDate = new Date(item.targetDate);
@@ -147,7 +139,6 @@ const Wishlist = () => {
         matchesDate = false;
       }
       
-      // Month filter
       let matchesMonth = true;
       if (selectedMonth) {
         if (item.targetMonth) {
@@ -161,7 +152,6 @@ const Wishlist = () => {
         }
       }
       
-      // Year filter
       let matchesYear = true;
       if (selectedYear) {
         if (item.targetYear) {
@@ -180,23 +170,18 @@ const Wishlist = () => {
         }
       }
       
-      // Budget filter
       const matchesBudget = budgetFilter === "all" || 
         (item.budgetRange === budgetFilter);
       
-      // Tags filter
       const matchesTag = tagFilter === "all" || 
         (item.tags && item.tags.includes(tagFilter));
       
-      // Squad members filter
       const matchesSquadMember = squadMemberFilter === "all" || 
         (item.squadMembers && item.squadMembers.includes(squadMemberFilter));
       
-      // Activity type filter
       const matchesActivityType = activityTypeFilter === "all" || 
         item.activityType === activityTypeFilter;
       
-      // Personal filter (solo travel)
       const matchesPersonal = !personalFilter || 
         item.travelType === "Solo";
       
@@ -317,7 +302,6 @@ const Wishlist = () => {
                   <div>
                     <h3 className="mb-2 text-sm font-medium">Date Filters</h3>
                     <div className="space-y-2">
-                      {/* Date filter */}
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button variant="outline" className="w-full justify-start text-left">
@@ -348,7 +332,6 @@ const Wishlist = () => {
                         </PopoverContent>
                       </Popover>
                       
-                      {/* Month filter */}
                       <Select
                         value={selectedMonth}
                         onValueChange={setSelectedMonth}
@@ -365,7 +348,6 @@ const Wishlist = () => {
                         </SelectContent>
                       </Select>
                       
-                      {/* Year filter */}
                       <Select
                         value={selectedYear}
                         onValueChange={setSelectedYear}
@@ -385,7 +367,6 @@ const Wishlist = () => {
                   </div>
                   
                   <div className="grid grid-cols-1 gap-2">
-                    {/* Activity Type filter */}
                     <Select
                       value={activityTypeFilter}
                       onValueChange={setActivityTypeFilter}
@@ -402,7 +383,6 @@ const Wishlist = () => {
                       </SelectContent>
                     </Select>
                     
-                    {/* Personal filter */}
                     <div className="flex items-center space-x-2">
                       <Button 
                         variant={personalFilter ? "default" : "outline"} 
@@ -414,7 +394,6 @@ const Wishlist = () => {
                       </Button>
                     </div>
                     
-                    {/* Budget filter */}
                     <Select
                       value={budgetFilter}
                       onValueChange={setBudgetFilter}
@@ -430,7 +409,6 @@ const Wishlist = () => {
                       </SelectContent>
                     </Select>
                     
-                    {/* Tags filter */}
                     {allTags.length > 0 && (
                       <Select
                         value={tagFilter}
@@ -449,7 +427,6 @@ const Wishlist = () => {
                       </Select>
                     )}
                     
-                    {/* Squad member filter */}
                     {squadMembers.length > 0 && (
                       <Select
                         value={squadMemberFilter}
@@ -498,7 +475,6 @@ const Wishlist = () => {
           </Select>
         </div>
         
-        {/* Active filters display */}
         {hasActiveFilters && (
           <div className="flex flex-wrap gap-2 mb-6">
             {selectedDate && (
