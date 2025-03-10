@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { WishlistItem, ActivityType, WishItemType, TimeframeType, TravelType, BudgetRange } from '@/types/wishlist';
@@ -59,6 +60,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
           id: item.id,
           title: item.title,
           description: item.description || undefined,
+          // Ensure proper type casting for enum types
           itemType: item.item_type as WishItemType, 
           activityType: item.activity_type ? (item.activity_type as ActivityType) : undefined,
           timeframeType: item.timeframe_type ? (item.timeframe_type as TimeframeType) : undefined,

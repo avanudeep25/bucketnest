@@ -44,7 +44,8 @@ const WishlistDetail = () => {
   const storeError = useWishlistStore((state) => state.error);
   const getSquadMemberById = useUserStore((state) => state.getSquadMemberById);
   
-  const [item, setItem] = useState<WishlistItem | undefined>(id ? getItem(id) : undefined);
+  const [item, setItem] = useState<WishlistItem | undefined>(undefined);
+  const [localIsLoading, setLocalIsLoading] = useState(true);
   const [fetchAttempts, setFetchAttempts] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [directFetchAttempted, setDirectFetchAttempted] = useState(false);
@@ -105,6 +106,7 @@ const WishlistDetail = () => {
       try {
         if (!id) {
           setError("No item ID provided");
+          setLocalIsLoading(false);
           return;
         }
         
@@ -114,6 +116,7 @@ const WishlistDetail = () => {
           console.log("WishlistDetail: Item found in store", wishlistItem);
           setItem(wishlistItem);
           setError(null);
+          setLocalIsLoading(false);
           return;
         }
         
@@ -129,30 +132,63 @@ const WishlistDetail = () => {
               console.log("Successfully fetched item directly:", directItem);
               setItem(directItem);
               setError(null);
+              setLocalIsLoading(false);
               return;
             }
             
             setError(`Experience with ID ${id} not found`);
             toast.error("Experience not found");
+            setLocalIsLoading(false);
             return;
           }
           
           setError(`Experience with ID ${id} not found`);
+          setLocalIsLoading(false);
           return;
         }
         
-        console.log("WishlistDetail: No items loaded yet or first attempt, fetching items...");
-        await fetchItems();
-        setFetchAttempts(prev => prev + 1);
+        if (fetchAttempts < 3) {
+          console.log("WishlistDetail: No items loaded yet or first attempt, fetching items...");
+          await fetchItems();
+          setFetchAttempts(prev => prev + 1);
+        } else {
+          console.log("Final attempt - direct fetch");
+          const directItem = await fetchSingleItem();
+          
+          if (directItem) {
+            console.log("Successfully fetched item on final attempt:", directItem);
+            setItem(directItem);
+            setError(null);
+          } else {
+            setError(`Experience with ID ${id} not found after multiple attempts`);
+            toast.error("Experience not found");
+          }
+          setLocalIsLoading(false);
+        }
       } catch (err) {
         console.error("Error in WishlistDetail loadData:", err);
         setError("Failed to load experience");
         toast.error("Failed to load experience");
+        setLocalIsLoading(false);
       }
     };
     
     loadData();
   }, [id, getItem, fetchItems, items, fetchAttempts, fetchSingleItem, directFetchAttempted]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localIsLoading) {
+        console.log("Loading timeout reached, forcing state update");
+        setLocalIsLoading(false);
+        if (!item && !error) {
+          setError("Loading timeout reached. Please try refreshing the page.");
+        }
+      }
+    }, 10000); // 10 second timeout
+    
+    return () => clearTimeout(timer);
+  }, [localIsLoading, item, error]);
 
   const handleDelete = async () => {
     if (id) {
@@ -201,7 +237,7 @@ const WishlistDetail = () => {
     }
   };
   
-  if (isLoading && fetchAttempts < 3) {
+  if (localIsLoading && fetchAttempts < 3) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation />
