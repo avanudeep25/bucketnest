@@ -1,10 +1,9 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, FormProvider } from "react-hook-form";
 import { z } from "zod";
-import { format, parse, getWeek, getYear, getMonth } from "date-fns";
+import { format, parse, getWeek, getYear, getMonth, startOfWeek, endOfWeek, addDays } from "date-fns";
 import { CalendarIcon, X, UserPlus, CheckIcon, XIcon } from "lucide-react";
 import { ActivityType, BudgetRange, TravelType, TimeframeType, WishItemType } from "@/types/wishlist";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -125,7 +124,6 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-// Generate array of months for the next 2 years
 const generateMonthOptions = () => {
   const months = [];
   const currentDate = new Date();
@@ -146,13 +144,11 @@ const generateMonthOptions = () => {
   return months;
 };
 
-// Generate array of weeks for the next 6 months
 const generateWeekOptions = () => {
   const weeks = [];
   const currentDate = new Date();
   let tempDate = new Date(currentDate);
 
-  // Generate next 26 weeks (approximately 6 months)
   for (let i = 0; i < 26; i++) {
     const year = getYear(tempDate);
     const weekNum = getWeek(tempDate);
@@ -165,7 +161,6 @@ const generateWeekOptions = () => {
       label: `Week ${weekNum}: ${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`
     });
 
-    // Move to next week
     tempDate.setDate(tempDate.getDate() + 7);
   }
 
@@ -185,8 +180,21 @@ const WishlistForm = () => {
   const [timePickerType, setTimePickerType] = useState<string | null>(null);
   const [selectedSquadMembers, setSelectedSquadMembers] = useState<string[]>([]);
   const [userDialogOpen, setUserDialogOpen] = useState(false);
+  const [selectedWeekDate, setSelectedWeekDate] = useState<Date | undefined>(undefined);
 
-  const acceptedSquadMembers = getAcceptedSquadMembers();
+  const acceptedSquadMembers = useMemo(() => getAcceptedSquadMembers(), [getAcceptedSquadMembers]);
+
+  const getWeekStringFromDate = (date: Date) => {
+    const year = getYear(date);
+    const weekNum = getWeek(date);
+    return `${year}-${String(weekNum).padStart(2, '0')}`;
+  };
+
+  const getSelectedWeekText = (date: Date) => {
+    const weekStart = startOfWeek(date);
+    const weekEnd = endOfWeek(date);
+    return `Week ${getWeek(date)}: ${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`;
+  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -214,7 +222,6 @@ const WishlistForm = () => {
   const travelType = form.watch("travelType");
 
   useEffect(() => {
-    // If user selects friends as travel type, reset squad members
     if (form.getValues("travelType") !== "Friends") {
       setSelectedSquadMembers([]);
     }
@@ -222,17 +229,29 @@ const WishlistForm = () => {
 
   useEffect(() => {
     setTimePickerType(timeframeType);
-    // Reset date fields when timeframe type changes
     form.setValue("targetDate", undefined);
     form.setValue("targetWeek", undefined);
     form.setValue("targetMonth", undefined);
+    setSelectedWeekDate(undefined);
   }, [timeframeType, form]);
 
+  useEffect(() => {
+    if (selectedWeekDate && timeframeType === 'Week') {
+      const weekString = getWeekStringFromDate(selectedWeekDate);
+      form.setValue("targetWeek", weekString);
+    }
+  }, [selectedWeekDate, timeframeType, form]);
+
   const onSubmit = (data: FormValues) => {
-    // Create an object with required fields explicitly set
+    if (!currentUser) {
+      toast.error("Please create a profile first");
+      navigate("/create");
+      return;
+    }
+    
     const newItem = {
-      title: data.title, // Explicitly set required field
-      itemType: data.itemType as WishItemType, // Explicitly set required field
+      title: data.title,
+      itemType: data.itemType as WishItemType,
       description: data.description || undefined,
       activityType: data.activityType as ActivityType | undefined,
       travelType: data.travelType as TravelType | undefined,
@@ -277,7 +296,6 @@ const WishlistForm = () => {
     }
   };
 
-  // If no user profile exists, show create profile form
   if (!currentUser) {
     return (
       <Card>
@@ -621,22 +639,50 @@ const WishlistForm = () => {
                   control={form.control}
                   name="targetWeek"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col">
                       <FormLabel>Select Week</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select which week" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {weekOptions.map((week) => (
-                            <SelectItem key={week.value} value={week.value}>
-                              {week.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {selectedWeekDate ? (
+                                getSelectedWeekText(selectedWeekDate)
+                              ) : (
+                                <span>Pick a week</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={selectedWeekDate}
+                            onSelect={(date) => {
+                              if (date) {
+                                setSelectedWeekDate(date);
+                                const weekString = getWeekStringFromDate(date);
+                                field.onChange(weekString);
+                              }
+                            }}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                          {selectedWeekDate && (
+                            <div className="px-4 py-2 border-t border-gray-100">
+                              <p className="text-sm font-medium">
+                                {getSelectedWeekText(selectedWeekDate)}
+                              </p>
+                            </div>
+                          )}
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}

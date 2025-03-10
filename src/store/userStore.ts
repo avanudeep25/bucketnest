@@ -92,7 +92,7 @@ export const useUserStore = create<UserState>()(
         set({ currentUser: newUser });
         
         // For testing: create some dummy relationships with the new user
-        const dummyRelationships = dummySquadMembers.map((member, index) => ({
+        const dummyRelationships: SquadRelationship[] = dummySquadMembers.map((member, index) => ({
           id: uuidv4(),
           requesterId: index < 1 ? member.id : newUser.id,
           requesteeId: index < 1 ? newUser.id : member.id,
