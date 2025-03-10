@@ -1,184 +1,108 @@
 
-import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { toast } from "sonner";
-import { useUserStore } from "@/store/userStore";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bookmark } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Login = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from || "/";
-  
-  const { loginWithEmail, signupWithEmail, currentUser } = useUserStore();
-  
-  // If user is already logged in, redirect to the intended destination
-  if (currentUser) {
-    navigate(from, { replace: true });
-    return null;
-  }
-  
-  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
-    
+
     try {
-      const formData = new FormData(event.currentTarget);
-      const email = formData.get("email") as string;
-      const password = formData.get("password") as string;
-      
-      await loginWithEmail(email, password);
-      toast.success("Logged in successfully!");
-      navigate(from, { replace: true });
-    } catch (error) {
-      toast.error("Login failed. Please check your credentials.");
-      console.error(error);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      toast.success('Logged in successfully');
+      navigate('/wishlist');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to log in');
     } finally {
       setIsLoading(false);
     }
   };
-  
-  const handleSignup = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
-    
+
     try {
-      const formData = new FormData(event.currentTarget);
-      const name = formData.get("name") as string;
-      const email = formData.get("email") as string;
-      const password = formData.get("password") as string;
-      
-      await signupWithEmail(name, email, password);
-      toast.success("Account created successfully!");
-      navigate(from, { replace: true });
-    } catch (error) {
-      toast.error("Signup failed. Please try again.");
-      console.error(error);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.session === null) {
+        toast.success('Please check your email to confirm your account');
+      } else {
+        toast.success('Signed up successfully');
+        navigate('/wishlist');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to sign up');
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4">
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-6">
-          <Link to="/" className="flex items-center gap-2">
-            <Bookmark className="h-8 w-8 text-blue-500" />
-            <span className="font-bold text-2xl">BucketNest</span>
-          </Link>
-        </div>
-        
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="signup">Signup</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="login">
-            <Card>
-              <CardHeader>
-                <CardTitle>Login</CardTitle>
-                <CardDescription>
-                  Enter your email and password to access your account
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input 
-                      id="login-email" 
-                      name="email" 
-                      type="email" 
-                      placeholder="your.email@example.com" 
-                      required 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
-                    <Input 
-                      id="login-password" 
-                      name="password" 
-                      type="password" 
-                      required 
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-blue-500 hover:bg-blue-600" 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Logging in..." : "Login"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="signup">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create an Account</CardTitle>
-                <CardDescription>
-                  Sign up to start planning your experiences
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Name</Label>
-                    <Input 
-                      id="signup-name" 
-                      name="name" 
-                      placeholder="Your name" 
-                      required 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input 
-                      id="signup-email" 
-                      name="email" 
-                      type="email" 
-                      placeholder="your.email@example.com" 
-                      required 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input 
-                      id="signup-password" 
-                      name="password" 
-                      type="password" 
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-blue-500 hover:bg-blue-600" 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Creating account..." : "Create Account"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-        
-        <div className="mt-6 text-center text-sm text-gray-500">
-          <Link to="/" className="text-blue-500 hover:underline">
-            ← Back to Home
-          </Link>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="p-8 bg-white rounded-lg shadow-md w-full max-w-md">
+        <h2 className="text-2xl font-bold text-center mb-6">Welcome to BucketNest</h2>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Loading...' : 'Log In'}
+            </Button>
+            <Button 
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleSignup}
+              disabled={isLoading}
+            >
+              Sign Up
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   );
