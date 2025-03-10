@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { WishlistItem, ActivityType, WishItemType, TimeframeType, TravelType } from '@/types/wishlist';
+import { WishlistItem, ActivityType, WishItemType, TimeframeType, TravelType, BudgetRange } from '@/types/wishlist';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -54,7 +54,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         targetMonth: item.target_month || undefined,
         targetYear: item.target_year || undefined,
         travelType: item.travel_type ? (item.travel_type as TravelType) : undefined,
-        budgetRange: item.budget_range || undefined,
+        budgetRange: item.budget_range ? (item.budget_range as BudgetRange) : undefined,
         destination: item.destination || undefined,
         link: item.link || undefined,
         notes: item.notes || undefined,
