@@ -38,16 +38,16 @@ const WishlistCard = ({ item, onDelete }: WishlistCardProps) => {
           <h3 className="text-lg font-semibold line-clamp-1">{item.title}</h3>
         </div>
         
-        {item.natureOfPlace && item.natureOfPlace.length > 0 && (
+        {item.tags && item.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1">
-            {item.natureOfPlace.slice(0, 2).map((nature) => (
-              <Badge key={nature} variant="outline" className="text-xs">
-                {nature}
+            {item.tags.slice(0, 2).map((tag) => (
+              <Badge key={tag} variant="outline" className="text-xs">
+                {tag}
               </Badge>
             ))}
-            {item.natureOfPlace.length > 2 && (
+            {item.tags.length > 2 && (
               <Badge variant="outline" className="text-xs">
-                +{item.natureOfPlace.length - 2}
+                +{item.tags.length - 2}
               </Badge>
             )}
           </div>

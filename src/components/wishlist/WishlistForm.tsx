@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -188,13 +187,6 @@ const WishlistForm = () => {
 
   const acceptedSquadMembers = getAcceptedSquadMembers();
 
-  useEffect(() => {
-    // If user selects friends as travel type, reset squad members
-    if (form.getValues("travelType") !== "Friends") {
-      setSelectedSquadMembers([]);
-    }
-  }, [form.watch("travelType")]);
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -219,6 +211,13 @@ const WishlistForm = () => {
   const itemType = form.watch("itemType");
   const timeframeType = form.watch("timeframeType");
   const travelType = form.watch("travelType");
+
+  useEffect(() => {
+    // If user selects friends as travel type, reset squad members
+    if (form.getValues("travelType") !== "Friends") {
+      setSelectedSquadMembers([]);
+    }
+  }, [form.watch("travelType")]);
 
   useEffect(() => {
     setTimePickerType(timeframeType);
