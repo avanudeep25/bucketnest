@@ -44,7 +44,7 @@ export const useWishlistStore = create<WishlistState>()(
       },
     }),
     {
-      name: 'wishlist-storage',
+      name: 'bucketnest-storage',
     }
   )
 );

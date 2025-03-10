@@ -53,27 +53,17 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				wishwise: {
-					50: '#e6f9fa',
-					100: '#ccf3f5',
-					200: '#99e7eb',
-					300: '#66dbe1',
-					400: '#33cfd7',
-					500: '#00c3cd',
-					600: '#009ca4',
-					700: '#00757b',
-					800: '#004e52',
-					900: '#002729',
-				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
+				blue: {
+					50: '#eff6ff',
+					100: '#dbeafe',
+					200: '#bfdbfe',
+					300: '#93c5fd',
+					400: '#60a5fa',
+					500: '#3b82f6',
+					600: '#2563eb',
+					700: '#1d4ed8',
+					800: '#1e40af',
+					900: '#1e3a8a',
 				}
 			},
 			borderRadius: {

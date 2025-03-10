@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { ActivityType, BudgetRange, PlaceNature, WishItemType } from "@/types/wishlist";
+import { ActivityType, BudgetRange, TravelType, TimeframeType, WishItemType } from "@/types/wishlist";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -67,21 +67,20 @@ const activityTypes: ActivityType[] = [
   'Other',
 ];
 
-const placeNatures: PlaceNature[] = [
-  'Beach & Coast',
-  'Mountains',
-  'Urban',
-  'Countryside',
-  'Forest',
-  'Desert',
-  'Island',
-  'Historic',
-  'Lakes & Rivers',
-  'Nature & Outdoors',
-  'Adventure',
-  'Cultural',
-  'Relaxation',
+const travelTypes: TravelType[] = [
+  'Solo',
+  'Friends',
+  'Family',
+  'Work',
   'Other',
+];
+
+const timeframeTypes: TimeframeType[] = [
+  'Specific Date',
+  'Week',
+  'Month',
+  'Year',
+  'Someday',
 ];
 
 const budgetRanges: BudgetRange[] = ['Budget ($)', 'Mid-Range ($$)', 'Luxury ($$$)'];
@@ -89,16 +88,17 @@ const budgetRanges: BudgetRange[] = ['Budget ($)', 'Mid-Range ($$)', 'Luxury ($$
 const popularTags = [
   "Thrilling", "Peaceful", "Family-friendly", "Solo", "Romantic", 
   "Weekend", "Summer", "Winter", "Spring", "Fall",
-  "Hidden gem", "Popular", "Historical", "Modern", "Scenic"
+  "Hidden gem", "Popular", "Historical", "Modern", "Scenic",
+  "Quick", "Local", "International", "Spontaneous", "Planned"
 ];
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100),
   description: z.string().optional(),
   itemType: z.enum(['places', 'activities', 'products', 'other']),
-  natureOfPlace: z.array(z.string()).optional(),
   activityType: z.string().optional(),
-  purposeOfVisit: z.string().optional(),
+  travelType: z.string().optional(),
+  timeframeType: z.string(),
   targetDate: z.date().optional(),
   budgetRange: z.string().optional(),
   tags: z.array(z.string()).optional(),
@@ -113,8 +113,8 @@ const WishlistForm = () => {
   const navigate = useNavigate();
   const addItem = useWishlistStore((state) => state.addItem);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedNatures, setSelectedNatures] = useState<PlaceNature[]>([]);
   const [customTag, setCustomTag] = useState("");
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -122,9 +122,9 @@ const WishlistForm = () => {
       title: "",
       description: "",
       itemType: "places",
-      natureOfPlace: [],
       activityType: undefined,
-      purposeOfVisit: "",
+      travelType: undefined,
+      timeframeType: "Month",
       targetDate: undefined,
       budgetRange: undefined,
       tags: [],
@@ -135,6 +135,7 @@ const WishlistForm = () => {
   });
 
   const itemType = form.watch("itemType");
+  const timeframeType = form.watch("timeframeType");
 
   const onSubmit = (data: FormValues) => {
     // Create an object with required fields explicitly set
@@ -143,19 +144,19 @@ const WishlistForm = () => {
       itemType: data.itemType as WishItemType, // Explicitly set required field
       description: data.description || undefined,
       activityType: data.activityType as ActivityType | undefined,
-      purposeOfVisit: data.purposeOfVisit || undefined,
+      travelType: data.travelType as TravelType | undefined,
+      timeframeType: data.timeframeType as TimeframeType,
       targetDate: data.targetDate,
       budgetRange: data.budgetRange as BudgetRange | undefined,
       imageUrl: data.imageUrl || undefined,
       link: data.link || undefined,
       notes: data.notes || undefined,
-      natureOfPlace: selectedNatures,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
     };
     
     addItem(newItem);
     
-    toast.success("Wishlist item created successfully!");
+    toast.success("Experience added successfully!");
     navigate("/wishlist");
   };
 
@@ -174,20 +175,12 @@ const WishlistForm = () => {
     }
   };
 
-  const toggleNature = (nature: PlaceNature) => {
-    if (selectedNatures.includes(nature)) {
-      setSelectedNatures(selectedNatures.filter((n) => n !== nature));
-    } else {
-      setSelectedNatures([...selectedNatures, nature]);
-    }
-  };
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create a New Wish</CardTitle>
+        <CardTitle>Add a New Experience</CardTitle>
         <CardDescription>
-          Add a new place, activity, or item to your wishlist.
+          Plan your next adventure, activity, or goal
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -200,10 +193,10 @@ const WishlistForm = () => {
                 <FormItem>
                   <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Scuba Diving in the Maldives" {...field} />
+                    <Input placeholder="Try the new pizza place downtown" {...field} />
                   </FormControl>
                   <FormDescription>
-                    Give your wish a descriptive title.
+                    Give your experience a descriptive title
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -218,7 +211,7 @@ const WishlistForm = () => {
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Write a brief description of your wish"
+                      placeholder="Write a brief description of your experience"
                       {...field}
                     />
                   </FormControl>
@@ -233,11 +226,11 @@ const WishlistForm = () => {
                 name="itemType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Item Type</FormLabel>
+                    <FormLabel>Experience Type</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select item type" />
+                          <SelectValue placeholder="Select experience type" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -280,85 +273,26 @@ const WishlistForm = () => {
                 />
               )}
               
-              {(itemType === "places" || itemType === "activities") && (
-                <FormItem>
-                  <FormLabel>Nature of Place</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className={cn(
-                            "w-full justify-between",
-                            !selectedNatures.length && "text-muted-foreground"
-                          )}
-                        >
-                          {selectedNatures.length > 0
-                            ? `${selectedNatures.length} selected`
-                            : "Select types"}
-                          <CheckIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent align="start" className="w-[280px] p-0 pointer-events-auto">
-                      <Command>
-                        <CommandInput placeholder="Search..." />
-                        <CommandEmpty>No type found.</CommandEmpty>
-                        <CommandGroup>
-                          <div className="max-h-[200px] overflow-y-auto">
-                            {placeNatures.map((nature) => (
-                              <CommandItem
-                                key={nature}
-                                value={nature}
-                                onSelect={() => toggleNature(nature as PlaceNature)}
-                              >
-                                <div
-                                  className={cn(
-                                    "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                                    selectedNatures.includes(nature)
-                                      ? "bg-primary text-primary-foreground"
-                                      : "opacity-50 [&_svg]:invisible"
-                                  )}
-                                >
-                                  <CheckIcon className="h-3 w-3" />
-                                </div>
-                                <span>{nature}</span>
-                              </CommandItem>
-                            ))}
-                          </div>
-                        </CommandGroup>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  {selectedNatures.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {selectedNatures.map((nature) => (
-                        <Badge key={nature} className="gap-1 bg-wishwise-100 text-wishwise-800 hover:bg-wishwise-200">
-                          {nature}
-                          <XIcon
-                            className="h-3 w-3 cursor-pointer"
-                            onClick={() => toggleNature(nature)}
-                          />
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                  <FormDescription>
-                    Select one or more categories that best describe this place.
-                  </FormDescription>
-                </FormItem>
-              )}
-              
               <FormField
                 control={form.control}
-                name="purposeOfVisit"
+                name="travelType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Purpose of Visit</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Bucket List Item" {...field} />
-                    </FormControl>
+                    <FormLabel>Travel With</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Who are you going with?" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {travelTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -366,43 +300,76 @@ const WishlistForm = () => {
               
               <FormField
                 control={form.control}
-                name="targetDate"
+                name="timeframeType"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Target Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "MMMM yyyy")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                          className={cn("p-3 pointer-events-auto")}
-                        />
-                      </PopoverContent>
-                    </Popover>
+                  <FormItem>
+                    <FormLabel>Time Clarity</FormLabel>
+                    <Select 
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setShowDatePicker(value === 'Specific Date');
+                      }} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="When do you plan to go?" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {timeframeTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              
+              {showDatePicker && (
+                <FormField
+                  control={form.control}
+                  name="targetDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Select Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "MMMM d, yyyy")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               
               <FormField
                 control={form.control}
@@ -442,7 +409,7 @@ const WishlistForm = () => {
                       />
                     </FormControl>
                     <FormDescription>
-                      Add an image to visualize your wish.
+                      Add an image to visualize your experience
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -462,7 +429,7 @@ const WishlistForm = () => {
                       />
                     </FormControl>
                     <FormDescription>
-                      Add a link to reference or booking site.
+                      Add a link to reference or booking site
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -479,7 +446,7 @@ const WishlistForm = () => {
                     className={cn(
                       "cursor-pointer",
                       selectedTags.includes(tag)
-                        ? "bg-wishwise-500 hover:bg-wishwise-600"
+                        ? "bg-blue-500 hover:bg-blue-600"
                         : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                     )}
                     onClick={() => toggleTag(tag)}
@@ -508,7 +475,7 @@ const WishlistForm = () => {
               {selectedTags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
                   {selectedTags.filter(tag => !popularTags.includes(tag)).map((tag) => (
-                    <Badge key={tag} className="gap-1 bg-wishwise-100 text-wishwise-800 hover:bg-wishwise-200">
+                    <Badge key={tag} className="gap-1 bg-blue-100 text-blue-800 hover:bg-blue-200">
                       {tag}
                       <XIcon
                         className="h-3 w-3 cursor-pointer"
@@ -528,7 +495,7 @@ const WishlistForm = () => {
                   <FormLabel>Additional Notes</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Any additional details or notes about your wish"
+                      placeholder="Any additional details or notes about your experience"
                       {...field}
                     />
                   </FormControl>
@@ -545,8 +512,8 @@ const WishlistForm = () => {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-wishwise-500 hover:bg-wishwise-600">
-                Create Wish
+              <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+                Add Experience
               </Button>
             </div>
           </form>

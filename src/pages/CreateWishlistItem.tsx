@@ -8,7 +8,7 @@ const CreateWishlistItem = () => {
       <Navigation />
       
       <div className="container px-4 py-8 md:px-6 max-w-4xl">
-        <h1 className="text-3xl font-bold mb-6">Create a New Wish</h1>
+        <h1 className="text-3xl font-bold mb-6">Add a New Upcoming Experience</h1>
         <WishlistForm />
       </div>
     </div>

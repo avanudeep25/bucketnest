@@ -31,6 +31,10 @@ export type PlaceNature =
 
 export type BudgetRange = 'Budget ($)' | 'Mid-Range ($$)' | 'Luxury ($$$)';
 
+export type TravelType = 'Solo' | 'Friends' | 'Family' | 'Work' | 'Other';
+
+export type TimeframeType = 'Specific Date' | 'Week' | 'Month' | 'Year' | 'Someday';
+
 export type WishlistItem = {
   id: string;
   title: string;
@@ -38,8 +42,9 @@ export type WishlistItem = {
   itemType: WishItemType;
   natureOfPlace?: PlaceNature[];
   activityType?: ActivityType;
-  purposeOfVisit?: string;
+  travelType?: TravelType;
   targetDate?: Date;
+  timeframeType?: TimeframeType;
   budgetRange?: BudgetRange;
   tags?: string[];
   imageUrl?: string;
