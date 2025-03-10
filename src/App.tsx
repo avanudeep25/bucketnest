@@ -11,13 +11,27 @@ import WishlistDetail from "./pages/WishlistDetail";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import { useUserStore } from "./store/userStore";
+import { useEffect } from "react";
+import { supabase } from "./integrations/supabase/client";
 
 const queryClient = new QueryClient();
 
 // Auth guard component with redirection to login
 const RequireProfile = ({ children }: { children: React.ReactNode }) => {
-  const currentUser = useUserStore((state) => state.currentUser);
+  const { currentUser, setCurrentUser } = useUserStore();
   const location = useLocation();
+  
+  useEffect(() => {
+    // Check for session on component mount
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setCurrentUser(session.user);
+      }
+    };
+    
+    checkSession();
+  }, [setCurrentUser]);
   
   if (!currentUser) {
     // If no user profile exists, redirect to login page with the intended destination

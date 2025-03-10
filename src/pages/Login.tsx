@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,9 +9,13 @@ import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  // Get the intended destination from location state, or default to "/wishlist"
+  const from = location.state?.from || "/wishlist";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +30,8 @@ const Login = () => {
       if (error) throw error;
 
       toast.success('Logged in successfully');
-      navigate('/wishlist');
+      // Redirect to the intended destination or wishlist page
+      navigate(from, { replace: true });
     } catch (error: any) {
       toast.error(error.message || 'Failed to log in');
     } finally {
@@ -50,7 +55,8 @@ const Login = () => {
         toast.success('Please check your email to confirm your account');
       } else {
         toast.success('Signed up successfully');
-        navigate('/wishlist');
+        // Redirect to the intended destination or wishlist page
+        navigate(from, { replace: true });
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign up');

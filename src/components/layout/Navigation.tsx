@@ -4,15 +4,51 @@ import { Button } from "@/components/ui/button";
 import { PenLine, LogOut, User, Home, List, Plus } from "lucide-react";
 import { useUserStore } from "@/store/userStore";
 import { toast } from "sonner";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navigation = () => {
-  const { currentUser, logout } = useUserStore();
+  const { currentUser, setCurrentUser, logout } = useUserStore();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    toast.success("Logged out successfully");
-    navigate("/");
+  // Listen for auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session) {
+          setCurrentUser(session.user);
+        } else {
+          setCurrentUser(null);
+        }
+      }
+    );
+
+    // Initial session check
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setCurrentUser(session.user);
+      }
+    };
+    
+    checkUser();
+
+    // Clean up subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [setCurrentUser]);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      logout();
+      toast.success("Logged out successfully");
+      navigate("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
+      toast.error("Failed to log out");
+    }
   };
 
   const handleAddExperience = () => {
