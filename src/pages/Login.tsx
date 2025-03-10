@@ -14,7 +14,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { currentUser } = useUserStore();
+  const { currentUser, setCurrentUser } = useUserStore();
 
   // Get the intended destination from location state, or default to "/wishlist"
   const from = location.state?.from || "/wishlist";
@@ -22,6 +22,7 @@ const Login = () => {
   // Redirect if user is already logged in
   useEffect(() => {
     if (currentUser) {
+      console.log("Login: User is logged in, redirecting to:", from);
       navigate(from, { replace: true });
     }
   }, [currentUser, navigate, from]);
@@ -39,8 +40,12 @@ const Login = () => {
       if (error) throw error;
 
       if (data.user) {
+        // Explicitly set the current user in the store
+        setCurrentUser(data.user);
         toast.success('Logged in successfully');
-        // Navigate happens in the useEffect when currentUser is updated
+        // Immediate navigation in addition to the useEffect
+        console.log("Login successful, redirecting to:", from);
+        navigate(from, { replace: true });
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to log in');
@@ -61,11 +66,18 @@ const Login = () => {
 
       if (error) throw error;
 
-      if (data.session === null) {
-        toast.success('Please check your email to confirm your account');
-      } else {
-        toast.success('Signed up successfully');
-        // Navigate happens in the useEffect when currentUser is updated
+      if (data.user) {
+        // Explicitly set the current user in the store
+        setCurrentUser(data.user);
+        
+        if (data.session === null) {
+          toast.success('Please check your email to confirm your account');
+        } else {
+          toast.success('Signed up successfully');
+          // Immediate navigation in addition to the useEffect
+          console.log("Signup successful, redirecting to:", from);
+          navigate(from, { replace: true });
+        }
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign up');
