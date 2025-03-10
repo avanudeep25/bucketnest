@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -32,6 +31,7 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
+import { WishlistItem, WishItemType, ActivityType, TimeframeType, TravelType, BudgetRange } from "@/types/wishlist";
 
 const WishlistDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -44,12 +44,11 @@ const WishlistDetail = () => {
   const storeError = useWishlistStore((state) => state.error);
   const getSquadMemberById = useUserStore((state) => state.getSquadMemberById);
   
-  const [item, setItem] = useState(id ? getItem(id) : undefined);
+  const [item, setItem] = useState<WishlistItem | undefined>(id ? getItem(id) : undefined);
   const [fetchAttempts, setFetchAttempts] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [directFetchAttempted, setDirectFetchAttempted] = useState(false);
   
-  // Function to directly fetch a single item from Supabase
   const fetchSingleItem = useCallback(async () => {
     if (!id) return null;
     
@@ -70,20 +69,19 @@ const WishlistDetail = () => {
       
       if (!data) return null;
       
-      // Transform the data to match our WishlistItem type
       return {
         id: data.id,
         title: data.title,
         description: data.description || undefined,
-        itemType: data.item_type,
-        activityType: data.activity_type || undefined,
-        timeframeType: data.timeframe_type || undefined,
+        itemType: data.item_type as WishItemType, 
+        activityType: data.activity_type ? (data.activity_type as ActivityType) : undefined,
+        timeframeType: data.timeframe_type ? (data.timeframe_type as TimeframeType) : undefined,
         targetDate: data.target_date ? new Date(data.target_date) : undefined,
         targetWeek: data.target_week || undefined,
         targetMonth: data.target_month || undefined,
         targetYear: data.target_year || undefined,
-        travelType: data.travel_type || undefined,
-        budgetRange: data.budget_range || undefined,
+        travelType: data.travel_type ? (data.travel_type as TravelType) : undefined,
+        budgetRange: data.budget_range ? (data.budget_range as BudgetRange) : undefined,
         destination: data.destination || undefined,
         link: data.link || undefined,
         notes: data.notes || undefined,
@@ -92,7 +90,7 @@ const WishlistDetail = () => {
         squadMembers: data.squad_members || undefined,
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)
-      };
+      } as WishlistItem;
     } catch (err) {
       console.error("Exception in fetchSingleItem:", err);
       return null;
@@ -110,7 +108,6 @@ const WishlistDetail = () => {
           return;
         }
         
-        // First try to get the item from the store
         const wishlistItem = getItem(id);
         
         if (wishlistItem) {
@@ -120,11 +117,9 @@ const WishlistDetail = () => {
           return;
         }
         
-        // If not found in store but store has items, it might not exist
         if (items.length > 0 && fetchAttempts > 0) {
           console.log(`WishlistDetail: Item with id ${id} not found in store with ${items.length} items`);
           
-          // Try to fetch directly from Supabase as a last resort
           if (!directFetchAttempted) {
             console.log("Attempting direct fetch from Supabase");
             setDirectFetchAttempted(true);
@@ -146,7 +141,6 @@ const WishlistDetail = () => {
           return;
         }
         
-        // If no items in store or first attempt, fetch all items
         console.log("WishlistDetail: No items loaded yet or first attempt, fetching items...");
         await fetchItems();
         setFetchAttempts(prev => prev + 1);
@@ -273,7 +267,6 @@ const WishlistDetail = () => {
         </Button>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Left Column - Image */}
           <div className="md:col-span-1">
             {item.imageUrl ? (
               <img
@@ -323,7 +316,6 @@ const WishlistDetail = () => {
             </div>
           </div>
           
-          {/* Right Column - Details */}
           <div className="md:col-span-2">
             <div className="flex items-start justify-between mb-1">
               <h1 className="text-3xl font-bold">{item.title}</h1>

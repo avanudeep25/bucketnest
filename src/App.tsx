@@ -15,7 +15,14 @@ import { useWishlistStore } from "./store/wishlistStore";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Auth guard component with redirection to login
 const RequireProfile = ({ children }: { children: React.ReactNode }) => {
@@ -29,16 +36,22 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
     // Check for session on component mount
     const checkSession = async () => {
       setIsLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        console.log("RequireProfile: User is authenticated", session.user);
-        setCurrentUser(session.user);
-        // Fetch wishlist items when user is authenticated
-        await fetchItems();
-        setIsLoading(false);
-      } else {
-        console.log("RequireProfile: No active session");
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          console.log("RequireProfile: User is authenticated", session.user);
+          setCurrentUser(session.user);
+          // Fetch wishlist items when user is authenticated
+          await fetchItems();
+          setIsLoading(false);
+        } else {
+          console.log("RequireProfile: No active session");
+          setCurrentUser(null);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
         setCurrentUser(null);
         setIsLoading(false);
       }
