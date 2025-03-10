@@ -16,7 +16,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const { currentUser, setCurrentUser, ensureUserHasProfile } = useUserStore();
 
-  // Get the intended destination from location state, or default to "/create" instead of "/wishlist"
+  // Get the intended destination from location state, or default to "/create"
   const from = location.state?.from || "/create";
 
   // Redirect if user is already logged in

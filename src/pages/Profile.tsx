@@ -27,9 +27,11 @@ const Profile = () => {
     username: currentUser?.username || "",
     bio: currentUser?.bio || "",
   });
-
+  
+  // Update form values when currentUser changes
   useEffect(() => {
     if (currentUser) {
+      console.log("Profile: Current user data:", currentUser);
       setFormValues({
         name: currentUser?.user_metadata?.name || "",
         username: currentUser?.username || "",
@@ -40,9 +42,7 @@ const Profile = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    if (name !== 'username') { // Prevent editing username
-      setFormValues(prev => ({ ...prev, [name]: value }));
-    }
+    setFormValues(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,14 +56,9 @@ const Profile = () => {
     try {
       setIsSaving(true);
       
-      // Generate a username if not present
-      let username = formValues.username;
-      if (!username.trim()) {
-        username = formValues.name.toLowerCase().replace(/\s+/g, '');
-        setFormValues(prev => ({ ...prev, username }));
-      }
+      console.log("Submitting profile update with:", formValues);
       
-      // Use the createUser function from userStore instead of direct updates
+      // Use the createUser function from userStore to update profile
       await createUser(formValues.name, formValues.bio);
       
       toast.success("Profile updated successfully!");
@@ -132,13 +127,14 @@ const Profile = () => {
                       id="username" 
                       name="username"
                       value={formValues.username}
-                      onChange={handleChange}
-                      placeholder="Choose a unique username"
+                      placeholder="Your username"
                       disabled
                       className="bg-gray-50"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Username is generated from your name and cannot be changed
+                      {formValues.username ? 
+                        "Username is auto-generated and cannot be changed" : 
+                        "A username will be automatically generated for you"}
                     </p>
                   </div>
                   
@@ -147,7 +143,7 @@ const Profile = () => {
                     <Textarea 
                       id="bio" 
                       name="bio"
-                      value={formValues.bio}
+                      value={formValues.bio || ""}
                       onChange={handleChange}
                       placeholder="Tell others about yourself"
                       className="min-h-[100px]"
