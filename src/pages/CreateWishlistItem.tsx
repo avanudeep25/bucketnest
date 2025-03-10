@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import WishlistForm from "@/components/wishlist/WishlistForm";
 import Navigation from "@/components/layout/Navigation";
 import { useUserStore } from "@/store/userStore";
@@ -25,7 +25,7 @@ const CreateWishlistItem = () => {
   const currentUser = useUserStore((state) => state.currentUser);
   const wishlistItem = id ? useWishlistStore(state => state.getItem(id)) : undefined;
   
-  // Get the async squad data
+  // Get the squad data
   const squadRequests = useUserStore((state) => state.getSquadRequestsReceived());
   const acceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers());
   const respondToSquadRequest = useUserStore((state) => state.respondToSquadRequest);
@@ -36,23 +36,15 @@ const CreateWishlistItem = () => {
   const [requests, setRequests] = useState([]);
   
   // Load the requests count when the component mounts
-  useMemo(async () => {
-    if(squadRequests) {
-      try {
-        // Handle the case when squadRequests is an array or a Promise
-        if (Array.isArray(squadRequests)) {
-          setRequestsCount(squadRequests.length);
-          setRequests(squadRequests);
-        } else if (typeof squadRequests.then === 'function') {
-          const requestsData = await squadRequests;
-          setRequestsCount(requestsData.length);
-          setRequests(requestsData);
-        }
-      } catch (error) {
-        console.error("Error loading squad requests:", error);
-        setRequestsCount(0);
-        setRequests([]);
-      }
+  useEffect(() => {
+    // Handle the squadRequests data
+    if (Array.isArray(squadRequests)) {
+      setRequestsCount(squadRequests.length);
+      setRequests(squadRequests);
+    } else {
+      // Set defaults if squadRequests is not an array
+      setRequestsCount(0);
+      setRequests([]);
     }
   }, [squadRequests]);
   
@@ -86,7 +78,7 @@ const CreateWishlistItem = () => {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>My Profile & Squad</DialogTitle>
+                  <DialogTitle>My Profile</DialogTitle>
                   <DialogDescription>
                     Manage your profile and squad members
                   </DialogDescription>
@@ -120,14 +112,18 @@ const CreateWishlistItem = () => {
                         {requests.map(request => {
                           const [requester, setRequester] = useState(null);
                           
-                          useMemo(async () => {
+                          useEffect(() => {
                             if(getSquadMemberById) {
-                              try {
-                                const member = await getSquadMemberById(request.requesterId);
-                                setRequester(member);
-                              } catch (error) {
-                                console.error("Error loading squad member:", error);
-                              }
+                              const loadMember = async () => {
+                                try {
+                                  const member = await getSquadMemberById(request.requesterId);
+                                  setRequester(member);
+                                } catch (error) {
+                                  console.error("Error loading squad member:", error);
+                                }
+                              };
+                              
+                              loadMember();
                             }
                           }, [getSquadMemberById, request.requesterId]);
                           
@@ -178,24 +174,26 @@ const CreateWishlistItem = () => {
                       </Button>
                     </div>
                     
-                    {acceptedSquadMembers instanceof Promise ? (
-                      <div className="text-sm text-gray-500 text-center py-2">
-                        Loading squad members...
-                      </div>
-                    ) : acceptedSquadMembers.length > 0 ? (
-                      <div className="space-y-2">
-                        {acceptedSquadMembers.map(member => (
-                          <div key={member.id} className="flex justify-between items-center border-b pb-2">
-                            <div>
-                              <div className="font-medium">{member.name}</div>
-                              <div className="text-xs text-gray-500">@{member.username}</div>
+                    {Array.isArray(acceptedSquadMembers) ? (
+                      acceptedSquadMembers.length > 0 ? (
+                        <div className="space-y-2">
+                          {acceptedSquadMembers.map(member => (
+                            <div key={member.id} className="flex justify-between items-center border-b pb-2">
+                              <div>
+                                <div className="font-medium">{member.name}</div>
+                                <div className="text-xs text-gray-500">@{member.username}</div>
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-500 text-center py-2">
+                          You haven't added any squad members yet
+                        </div>
+                      )
                     ) : (
                       <div className="text-sm text-gray-500 text-center py-2">
-                        You haven't added any squad members yet
+                        Loading squad members...
                       </div>
                     )}
                   </div>
