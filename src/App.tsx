@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +9,7 @@ import CreateWishlistItem from "./pages/CreateWishlistItem";
 import WishlistDetail from "./pages/WishlistDetail";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import Profile from "./pages/Profile";
 import { useUserStore } from "./store/userStore";
 import { useWishlistStore } from "./store/wishlistStore";
 import { useEffect, useState } from "react";
@@ -25,7 +25,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Auth guard component with redirection to login
 const RequireProfile = ({ children }: { children: React.ReactNode }) => {
   const { currentUser, setCurrentUser } = useUserStore();
   const { fetchItems } = useWishlistStore();
@@ -34,7 +33,6 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Check for session on component mount
     const checkSession = async () => {
       setIsLoading(true);
       try {
@@ -43,7 +41,6 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
         if (session) {
           console.log("RequireProfile: User is authenticated", session.user);
           setCurrentUser(session.user);
-          // Fetch wishlist items when user is authenticated
           await fetchItems();
           setIsLoading(false);
         } else {
@@ -58,13 +55,11 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
       }
     };
     
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state changed:", event, session?.user);
         if (session) {
           setCurrentUser(session.user);
-          // Fetch wishlist items when auth state changes to logged in
           await fetchItems();
         } else {
           setCurrentUser(null);
@@ -74,19 +69,16 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
     
     checkSession();
     
-    // Clean up subscription
     return () => {
       subscription.unsubscribe();
     };
   }, [setCurrentUser, navigate, fetchItems]);
   
-  // Show loading while checking auth
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
   
   if (!currentUser) {
-    // If no user profile exists, redirect to login page with the intended destination
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
   
@@ -110,6 +102,11 @@ const App = () => (
           <Route path="/create" element={
             <RequireProfile>
               <CreateWishlistItem />
+            </RequireProfile>
+          } />
+          <Route path="/profile" element={
+            <RequireProfile>
+              <Profile />
             </RequireProfile>
           } />
           <Route path="/wishlist/:id" element={
