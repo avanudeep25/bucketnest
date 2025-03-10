@@ -1,3 +1,4 @@
+
 export type WishItemType = 'places' | 'activities' | 'products' | 'other';
 
 export type ActivityType = 
@@ -22,6 +23,7 @@ export interface WishlistItem {
   userId?: string;
   title: string;
   description?: string;
+  destination?: string;
   itemType: WishItemType;
   activityType?: ActivityType;
   travelType?: TravelType;

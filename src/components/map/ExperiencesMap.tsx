@@ -2,6 +2,8 @@
 import { useEffect, useRef } from 'react';
 import { WishlistItem } from '@/types/wishlist';
 import { useWishlistStore } from '@/store/wishlistStore';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface ExperiencesMapProps {
   className?: string;

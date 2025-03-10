@@ -121,6 +121,7 @@ const formSchema = z.object({
   targetDate: z.date().optional(),
   targetWeek: z.string().optional(),
   targetMonth: z.string().optional(),
+  targetYear: z.number().optional(),
   budgetRange: z.string().optional(),
   tags: z.array(z.string()).optional(),
   imageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
@@ -503,7 +504,10 @@ const WishlistForm = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Select Year</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value?.toString()}>
+                      <Select 
+                        onValueChange={(value) => field.onChange(parseInt(value, 10))} 
+                        defaultValue={field.value?.toString()}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select year" />
