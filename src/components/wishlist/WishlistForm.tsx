@@ -96,7 +96,12 @@ const timeframeTypes: TimeframeType[] = [
   'Someday',
 ];
 
-const budgetRanges: BudgetRange[] = ['Budget ($)', 'Mid-Range ($$)', 'Luxury ($$$)'];
+const budgetRanges: BudgetRange[] = [
+  "Don't Care",
+  "I can plan this",
+  "Need some serious saving",
+  "Have to sell my assets"
+];
 
 const popularTags = [
   "Thrilling", "Peaceful", "Family-friendly", "Solo", "Romantic", 
@@ -357,49 +362,49 @@ const WishlistForm = () => {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Try the new pizza place downtown" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Give your experience a descriptive title
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Try the new pizza place downtown" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="destination"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Destination @ Location</FormLabel>
-                  <FormControl>
-                    <LocationAutocomplete
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Search and select your destination
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <div className="hidden md:flex items-end justify-center mb-2 text-lg font-medium text-gray-500">
+                @
+              </div>
+
+              <FormField
+                control={form.control}
+                name="destination"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Destination</FormLabel>
+                    <FormControl>
+                      <LocationAutocomplete
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Short Description</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Write a brief description of your experience"
@@ -417,11 +422,11 @@ const WishlistForm = () => {
                 name="itemType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Wish Type</FormLabel>
+                    <FormLabel>Plan Type</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select wish type" />
+                          <SelectValue placeholder="Select plan type" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -469,7 +474,7 @@ const WishlistForm = () => {
                 name="travelType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Travel With</FormLabel>
+                    <FormLabel>Any Company?</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
