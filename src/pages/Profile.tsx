@@ -19,9 +19,8 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 
 const Profile = () => {
-  const { currentUser, setCurrentUser } = useUserStore();
+  const { currentUser, createUser } = useUserStore();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formValues, setFormValues] = useState({
     name: currentUser?.user_metadata?.name || "",
@@ -60,78 +59,20 @@ const Profile = () => {
     try {
       setIsSaving(true);
       
-      // Update user metadata in Supabase Auth
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: { 
-          name: formValues.name,
-        }
-      });
+      // Use the createUser function from userStore instead of direct updates
+      await createUser(formValues.name, formValues.bio);
       
-      if (updateError) throw updateError;
-      
-      console.log("Checking for existing profile for user:", currentUser?.id);
-      
-      // Check if profile exists in database
-      const { data: existingProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', currentUser?.id)
-        .single();
-      
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error("Error checking for existing profile:", profileError);
-        throw profileError;
-      }
-      
-      console.log("Existing profile:", existingProfile);
-      
-      // If profile exists, update it, otherwise create a new one
-      if (existingProfile) {
-        console.log("Updating existing profile");
-        const { error: updateProfileError } = await supabase
+      // Update the username separately if needed
+      if (currentUser?.username !== formValues.username) {
+        const { error: usernameError } = await supabase
           .from('profiles')
-          .update({
-            name: formValues.name,
-            username: formValues.username,
-            bio: formValues.bio || null,
-            updated_at: new Date().toISOString(),
-          })
+          .update({ username: formValues.username })
           .eq('id', currentUser?.id);
           
-        if (updateProfileError) {
-          console.error("Error updating profile:", updateProfileError);
-          throw updateProfileError;
+        if (usernameError) {
+          console.error("Error updating username:", usernameError);
+          throw usernameError;
         }
-      } else {
-        console.log("Creating new profile");
-        const { error: insertProfileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: currentUser?.id,
-            name: formValues.name,
-            username: formValues.username,
-            bio: formValues.bio || null,
-          });
-          
-        if (insertProfileError) {
-          console.error("Error creating profile:", insertProfileError);
-          throw insertProfileError;
-        }
-      }
-      
-      // Update local user state
-      if (currentUser) {
-        console.log("Updating local user state");
-        const updatedUser = {
-          ...currentUser,
-          user_metadata: {
-            ...currentUser.user_metadata,
-            name: formValues.name,
-          },
-          username: formValues.username,
-          bio: formValues.bio,
-        };
-        setCurrentUser(updatedUser);
       }
       
       toast.success("Profile updated successfully!");

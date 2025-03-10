@@ -28,9 +28,9 @@ interface UserState {
   setCurrentUser: (user: ExtendedUser | null) => void;
   logout: () => void;
   createUser: (name: string, bio?: string) => Promise<void>;
-  getSquadRequestsReceived: () => SquadRequest[];
-  getAcceptedSquadMembers: () => UserProfile[];
-  getSquadMemberById: (id: string) => UserProfile | undefined;
+  getSquadRequestsReceived: () => Promise<SquadRequest[]>;
+  getAcceptedSquadMembers: () => Promise<UserProfile[]>;
+  getSquadMemberById: (id: string) => Promise<UserProfile | undefined>;
   respondToSquadRequest: (requestId: string, accept: boolean) => Promise<void>;
   searchUsers: (query: string) => Promise<UserProfile[]>;
   sendSquadRequest: (username: string) => Promise<boolean>;
@@ -53,61 +53,103 @@ export const useUserStore = create<UserState>()(
       
       createUser: async (name, bio) => {
         const currentUser = get().currentUser;
-        if (!currentUser) return;
-        
-        // Generate a username from name
-        const username = name.toLowerCase().replace(/\s+/g, '');
+        if (!currentUser) {
+          console.error("Cannot create/update user: No current user found");
+          throw new Error("No current user found");
+        }
         
         try {
+          console.log("Creating/updating user profile with name:", name, "and bio:", bio);
+          
+          // Generate a username from name if none exists
+          let username = currentUser.username;
+          if (!username) {
+            username = name.toLowerCase().replace(/\s+/g, '');
+          }
+          
           // Update user metadata in Supabase Auth
-          const { error: updateError } = await supabase.auth.updateUser({
+          const { data: userData, error: updateError } = await supabase.auth.updateUser({
             data: { name }
           });
           
-          if (updateError) throw updateError;
+          if (updateError) {
+            console.error("Error updating user metadata:", updateError);
+            throw updateError;
+          }
+          
+          console.log("Auth user metadata updated successfully");
           
           // Check if profile exists
-          const { data: existingProfile } = await supabase
+          const { data: existingProfile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', currentUser.id)
             .single();
             
+          if (profileError && profileError.code !== 'PGRST116') {
+            console.error("Error checking for existing profile:", profileError);
+            throw profileError;
+          }
+          
+          console.log("Existing profile check result:", existingProfile);
+          
+          // Prepare profile data
+          const profileData = {
+            name,
+            username,
+            bio: bio || null,
+            updated_at: new Date().toISOString()
+          };
+          
+          let result;
+          
           // If profile exists, update it, otherwise create new one
           if (existingProfile) {
-            await supabase
+            console.log("Updating existing profile with data:", profileData);
+            const { data, error } = await supabase
               .from('profiles')
-              .update({
-                name,
-                username,
-                bio: bio || null,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', currentUser.id);
+              .update(profileData)
+              .eq('id', currentUser.id)
+              .select();
+              
+            if (error) {
+              console.error("Error updating profile:", error);
+              throw error;
+            }
+            
+            result = data;
+            console.log("Profile updated successfully:", result);
           } else {
-            await supabase
+            console.log("Creating new profile with data:", { id: currentUser.id, ...profileData });
+            const { data, error } = await supabase
               .from('profiles')
               .insert({
                 id: currentUser.id,
-                name,
-                username,
-                bio: bio || null
-              });
+                ...profileData
+              })
+              .select();
+              
+            if (error) {
+              console.error("Error creating profile:", error);
+              throw error;
+            }
+            
+            result = data;
+            console.log("Profile created successfully:", result);
           }
           
           // Update the current user with the new data
-          const updatedUser = {
-            ...currentUser,
-            name,
-            username,
-            bio,
-            user_metadata: {
-              ...currentUser.user_metadata,
-              name
-            }
-          };
-          
-          set({ currentUser: updatedUser });
+          if (userData.user) {
+            const updatedUser = {
+              ...userData.user,
+              name,
+              username,
+              bio,
+            };
+            
+            console.log("Setting updated user to state:", updatedUser);
+            set({ currentUser: updatedUser });
+          }
         } catch (error) {
           console.error('Error creating/updating user profile:', error);
           throw error;
@@ -144,15 +186,15 @@ export const useUserStore = create<UserState>()(
         }
       },
       
-      getSquadRequestsReceived: () => {
+      getSquadRequestsReceived: async () => {
         return get().squadRequests;
       },
       
-      getAcceptedSquadMembers: () => {
+      getAcceptedSquadMembers: async () => {
         return get().squadMembers;
       },
       
-      getSquadMemberById: (id) => {
+      getSquadMemberById: async (id) => {
         const allMembers = get().squadMembers;
         return allMembers.find(member => member.id === id);
       },
