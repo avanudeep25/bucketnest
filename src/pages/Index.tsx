@@ -1,8 +1,7 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/layout/Navigation";
-import { Bookmark, Plus, Compass } from "lucide-react";
+import { Plus } from "lucide-react";
 
 const Index = () => {
   return (
@@ -44,8 +43,8 @@ const Index = () => {
                   <div className="p-3 md:p-6 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg animate-float">
                     <div className="aspect-video rounded-lg bg-gray-100 overflow-hidden">
                       <img
-                        src="https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1488&q=80"
-                        alt="Bucket List Adventures"
+                        src="https://images.unsplash.com/photo-1458668383970-8ddd3927deed"
+                        alt="Map Pin Location"
                         className="w-full h-full object-cover"
                       />
                     </div>

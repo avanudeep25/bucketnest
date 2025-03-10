@@ -1,21 +1,12 @@
-
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Bookmark, Plus, Home, List, LogOut, User } from "lucide-react";
+import { Quill, LogOut, User, Home, List, Plus } from "lucide-react";
 import { useUserStore } from "@/store/userStore";
 import { toast } from "sonner";
 
 const Navigation = () => {
   const { currentUser, logout } = useUserStore();
   const navigate = useNavigate();
-
-  const handleAddExperience = () => {
-    if (!currentUser) {
-      navigate("/login", { state: { from: "/create" } });
-    } else {
-      navigate("/create");
-    }
-  };
 
   const handleLogout = () => {
     logout();
@@ -27,7 +18,7 @@ const Navigation = () => {
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm border-b">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <Bookmark className="h-6 w-6 text-blue-500" />
+          <Quill className="h-6 w-6 text-blue-500" />
           <span className="font-bold text-xl">BucketNest</span>
         </Link>
 
@@ -42,29 +33,17 @@ const Navigation = () => {
 
         <div className="flex items-center gap-4">
           {currentUser ? (
-            <>
-              <Button variant="ghost" onClick={handleLogout} className="gap-2">
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Logout</span>
-              </Button>
-              <Button onClick={handleAddExperience} className="gap-2 bg-blue-500 hover:bg-blue-600">
-                <Plus className="h-4 w-4" />
-                <span>Add Experience</span>
-              </Button>
-            </>
+            <Button variant="ghost" onClick={handleLogout} className="gap-2">
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </Button>
           ) : (
-            <>
-              <Button variant="outline" asChild>
-                <Link to="/login">
-                  <User className="h-4 w-4 mr-2" />
-                  Login
-                </Link>
-              </Button>
-              <Button onClick={handleAddExperience} className="gap-2 bg-blue-500 hover:bg-blue-600">
-                <Plus className="h-4 w-4" />
-                <span>Add Experience</span>
-              </Button>
-            </>
+            <Button variant="outline" asChild>
+              <Link to="/login">
+                <User className="h-4 w-4 mr-2" />
+                Login
+              </Link>
+            </Button>
           )}
         </div>
       </div>

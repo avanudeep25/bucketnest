@@ -63,6 +63,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
+import LocationAutocomplete from "./LocationAutocomplete";
 
 const itemTypes: WishItemType[] = ['places', 'activities', 'products', 'other'];
 
@@ -106,6 +107,7 @@ const popularTags = [
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100),
+  destination: z.string().min(3, "Please select a destination"),
   description: z.string().optional(),
   itemType: z.enum(['places', 'activities', 'products', 'other']),
   activityType: z.string().optional(),
@@ -200,6 +202,7 @@ const WishlistForm = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
+      destination: "",
       description: "",
       itemType: "places",
       activityType: undefined,
@@ -350,9 +353,6 @@ const WishlistForm = () => {
     <Card>
       <CardHeader>
         <CardTitle>Add a New Experience</CardTitle>
-        <CardDescription>
-          Plan your next adventure, activity, or goal
-        </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -373,7 +373,27 @@ const WishlistForm = () => {
                 </FormItem>
               )}
             />
-            
+
+            <FormField
+              control={form.control}
+              name="destination"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Destination @ Location</FormLabel>
+                  <FormControl>
+                    <LocationAutocomplete
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Search and select your destination
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="description"
