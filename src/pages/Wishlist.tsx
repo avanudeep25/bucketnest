@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useEffect } from "react";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useUserStore } from "@/store/userStore";
@@ -238,7 +239,7 @@ const Wishlist = () => {
   ];
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative">
       <Navigation />
       
       <div className="container px-4 py-8 md:px-6 flex-1">
@@ -582,6 +583,20 @@ const Wishlist = () => {
             )}
           </div>
         )}
+      </div>
+      
+      {/* Floating Action Button for adding new experiences */}
+      <div className="fixed bottom-20 md:bottom-8 right-8 z-40">
+        <Button
+          size="lg"
+          className="rounded-full w-14 h-14 shadow-lg bg-wishwise-500 hover:bg-wishwise-600"
+          asChild
+        >
+          <Link to="/create">
+            <Plus className="h-6 w-6" />
+            <span className="sr-only">Add Experience</span>
+          </Link>
+        </Button>
       </div>
     </div>
   );
