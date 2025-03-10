@@ -28,9 +28,9 @@ interface UserState {
   setCurrentUser: (user: ExtendedUser | null) => void;
   logout: () => void;
   createUser: (name: string, bio?: string) => Promise<void>;
-  getSquadRequestsReceived: () => Promise<SquadRequest[]>;
-  getAcceptedSquadMembers: () => Promise<UserProfile[]>;
-  getSquadMemberById: (id: string) => Promise<UserProfile | undefined>;
+  getSquadRequestsReceived: () => SquadRequest[];
+  getAcceptedSquadMembers: () => UserProfile[];
+  getSquadMemberById: (id: string) => UserProfile | undefined;
   respondToSquadRequest: (requestId: string, accept: boolean) => Promise<void>;
   searchUsers: (query: string) => Promise<UserProfile[]>;
   sendSquadRequest: (username: string) => Promise<boolean>;
@@ -186,15 +186,16 @@ export const useUserStore = create<UserState>()(
         }
       },
       
-      getSquadRequestsReceived: async () => {
+      // These methods now return synchronous data from the store instead of Promises
+      getSquadRequestsReceived: () => {
         return get().squadRequests;
       },
       
-      getAcceptedSquadMembers: async () => {
+      getAcceptedSquadMembers: () => {
         return get().squadMembers;
       },
       
-      getSquadMemberById: async (id) => {
+      getSquadMemberById: (id) => {
         const allMembers = get().squadMembers;
         return allMembers.find(member => member.id === id);
       },

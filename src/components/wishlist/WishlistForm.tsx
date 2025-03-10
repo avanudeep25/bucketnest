@@ -195,7 +195,9 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
   const [selectedWeekDate, setSelectedWeekDate] = useState<Date | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const acceptedSquadMembers = getAcceptedSquadMembers();
+  // Get the accepted squad members synchronously
+  const acceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers());
+  const searchUsers = useUserStore((state) => state.searchUsers);
 
   const getWeekStringFromDate = (date: Date) => {
     const year = getYear(date);
@@ -926,3 +928,4 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
 };
 
 export default WishlistForm;
+

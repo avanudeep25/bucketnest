@@ -25,7 +25,7 @@ const CreateWishlistItem = () => {
   const currentUser = useUserStore((state) => state.currentUser);
   const wishlistItem = id ? useWishlistStore(state => state.getItem(id)) : undefined;
   
-  // Use the store functions directly without treating them as Promises
+  // Use the synchronous store functions directly
   const squadRequests = useUserStore((state) => state.getSquadRequestsReceived());
   const acceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers());
   const respondToSquadRequest = useUserStore((state) => state.respondToSquadRequest);
