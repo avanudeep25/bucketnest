@@ -5,7 +5,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { z } from "zod";
 import { format, parse, getWeek, getYear, getMonth, startOfWeek, endOfWeek, addDays } from "date-fns";
 import { CalendarIcon, X, UserPlus, CheckIcon, XIcon } from "lucide-react";
-import { ActivityType, BudgetRange, TravelType, TimeframeType, WishItemType } from "@/types/wishlist";
+import { ActivityType, BudgetRange, TravelType, TimeframeType, WishItemType, WishlistItem } from "@/types/wishlist";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useUserStore } from "@/store/userStore";
 import { Button } from "@/components/ui/button";
@@ -64,6 +64,10 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar";
 import LocationAutocomplete from "./LocationAutocomplete";
+
+interface WishlistFormProps {
+  editItem?: WishlistItem;
+}
 
 const itemTypes: WishItemType[] = ['places', 'activities', 'products', 'other'];
 
@@ -178,15 +182,16 @@ const generateWeekOptions = () => {
 const monthOptions = generateMonthOptions();
 const weekOptions = generateWeekOptions();
 
-const WishlistForm = () => {
+const WishlistForm = ({ editItem }: WishlistFormProps) => {
   const navigate = useNavigate();
   const addItem = useWishlistStore((state) => state.addItem);
+  const updateItem = useWishlistStore((state) => state.updateItem);
   const currentUser = useUserStore((state) => state.currentUser);
   const getAcceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>(editItem?.tags || []);
   const [customTag, setCustomTag] = useState("");
-  const [timePickerType, setTimePickerType] = useState<string | null>(null);
-  const [selectedSquadMembers, setSelectedSquadMembers] = useState<string[]>([]);
+  const [timePickerType, setTimePickerType] = useState<string | null>(editItem?.timeframeType || null);
+  const [selectedSquadMembers, setSelectedSquadMembers] = useState<string[]>(editItem?.squadMembers || []);
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [selectedWeekDate, setSelectedWeekDate] = useState<Date | undefined>(undefined);
 
@@ -207,22 +212,23 @@ const WishlistForm = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
-      destination: "",
-      description: "",
-      itemType: "places",
-      activityType: undefined,
-      travelType: undefined,
-      timeframeType: "Month",
-      targetDate: undefined,
-      targetWeek: undefined,
-      targetMonth: undefined,
-      budgetRange: undefined,
-      tags: [],
-      imageUrl: "",
-      link: "",
-      notes: "",
-      squadMembers: [],
+      title: editItem?.title || "",
+      destination: editItem?.destination || "",
+      description: editItem?.description || "",
+      itemType: editItem?.itemType || "places",
+      activityType: editItem?.activityType,
+      travelType: editItem?.travelType,
+      timeframeType: editItem?.timeframeType || "Month",
+      targetDate: editItem?.targetDate,
+      targetWeek: editItem?.targetWeek,
+      targetMonth: editItem?.targetMonth,
+      targetYear: editItem?.targetYear ? parseInt(editItem.targetYear) : undefined,
+      budgetRange: editItem?.budgetRange,
+      tags: editItem?.tags || [],
+      imageUrl: editItem?.imageUrl || "",
+      link: editItem?.link || "",
+      notes: editItem?.notes || "",
+      squadMembers: editItem?.squadMembers || [],
     },
   });
 
@@ -258,7 +264,7 @@ const WishlistForm = () => {
       return;
     }
     
-    const newItem = {
+    const formattedItem = {
       title: data.title,
       destination: data.destination,
       itemType: data.itemType as WishItemType,
@@ -279,15 +285,20 @@ const WishlistForm = () => {
     };
     
     try {
-      const id = await addItem(newItem);
-      
-      if (id) {
-        toast.success("Experience added successfully!");
-        navigate("/wishlist");
+      if (editItem?.id) {
+        await updateItem(editItem.id, formattedItem);
+        toast.success("Experience updated successfully!");
+      } else {
+        const id = await addItem(formattedItem);
+        
+        if (id) {
+          toast.success("Experience added successfully!");
+        }
       }
+      navigate("/wishlist");
     } catch (error) {
-      console.error("Error adding experience:", error);
-      toast.error("Failed to add experience. Please try again.");
+      console.error("Error with experience:", error);
+      toast.error(`Failed to ${editItem ? 'update' : 'add'} experience. Please try again.`);
     }
   };
 
@@ -900,7 +911,7 @@ const WishlistForm = () => {
                 Cancel
               </Button>
               <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
-                Add Experience
+                {editItem ? "Update Experience" : "Add Experience"}
               </Button>
             </div>
           </form>
