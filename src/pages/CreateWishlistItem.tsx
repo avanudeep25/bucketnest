@@ -14,12 +14,16 @@ import {
 } from "@/components/ui/dialog";
 import { PlusIcon, UsersIcon } from "lucide-react";
 import { toast } from "sonner";
+import { useParams } from "react-router-dom";
+import { useWishlistStore } from "@/store/wishlistStore";
 
 const CreateWishlistItem = () => {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const { id } = useParams(); // Get the ID from the URL if we're editing
   
   // Use useMemo to prevent infinite renders with Zustand selectors
   const currentUser = useUserStore((state) => state.currentUser);
+  const wishlistItem = id ? useWishlistStore(state => state.getItem(id)) : undefined;
   
   // Use useMemo to cache the result of getSquadRequestsReceived
   const squadRequests = useMemo(() => {
@@ -39,9 +43,11 @@ const CreateWishlistItem = () => {
         {currentUser && (
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Let's go...</h1>
+              <h1 className="text-3xl font-bold tracking-tight">
+                {id ? "Edit Experience" : "Let's go..."}
+              </h1>
               <p className="text-gray-500 mt-1">
-                Add your new upcoming experience
+                {id ? "Update your experience" : "Add your new upcoming experience"}
               </p>
             </div>
             
@@ -163,7 +169,7 @@ const CreateWishlistItem = () => {
           </div>
         )}
         
-        <WishlistForm />
+        <WishlistForm editItem={wishlistItem} />
       </div>
     </div>
   );

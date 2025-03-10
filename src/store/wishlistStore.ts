@@ -53,7 +53,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         return;
       }
       
-      // Transform the data to match our WishlistItem type
+      // Transform the data to match our WishlistItem type with proper type casting
       const wishlistItems: WishlistItem[] = data.map(item => {
         console.log(`Processing item ${item.id}:`, item);
         return {

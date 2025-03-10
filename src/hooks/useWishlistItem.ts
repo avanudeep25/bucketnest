@@ -35,6 +35,7 @@ export const useWishlistItem = (id: string | undefined) => {
       
       if (!data) return null;
       
+      // Explicitly cast itemType and other enum fields to ensure type compatibility
       return {
         id: data.id,
         title: data.title,
@@ -65,6 +66,7 @@ export const useWishlistItem = (id: string | undefined) => {
 
   useEffect(() => {
     let isMounted = true;
+    let timeoutId: number | undefined;
     
     const loadData = async () => {
       try {
@@ -74,21 +76,26 @@ export const useWishlistItem = (id: string | undefined) => {
           return;
         }
         
+        // First, check if the item exists in the store
         const wishlistItem = getItem(id);
         
         if (wishlistItem) {
+          console.log("Item found in store:", wishlistItem);
           setItem(wishlistItem);
           setError(null);
           setIsLoading(false);
           return;
         }
         
+        // If store has items but our target isn't there, and we've already tried fetching
         if (items.length > 0 && fetchAttempts > 0) {
           if (!directFetchAttempted) {
+            console.log("Items exist in store but not the one we need, trying direct fetch");
             setDirectFetchAttempted(true);
             const directItem = await fetchSingleItem();
             
             if (directItem && isMounted) {
+              console.log("Item fetched directly:", directItem);
               setItem(directItem);
               setError(null);
               setIsLoading(false);
@@ -96,6 +103,7 @@ export const useWishlistItem = (id: string | undefined) => {
             }
             
             if (isMounted) {
+              console.log(`Experience with ID ${id} not found after direct fetch`);
               setError(`Experience with ID ${id} not found`);
               toast.error("Experience not found");
               setIsLoading(false);
@@ -110,18 +118,24 @@ export const useWishlistItem = (id: string | undefined) => {
           return;
         }
         
+        // Try up to 3 times to fetch all items
         if (fetchAttempts < 3) {
+          console.log(`Attempt ${fetchAttempts + 1} to fetch all items`);
           await fetchItems();
           if (isMounted) {
             setFetchAttempts(prev => prev + 1);
           }
         } else {
+          // Last resort: direct fetch after 3 attempts
+          console.log("Maximum attempts reached, trying direct fetch");
           const directItem = await fetchSingleItem();
           
           if (directItem && isMounted) {
+            console.log("Successfully fetched item directly:", directItem);
             setItem(directItem);
             setError(null);
           } else if (isMounted) {
+            console.log("Failed to fetch item after all attempts");
             setError(`Experience with ID ${id} not found after multiple attempts`);
             toast.error("Experience not found");
           }
@@ -141,21 +155,23 @@ export const useWishlistItem = (id: string | undefined) => {
     
     loadData();
     
+    // Set a timeout to ensure we don't get stuck in loading forever
+    timeoutId = window.setTimeout(() => {
+      if (isMounted && isLoading) {
+        console.log("Loading timeout reached");
+        setIsLoading(false);
+        if (!item && !error) {
+          setError("Loading timeout reached. Please try refreshing the page.");
+          toast.error("Loading timeout reached");
+        }
+      }
+    }, 15000); // 15 seconds timeout
+    
     return () => {
       isMounted = false;
+      if (timeoutId) window.clearTimeout(timeoutId);
     };
-  }, [id, getItem, fetchItems, items, fetchAttempts, fetchSingleItem, directFetchAttempted]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-      if (!item && !error) {
-        setError("Loading timeout reached. Please try refreshing the page.");
-      }
-    }, 10000);
-    
-    return () => clearTimeout(timer);
-  }, [isLoading, item, error]);
+  }, [id, getItem, fetchItems, items, fetchAttempts, fetchSingleItem, directFetchAttempted, isLoading, item, error]);
 
   return { item, isLoading, error, fetchAttempts, storeError };
 };
