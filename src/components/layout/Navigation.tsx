@@ -1,11 +1,17 @@
 
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PenLine, LogOut, User, Home, List, Plus } from "lucide-react";
+import { PenLine, LogOut, User, Home, List, Plus, Settings } from "lucide-react";
 import { useUserStore } from "@/store/userStore";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navigation = () => {
   const { currentUser, setCurrentUser, logout } = useUserStore();
@@ -67,16 +73,24 @@ const Navigation = () => {
 
         <div className="flex items-center gap-4">
           {currentUser ? (
-            <>
-              <Button variant="ghost" onClick={() => navigate('/profile')} className="text-blue-500">
-                <User className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Profile</span>
-              </Button>
-              <Button variant="ghost" onClick={handleLogout} className="gap-2">
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Logout</span>
-              </Button>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  <span className="hidden sm:inline">Settings</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <User className="h-4 w-4 mr-2" />
+                  My Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Button variant="outline" asChild>
               <Link to="/login">
@@ -108,8 +122,8 @@ const Navigation = () => {
           </button>
           {currentUser && (
             <Link to="/profile" className="flex flex-col items-center justify-center text-xs font-medium">
-              <User className="h-5 w-5 mb-1 text-blue-500" />
-              Profile
+              <Settings className="h-5 w-5 mb-1 text-blue-500" />
+              Settings
             </Link>
           )}
         </div>

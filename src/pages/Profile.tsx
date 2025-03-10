@@ -12,7 +12,6 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -70,16 +69,26 @@ const Profile = () => {
       
       if (updateError) throw updateError;
       
+      console.log("Checking for existing profile for user:", currentUser?.id);
+      
       // Check if profile exists in database
-      const { data: existingProfile } = await supabase
+      const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', currentUser?.id)
         .single();
       
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error("Error checking for existing profile:", profileError);
+        throw profileError;
+      }
+      
+      console.log("Existing profile:", existingProfile);
+      
       // If profile exists, update it, otherwise create a new one
       if (existingProfile) {
-        const { error: profileError } = await supabase
+        console.log("Updating existing profile");
+        const { error: updateProfileError } = await supabase
           .from('profiles')
           .update({
             name: formValues.name,
@@ -89,9 +98,13 @@ const Profile = () => {
           })
           .eq('id', currentUser?.id);
           
-        if (profileError) throw profileError;
+        if (updateProfileError) {
+          console.error("Error updating profile:", updateProfileError);
+          throw updateProfileError;
+        }
       } else {
-        const { error: profileError } = await supabase
+        console.log("Creating new profile");
+        const { error: insertProfileError } = await supabase
           .from('profiles')
           .insert({
             id: currentUser?.id,
@@ -100,11 +113,15 @@ const Profile = () => {
             bio: formValues.bio || null,
           });
           
-        if (profileError) throw profileError;
+        if (insertProfileError) {
+          console.error("Error creating profile:", insertProfileError);
+          throw insertProfileError;
+        }
       }
       
       // Update local user state
       if (currentUser) {
+        console.log("Updating local user state");
         const updatedUser = {
           ...currentUser,
           user_metadata: {
@@ -147,66 +164,54 @@ const Profile = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="flex flex-col md:flex-row gap-6 items-start">
-                  <div className="flex flex-col items-center space-y-2">
-                    <Avatar className="w-24 h-24">
-                      <AvatarImage src={currentUser?.user_metadata?.avatar_url} />
-                      <AvatarFallback className="text-xl">
-                        {formValues.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <p className="text-sm text-muted-foreground">Profile Image</p>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input 
+                      id="email" 
+                      value={currentUser?.email || ""}
+                      disabled
+                      className="bg-gray-50"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Your email cannot be changed
+                    </p>
                   </div>
                   
-                  <div className="flex-1 space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input 
-                        id="email" 
-                        value={currentUser?.email || ""}
-                        disabled
-                        className="bg-gray-50"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Your email cannot be changed
-                      </p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Name</Label>
-                      <Input 
-                        id="name" 
-                        name="name"
-                        value={formValues.name}
-                        onChange={handleChange}
-                        placeholder="Your full name"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="username">Username</Label>
-                      <Input 
-                        id="username" 
-                        name="username"
-                        value={formValues.username}
-                        onChange={handleChange}
-                        placeholder="Choose a unique username"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="bio">Bio</Label>
-                      <Textarea 
-                        id="bio" 
-                        name="bio"
-                        value={formValues.bio}
-                        onChange={handleChange}
-                        placeholder="Tell others about yourself"
-                        className="min-h-[100px]"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input 
+                      id="name" 
+                      name="name"
+                      value={formValues.name}
+                      onChange={handleChange}
+                      placeholder="Your full name"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input 
+                      id="username" 
+                      name="username"
+                      value={formValues.username}
+                      onChange={handleChange}
+                      placeholder="Choose a unique username"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Textarea 
+                      id="bio" 
+                      name="bio"
+                      value={formValues.bio}
+                      onChange={handleChange}
+                      placeholder="Tell others about yourself"
+                      className="min-h-[100px]"
+                    />
                   </div>
                 </div>
                 
