@@ -21,10 +21,10 @@ const Index = () => {
                     Your Personal Bucket List Planner
                   </div>
                   <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-white">
-                    <span className="font-normal">BucketNest:</span> <span className="font-feelfree italic text-blue-300">Your Next Adventure Awaits!</span>
+                    <span className="font-normal">Your Next Adventure Awaits!</span>
                   </h1>
                   <p className="mt-4 text-gray-200 md:text-xl">
-                    From your next vacation to your next friends' outing, from tasting a new whisky to taking out your girlfriends—BucketNest keeps all your bucket-list dreams in one place.
+                    From your next vacation to your next friends' outing, from tasting a new whisky to fixing a place to meet your girlfriend—BucketNest keeps all your bucket-list items small to big all in one place.
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -111,4 +111,3 @@ const Index = () => {
 };
 
 export default Index;
-
