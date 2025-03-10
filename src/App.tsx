@@ -32,11 +32,13 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
+        console.log("RequireProfile: User is authenticated", session.user);
         setCurrentUser(session.user);
         // Fetch wishlist items when user is authenticated
         await fetchItems();
         setIsLoading(false);
       } else {
+        console.log("RequireProfile: No active session");
         setCurrentUser(null);
         setIsLoading(false);
       }
@@ -45,6 +47,7 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event, session?.user);
         if (session) {
           setCurrentUser(session.user);
           // Fetch wishlist items when auth state changes to logged in
@@ -98,6 +101,11 @@ const App = () => (
           <Route path="/wishlist/:id" element={
             <RequireProfile>
               <WishlistDetail />
+            </RequireProfile>
+          } />
+          <Route path="/wishlist/edit/:id" element={
+            <RequireProfile>
+              <CreateWishlistItem />
             </RequireProfile>
           } />
           <Route path="*" element={<NotFound />} />

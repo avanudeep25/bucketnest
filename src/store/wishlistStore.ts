@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 interface WishlistState {
   items: WishlistItem[];
   isLoading: boolean;
+  error: string | null;
   fetchItems: () => Promise<void>;
   addItem: (item: Omit<WishlistItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string | undefined>;
   updateItem: (id: string, item: Partial<WishlistItem>) => Promise<void>;
@@ -17,10 +18,11 @@ interface WishlistState {
 export const useWishlistStore = create<WishlistState>((set, get) => ({
   items: [],
   isLoading: false,
+  error: null,
   
   fetchItems: async () => {
     try {
-      set({ isLoading: true });
+      set({ isLoading: true, error: null });
       
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) {
@@ -38,7 +40,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       if (error) {
         console.error('Error fetching wishlist items:', error);
         toast.error('Failed to load your wishlist items');
-        set({ isLoading: false });
+        set({ isLoading: false, error: error.message });
         return;
       }
       
@@ -82,7 +84,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     } catch (error) {
       console.error('Exception caught in fetchItems:', error);
       toast.error('Failed to load your wishlist items');
-      set({ isLoading: false, items: [] });
+      set({ isLoading: false, items: [], error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
   
@@ -101,7 +103,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         item_type: newItem.itemType,
         activity_type: newItem.activityType,
         timeframe_type: newItem.timeframeType,
-        target_date: newItem.targetDate ? newItem.targetDate.toISOString() : null, // Convert Date to ISO string for Supabase
+        target_date: newItem.targetDate ? newItem.targetDate.toISOString() : null,
         target_week: newItem.targetWeek,
         target_month: newItem.targetMonth,
         target_year: newItem.targetYear,
@@ -217,6 +219,10 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
   },
   
   getItem: (id) => {
-    return get().items.find((item) => item.id === id);
+    const items = get().items;
+    console.log(`Looking for item with ID: ${id} among ${items.length} items`);
+    const foundItem = items.find((item) => item.id === id);
+    console.log('Found item:', foundItem);
+    return foundItem;
   },
 }));

@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { 
   ArrowLeft, CalendarIcon, MapPinIcon, DollarSignIcon, 
   UsersIcon, TagIcon, ExternalLinkIcon, PencilIcon, 
   TrashIcon, Calendar, MapPin, Tag, Activity, Package, 
-  ShoppingBag, Heart, AlertTriangle
+  ShoppingBag, Heart, AlertTriangle, RotateCw
 } from "lucide-react";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useUserStore } from "@/store/userStore";
@@ -30,6 +31,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 
 const WishlistDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,39 +41,115 @@ const WishlistDetail = () => {
   const fetchItems = useWishlistStore((state) => state.fetchItems);
   const items = useWishlistStore((state) => state.items);
   const isLoading = useWishlistStore((state) => state.isLoading);
+  const storeError = useWishlistStore((state) => state.error);
   const getSquadMemberById = useUserStore((state) => state.getSquadMemberById);
+  
   const [item, setItem] = useState(id ? getItem(id) : undefined);
   const [fetchAttempts, setFetchAttempts] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [directFetchAttempted, setDirectFetchAttempted] = useState(false);
+  
+  // Function to directly fetch a single item from Supabase
+  const fetchSingleItem = useCallback(async () => {
+    if (!id) return null;
+    
+    try {
+      console.log(`Directly fetching item with ID ${id} from Supabase`);
+      const { data, error } = await supabase
+        .from('wishlist_items')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching single item:", error);
+        return null;
+      }
+      
+      console.log("Directly fetched item:", data);
+      
+      if (!data) return null;
+      
+      // Transform the data to match our WishlistItem type
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description || undefined,
+        itemType: data.item_type,
+        activityType: data.activity_type || undefined,
+        timeframeType: data.timeframe_type || undefined,
+        targetDate: data.target_date ? new Date(data.target_date) : undefined,
+        targetWeek: data.target_week || undefined,
+        targetMonth: data.target_month || undefined,
+        targetYear: data.target_year || undefined,
+        travelType: data.travel_type || undefined,
+        budgetRange: data.budget_range || undefined,
+        destination: data.destination || undefined,
+        link: data.link || undefined,
+        notes: data.notes || undefined,
+        imageUrl: data.image_url || undefined,
+        tags: data.tags || undefined,
+        squadMembers: data.squad_members || undefined,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at)
+      };
+    } catch (err) {
+      console.error("Exception in fetchSingleItem:", err);
+      return null;
+    }
+  }, [id]);
 
   useEffect(() => {
     const loadData = async () => {
       console.log("WishlistDetail: Loading data, attempt", fetchAttempts + 1);
+      console.log("Current auth state:", await supabase.auth.getSession());
+      
       try {
-        if (items.length === 0) {
-          console.log("WishlistDetail: No items loaded yet, fetching items...");
-          await fetchItems();
-          setFetchAttempts(prev => prev + 1);
-        } else if (id) {
-          console.log(`WishlistDetail: Looking for item with id ${id}`);
-          const wishlistItem = getItem(id);
-          
-          if (wishlistItem) {
-            console.log("WishlistDetail: Item found", wishlistItem);
-            setItem(wishlistItem);
-            setError(null);
-          } else {
-            console.log(`WishlistDetail: Item with id ${id} not found`);
-            if (fetchAttempts >= 2) {
-              setError(`Experience with ID ${id} not found`);
-              toast.error("Experience not found");
-            } else {
-              // Try fetching items again in case they weren't loaded properly
-              await fetchItems();
-              setFetchAttempts(prev => prev + 1);
-            }
-          }
+        if (!id) {
+          setError("No item ID provided");
+          return;
         }
+        
+        // First try to get the item from the store
+        const wishlistItem = getItem(id);
+        
+        if (wishlistItem) {
+          console.log("WishlistDetail: Item found in store", wishlistItem);
+          setItem(wishlistItem);
+          setError(null);
+          return;
+        }
+        
+        // If not found in store but store has items, it might not exist
+        if (items.length > 0 && fetchAttempts > 0) {
+          console.log(`WishlistDetail: Item with id ${id} not found in store with ${items.length} items`);
+          
+          // Try to fetch directly from Supabase as a last resort
+          if (!directFetchAttempted) {
+            console.log("Attempting direct fetch from Supabase");
+            setDirectFetchAttempted(true);
+            const directItem = await fetchSingleItem();
+            
+            if (directItem) {
+              console.log("Successfully fetched item directly:", directItem);
+              setItem(directItem);
+              setError(null);
+              return;
+            }
+            
+            setError(`Experience with ID ${id} not found`);
+            toast.error("Experience not found");
+            return;
+          }
+          
+          setError(`Experience with ID ${id} not found`);
+          return;
+        }
+        
+        // If no items in store or first attempt, fetch all items
+        console.log("WishlistDetail: No items loaded yet or first attempt, fetching items...");
+        await fetchItems();
+        setFetchAttempts(prev => prev + 1);
       } catch (err) {
         console.error("Error in WishlistDetail loadData:", err);
         setError("Failed to load experience");
@@ -80,7 +158,7 @@ const WishlistDetail = () => {
     };
     
     loadData();
-  }, [id, getItem, fetchItems, items, fetchAttempts]);
+  }, [id, getItem, fetchItems, items, fetchAttempts, fetchSingleItem, directFetchAttempted]);
 
   const handleDelete = async () => {
     if (id) {
@@ -135,7 +213,9 @@ const WishlistDetail = () => {
         <Navigation />
         <div className="container px-4 py-8">
           <div className="text-center py-12">
+            <RotateCw className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
             <h2 className="text-2xl font-semibold">Loading experience...</h2>
+            <p className="text-gray-500 mt-2">Attempt {fetchAttempts + 1} of 3</p>
           </div>
         </div>
       </div>
@@ -147,6 +227,15 @@ const WishlistDetail = () => {
       <div className="min-h-screen flex flex-col">
         <Navigation />
         <div className="container px-4 py-8">
+          <Button
+            variant="ghost"
+            className="mb-4 pl-0 flex items-center gap-1 hover:bg-transparent hover:text-blue-600"
+            onClick={() => navigate("/wishlist")}
+          >
+            <ArrowLeft size={18} />
+            <span>Back to My BucketNest</span>
+          </Button>
+          
           <div className="text-center py-12">
             <AlertTriangle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
             <h2 className="text-2xl font-semibold mb-4">
@@ -155,6 +244,11 @@ const WishlistDetail = () => {
             <p className="text-gray-500 mb-6">
               The experience you're looking for could not be found or there was an error loading it.
             </p>
+            {storeError && (
+              <p className="text-red-500 mb-6">
+                Error details: {storeError}
+              </p>
+            )}
             <Button className="mt-4" onClick={() => navigate("/wishlist")}>
               Go to My BucketNest
             </Button>
