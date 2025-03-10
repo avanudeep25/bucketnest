@@ -185,6 +185,7 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
   const addItem = useWishlistStore((state) => state.addItem);
   const updateItem = useWishlistStore((state) => state.updateItem);
   const currentUser = useUserStore((state) => state.currentUser);
+  const getAcceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers);
   const searchUsers = useUserStore((state) => state.searchUsers);
   const [selectedTags, setSelectedTags] = useState<string[]>(editItem?.tags || []);
   const [customTag, setCustomTag] = useState("");
@@ -193,8 +194,25 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [selectedWeekDate, setSelectedWeekDate] = useState<Date | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadedSquadMembers, setLoadedSquadMembers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const acceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers());
+  useEffect(() => {
+    const loadSquadMembers = async () => {
+      try {
+        setIsLoading(true);
+        const members = await getAcceptedSquadMembers();
+        setLoadedSquadMembers(members || []);
+      } catch (error) {
+        console.error("Error loading squad members:", error);
+        setLoadedSquadMembers([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadSquadMembers();
+  }, [getAcceptedSquadMembers]);
 
   const getWeekStringFromDate = (date: Date) => {
     const year = getYear(date);
@@ -593,7 +611,7 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
                     <div className="flex flex-wrap gap-2">
                       {selectedSquadMembers.length > 0 ? (
                         selectedSquadMembers.map((memberId) => {
-                          const member = acceptedSquadMembers.find(m => m.id === memberId);
+                          const member = loadedSquadMembers.find(m => m.id === memberId);
                           return (
                             <Badge 
                               key={memberId} 
@@ -618,7 +636,7 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
                           type="button" 
                           variant="outline" 
                           className="flex items-center gap-2 mt-2"
-                          disabled={acceptedSquadMembers.length === 0}
+                          disabled={loadedSquadMembers.length === 0}
                         >
                           <UserPlus className="h-4 w-4" />
                           Add Squad Members
@@ -633,8 +651,12 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
                         </DialogHeader>
                         
                         <div className="space-y-4 mt-4 max-h-[300px] overflow-y-auto">
-                          {acceptedSquadMembers.length > 0 ? (
-                            acceptedSquadMembers.map((member) => (
+                          {isLoading ? (
+                            <div className="text-center p-4 text-muted-foreground">
+                              Loading squad members...
+                            </div>
+                          ) : loadedSquadMembers.length > 0 ? (
+                            loadedSquadMembers.map((member) => (
                               <div 
                                 key={member.id} 
                                 className={cn(

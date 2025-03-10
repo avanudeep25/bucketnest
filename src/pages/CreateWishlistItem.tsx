@@ -25,11 +25,26 @@ const CreateWishlistItem = () => {
   const currentUser = useUserStore((state) => state.currentUser);
   const wishlistItem = id ? useWishlistStore(state => state.getItem(id)) : undefined;
   
-  // Use the synchronous store functions directly
+  // Get the async squad data
   const squadRequests = useUserStore((state) => state.getSquadRequestsReceived());
   const acceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers());
   const respondToSquadRequest = useUserStore((state) => state.respondToSquadRequest);
   const getSquadMemberById = useUserStore((state) => state.getSquadMemberById);
+  
+  // Use state to track the loaded async values
+  const [requestsCount, setRequestsCount] = useState(0);
+  
+  // Load the requests count when the component mounts
+  useMemo(async () => {
+    if(squadRequests) {
+      try {
+        const requests = await squadRequests;
+        setRequestsCount(requests.length);
+      } catch (error) {
+        console.error("Error loading squad requests:", error);
+      }
+    }
+  }, [squadRequests]);
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -43,7 +58,7 @@ const CreateWishlistItem = () => {
                 {id ? "Edit Experience" : "Let's go..."}
               </h1>
               <p className="text-gray-500 mt-1">
-                {id ? "Update your experience" : "Add your new upcoming experience"}
+                {id ? "Update your experience" : "Add your next Bucket list item"}
               </p>
             </div>
             
@@ -52,9 +67,9 @@ const CreateWishlistItem = () => {
                 <Button variant="outline" size="sm" className="flex items-center gap-1">
                   <UsersIcon className="h-4 w-4" />
                   <span>Your Squad</span>
-                  {squadRequests.length > 0 && (
+                  {requestsCount > 0 && (
                     <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ml-1">
-                      {squadRequests.length}
+                      {requestsCount}
                     </span>
                   )}
                 </Button>
@@ -87,44 +102,58 @@ const CreateWishlistItem = () => {
                   <div className="border rounded-md p-4">
                     <div className="flex justify-between items-center mb-3">
                       <h3 className="font-medium">Squad Requests</h3>
-                      <span className="text-sm text-gray-500">{squadRequests.length} pending</span>
+                      <span className="text-sm text-gray-500">{requestsCount} pending</span>
                     </div>
                     
-                    {squadRequests.length > 0 ? (
+                    {requestsCount > 0 ? (
                       <div className="space-y-3">
-                        {squadRequests.map(request => {
-                          // Get the requester info directly using the updated function
-                          const requester = getSquadMemberById(request.requesterId);
-                          return (
-                            <div key={request.id} className="flex justify-between items-center border-b pb-2">
-                              <div>
-                                <div className="font-medium">{requester?.name || "Unknown User"}</div>
-                                <div className="text-xs text-gray-500">@{requester?.username}</div>
+                        {squadRequests.then(requests => 
+                          requests.map(request => {
+                            // Handle async getSquadMemberById
+                            const [requester, setRequester] = useState(null);
+                            
+                            useMemo(async () => {
+                              if(getSquadMemberById) {
+                                try {
+                                  const member = await getSquadMemberById(request.requesterId);
+                                  setRequester(member);
+                                } catch (error) {
+                                  console.error("Error loading squad member:", error);
+                                }
+                              }
+                            }, [getSquadMemberById, request.requesterId]);
+                            
+                            return (
+                              <div key={request.id} className="flex justify-between items-center border-b pb-2">
+                                <div>
+                                  <div className="font-medium">{requester?.name || "Unknown User"}</div>
+                                  <div className="text-xs text-gray-500">@{requester?.username}</div>
+                                </div>
+                                <div className="space-x-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={async () => {
+                                      await respondToSquadRequest(request.id, false);
+                                      toast.info("Request declined");
+                                    }}
+                                  >
+                                    Decline
+                                  </Button>
+                                  <Button 
+                                    size="sm"
+                                    onClick={async () => {
+                                      await respondToSquadRequest(request.id, true);
+                                      toast.success("Added to your squad!");
+                                    }}
+                                  >
+                                    Accept
+                                  </Button>
+                                </div>
                               </div>
-                              <div className="space-x-2">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={async () => {
-                                    await respondToSquadRequest(request.id, false);
-                                    toast.info("Request declined");
-                                  }}
-                                >
-                                  Decline
-                                </Button>
-                                <Button 
-                                  size="sm"
-                                  onClick={async () => {
-                                    await respondToSquadRequest(request.id, true);
-                                    toast.success("Added to your squad!");
-                                  }}
-                                >
-                                  Accept
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })
+                        )}
                       </div>
                     ) : (
                       <div className="text-sm text-gray-500 text-center py-2">
@@ -142,7 +171,11 @@ const CreateWishlistItem = () => {
                       </Button>
                     </div>
                     
-                    {acceptedSquadMembers.length > 0 ? (
+                    {acceptedSquadMembers instanceof Promise ? (
+                      <div className="text-sm text-gray-500 text-center py-2">
+                        Loading squad members...
+                      </div>
+                    ) : acceptedSquadMembers.length > 0 ? (
                       <div className="space-y-2">
                         {acceptedSquadMembers.map(member => (
                           <div key={member.id} className="flex justify-between items-center border-b pb-2">

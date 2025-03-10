@@ -76,11 +76,17 @@ const Profile = () => {
       }
       
       toast.success("Profile updated successfully!");
-      setIsSaving(false); // Ensure isSaving is reset even on success
+      
+      // Make sure to reset saving state even on success
+      setTimeout(() => {
+        setIsSaving(false);
+        navigate('/wishlist');
+      }, 500);
+      
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile. Please try again.");
-      setIsSaving(false); // Ensure isSaving is reset on error
+      setIsSaving(false);
     }
   };
 
@@ -170,7 +176,7 @@ const Profile = () => {
                     disabled={isSaving}
                   >
                     {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Changes
+                    {isSaving ? 'Saving...' : 'Save Changes'}
                   </Button>
                 </div>
               </form>
