@@ -186,6 +186,7 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
   const updateItem = useWishlistStore((state) => state.updateItem);
   const currentUser = useUserStore((state) => state.currentUser);
   const getAcceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers);
+  const searchUsers = useUserStore((state) => state.searchUsers);
   const [selectedTags, setSelectedTags] = useState<string[]>(editItem?.tags || []);
   const [customTag, setCustomTag] = useState("");
   const [timePickerType, setTimePickerType] = useState<string | null>(editItem?.timeframeType || null);
@@ -194,7 +195,7 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
   const [selectedWeekDate, setSelectedWeekDate] = useState<Date | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const acceptedSquadMembers = useMemo(() => getAcceptedSquadMembers(), [getAcceptedSquadMembers]);
+  const acceptedSquadMembers = getAcceptedSquadMembers();
 
   const getWeekStringFromDate = (date: Date) => {
     const year = getYear(date);

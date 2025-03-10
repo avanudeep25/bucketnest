@@ -23,21 +23,26 @@ export interface SquadRequest {
 
 interface UserState {
   currentUser: ExtendedUser | null;
+  squadRequests: SquadRequest[];
+  squadMembers: UserProfile[];
   setCurrentUser: (user: ExtendedUser | null) => void;
   logout: () => void;
   createUser: (name: string, bio?: string) => Promise<void>;
-  getSquadRequestsReceived: () => Promise<SquadRequest[]>;
-  getAcceptedSquadMembers: () => Promise<UserProfile[]>;
-  getSquadMemberById: (id: string) => Promise<UserProfile | undefined>;
+  getSquadRequestsReceived: () => SquadRequest[];
+  getAcceptedSquadMembers: () => UserProfile[];
+  getSquadMemberById: (id: string) => UserProfile | undefined;
   respondToSquadRequest: (requestId: string, accept: boolean) => Promise<void>;
   searchUsers: (query: string) => Promise<UserProfile[]>;
   sendSquadRequest: (username: string) => Promise<boolean>;
+  fetchSquadData: () => Promise<void>;
 }
 
 export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
       currentUser: null,
+      squadRequests: [],
+      squadMembers: [],
       
       setCurrentUser: (user) => set({ currentUser: user }),
       
@@ -109,61 +114,47 @@ export const useUserStore = create<UserState>()(
         }
       },
       
-      getSquadRequestsReceived: async () => {
-        const currentUser = get().currentUser;
-        if (!currentUser) return [];
-        
+      fetchSquadData: async () => {
         try {
           // In a real implementation, this would fetch from the database
-          // For now, return mock data
-          return [];
+          // For now, set mock data
+          set({
+            squadRequests: [],
+            squadMembers: [
+              {
+                id: '123',
+                name: 'Jane Doe',
+                username: 'janedoe',
+                avatarUrl: '',
+                createdAt: new Date(),
+                updatedAt: new Date()
+              },
+              {
+                id: '789',
+                name: 'John Smith',
+                username: 'johnsmith',
+                avatarUrl: '',
+                createdAt: new Date(),
+                updatedAt: new Date()
+              }
+            ]
+          });
         } catch (error) {
-          console.error('Error fetching squad requests:', error);
-          return [];
+          console.error('Error fetching squad data:', error);
         }
       },
       
-      getAcceptedSquadMembers: async () => {
-        const currentUser = get().currentUser;
-        if (!currentUser) return [];
-        
-        try {
-          // In a real implementation, this would fetch from the database
-          // For now, return the mock data
-          return [
-            {
-              id: '123',
-              name: 'Jane Doe',
-              username: 'janedoe',
-              avatarUrl: '',
-              createdAt: new Date(),
-              updatedAt: new Date()
-            },
-            {
-              id: '789',
-              name: 'John Smith',
-              username: 'johnsmith',
-              avatarUrl: '',
-              createdAt: new Date(),
-              updatedAt: new Date()
-            }
-          ];
-        } catch (error) {
-          console.error('Error fetching squad members:', error);
-          return [];
-        }
+      getSquadRequestsReceived: () => {
+        return get().squadRequests;
       },
       
-      getSquadMemberById: async (id) => {
-        try {
-          // In a real implementation, this would fetch from the database
-          // For now, search through the mock data
-          const allMembers = await get().getAcceptedSquadMembers();
-          return allMembers.find(member => member.id === id);
-        } catch (error) {
-          console.error('Error fetching squad member by ID:', error);
-          return undefined;
-        }
+      getAcceptedSquadMembers: () => {
+        return get().squadMembers;
+      },
+      
+      getSquadMemberById: (id) => {
+        const allMembers = get().squadMembers;
+        return allMembers.find(member => member.id === id);
       },
       
       respondToSquadRequest: async (requestId, accept) => {
@@ -172,6 +163,9 @@ export const useUserStore = create<UserState>()(
           console.log(`Squad request ${requestId} ${accept ? 'accepted' : 'rejected'}`);
           
           // In a real implementation, this would update the database
+          // For now, filter out the request from the local state
+          const updatedRequests = get().squadRequests.filter(request => request.id !== requestId);
+          set({ squadRequests: updatedRequests });
         } catch (error) {
           console.error('Error responding to squad request:', error);
           throw error;

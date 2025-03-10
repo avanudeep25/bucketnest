@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from "react";
 import WishlistForm from "@/components/wishlist/WishlistForm";
 import Navigation from "@/components/layout/Navigation";
@@ -24,15 +25,11 @@ const CreateWishlistItem = () => {
   const currentUser = useUserStore((state) => state.currentUser);
   const wishlistItem = id ? useWishlistStore(state => state.getItem(id)) : undefined;
   
-  // Use useMemo to cache the result of getSquadRequestsReceived
-  const squadRequests = useMemo(() => {
-    return useUserStore.getState().getSquadRequestsReceived();
-  }, [currentUser?.id]); // Re-compute only when currentUser changes
-  
-  // Cache accepted squad members
-  const acceptedSquadMembers = useMemo(() => {
-    return useUserStore.getState().getAcceptedSquadMembers();
-  }, [currentUser?.id]); // Re-compute only when currentUser changes
+  // Use the store functions directly without treating them as Promises
+  const squadRequests = useUserStore((state) => state.getSquadRequestsReceived());
+  const acceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers());
+  const respondToSquadRequest = useUserStore((state) => state.respondToSquadRequest);
+  const getSquadMemberById = useUserStore((state) => state.getSquadMemberById);
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -96,8 +93,8 @@ const CreateWishlistItem = () => {
                     {squadRequests.length > 0 ? (
                       <div className="space-y-3">
                         {squadRequests.map(request => {
-                          // Get the requester info safely using a memoized approach
-                          const requester = useUserStore.getState().getSquadMemberById(request.requesterId);
+                          // Get the requester info directly using the updated function
+                          const requester = getSquadMemberById(request.requesterId);
                           return (
                             <div key={request.id} className="flex justify-between items-center border-b pb-2">
                               <div>
@@ -108,8 +105,8 @@ const CreateWishlistItem = () => {
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => {
-                                    useUserStore.getState().respondToSquadRequest(request.id, false);
+                                  onClick={async () => {
+                                    await respondToSquadRequest(request.id, false);
                                     toast.info("Request declined");
                                   }}
                                 >
@@ -117,8 +114,8 @@ const CreateWishlistItem = () => {
                                 </Button>
                                 <Button 
                                   size="sm"
-                                  onClick={() => {
-                                    useUserStore.getState().respondToSquadRequest(request.id, true);
+                                  onClick={async () => {
+                                    await respondToSquadRequest(request.id, true);
                                     toast.success("Added to your squad!");
                                   }}
                                 >

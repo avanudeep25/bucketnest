@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -26,7 +27,7 @@ const queryClient = new QueryClient({
 });
 
 const RequireProfile = ({ children }: { children: React.ReactNode }) => {
-  const { currentUser, setCurrentUser } = useUserStore();
+  const { currentUser, setCurrentUser, fetchSquadData } = useUserStore();
   const { fetchItems } = useWishlistStore();
   const location = useLocation();
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
           console.log("RequireProfile: User is authenticated", session.user);
           setCurrentUser(session.user);
           await fetchItems();
+          await fetchSquadData();
           setIsLoading(false);
         } else {
           console.log("RequireProfile: No active session");
@@ -61,6 +63,7 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
         if (session) {
           setCurrentUser(session.user);
           await fetchItems();
+          await fetchSquadData();
         } else {
           setCurrentUser(null);
         }
@@ -72,7 +75,7 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [setCurrentUser, navigate, fetchItems]);
+  }, [setCurrentUser, navigate, fetchItems, fetchSquadData]);
   
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;

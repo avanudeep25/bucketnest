@@ -53,7 +53,8 @@ const Wishlist = () => {
   const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   
-  const squadMembers = useMemo(() => getAcceptedSquadMembers(), [getAcceptedSquadMembers]);
+  // Get squad members directly from the store
+  const squadMembers = getAcceptedSquadMembers();
   
   useEffect(() => {
     fetchItems();
