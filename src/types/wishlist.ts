@@ -31,7 +31,7 @@ export interface WishlistItem {
   targetDate?: Date;
   targetWeek?: string;
   targetMonth?: string;
-  targetYear?: number;
+  targetYear?: string; // Changed from number to string to match DB
   budgetRange?: BudgetRange;
   link?: string;
   notes?: string;

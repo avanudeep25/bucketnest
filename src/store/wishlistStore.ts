@@ -42,19 +42,19 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       }
       
       // Transform the data to match our WishlistItem type
-      const wishlistItems = data.map(item => ({
+      const wishlistItems: WishlistItem[] = data.map(item => ({
         id: item.id,
         title: item.title,
         description: item.description || undefined,
-        itemType: item.item_type,
+        itemType: item.item_type as WishlistItem['itemType'], // Cast to correct type
         activityType: item.activity_type || undefined,
-        timeframeType: item.timeframe_type || undefined,
+        timeframeType: item.timeframe_type as WishlistItem['timeframeType'] || undefined, // Cast to correct type
         targetDate: item.target_date ? new Date(item.target_date) : undefined,
         targetWeek: item.target_week || undefined,
         targetMonth: item.target_month || undefined,
         targetYear: item.target_year || undefined,
-        travelType: item.travel_type || undefined,
-        budgetRange: item.budget_range || undefined,
+        travelType: item.travel_type as WishlistItem['travelType'] || undefined, // Cast to correct type
+        budgetRange: item.budget_range as WishlistItem['budgetRange'] || undefined, // Cast to correct type
         destination: item.destination || undefined,
         link: item.link || undefined,
         notes: item.notes || undefined,
@@ -88,7 +88,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         item_type: newItem.itemType,
         activity_type: newItem.activityType,
         timeframe_type: newItem.timeframeType,
-        target_date: newItem.targetDate,
+        target_date: newItem.targetDate ? newItem.targetDate.toISOString() : null, // Convert Date to ISO string for Supabase
         target_week: newItem.targetWeek,
         target_month: newItem.targetMonth,
         target_year: newItem.targetYear,
@@ -140,7 +140,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       if (updatedItem.itemType !== undefined) dbItem.item_type = updatedItem.itemType;
       if (updatedItem.activityType !== undefined) dbItem.activity_type = updatedItem.activityType;
       if (updatedItem.timeframeType !== undefined) dbItem.timeframe_type = updatedItem.timeframeType;
-      if (updatedItem.targetDate !== undefined) dbItem.target_date = updatedItem.targetDate;
+      if (updatedItem.targetDate !== undefined) dbItem.target_date = updatedItem.targetDate ? updatedItem.targetDate.toISOString() : null;
       if (updatedItem.targetWeek !== undefined) dbItem.target_week = updatedItem.targetWeek;
       if (updatedItem.targetMonth !== undefined) dbItem.target_month = updatedItem.targetMonth;
       if (updatedItem.targetYear !== undefined) dbItem.target_year = updatedItem.targetYear;
