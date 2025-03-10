@@ -1,5 +1,5 @@
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import WishlistForm from "@/components/wishlist/WishlistForm";
 import Navigation from "@/components/layout/Navigation";
 import { useUserStore } from "@/store/userStore";
@@ -16,37 +16,116 @@ import { PlusIcon, UsersIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 import { useWishlistStore } from "@/store/wishlistStore";
+import { SquadRequest, ExtendedUser } from "@/store/userStore";
+import { UserProfile } from "@/types/wishlist";
 
 const CreateWishlistItem = () => {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const { id } = useParams(); // Get the ID from the URL if we're editing
   
-  // Use useMemo to prevent infinite renders with Zustand selectors
+  // Get store values
   const currentUser = useUserStore((state) => state.currentUser);
   const wishlistItem = id ? useWishlistStore(state => state.getItem(id)) : undefined;
   
-  // Get the squad data
-  const squadRequests = useUserStore((state) => state.getSquadRequestsReceived());
-  const acceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers());
+  // Get the squad data functions
+  const getSquadRequestsReceived = useUserStore((state) => state.getSquadRequestsReceived);
+  const getAcceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers);
   const respondToSquadRequest = useUserStore((state) => state.respondToSquadRequest);
   const getSquadMemberById = useUserStore((state) => state.getSquadMemberById);
   
-  // Use state to track the loaded async values
+  // Use state to track loaded values
   const [requestsCount, setRequestsCount] = useState(0);
-  const [requests, setRequests] = useState([]);
+  const [squadRequests, setSquadRequests] = useState<SquadRequest[]>([]);
+  const [squadMembers, setSquadMembers] = useState<UserProfile[]>([]);
   
-  // Load the requests count when the component mounts
+  // Load the squad data when the component mounts
   useEffect(() => {
-    // Handle the squadRequests data
-    if (Array.isArray(squadRequests)) {
-      setRequestsCount(squadRequests.length);
-      setRequests(squadRequests);
-    } else {
-      // Set defaults if squadRequests is not an array
-      setRequestsCount(0);
-      setRequests([]);
-    }
-  }, [squadRequests]);
+    const loadData = () => {
+      try {
+        // Get squad requests and set state
+        const requests = getSquadRequestsReceived();
+        if (Array.isArray(requests)) {
+          setSquadRequests(requests);
+          setRequestsCount(requests.length);
+        }
+        
+        // Get squad members and set state
+        const members = getAcceptedSquadMembers();
+        if (Array.isArray(members)) {
+          setSquadMembers(members);
+        }
+      } catch (error) {
+        console.error("Error loading squad data:", error);
+        setSquadRequests([]);
+        setSquadMembers([]);
+      }
+    };
+    
+    loadData();
+  }, [getSquadRequestsReceived, getAcceptedSquadMembers]);
+  
+  // Component to display a squad request
+  const SquadRequestItem = ({ request }: { request: SquadRequest }) => {
+    const [requester, setRequester] = useState<UserProfile | null>(null);
+    
+    useEffect(() => {
+      const loadRequester = async () => {
+        try {
+          const member = getSquadMemberById(request.requesterId);
+          if (member) {
+            setRequester(member);
+          }
+        } catch (error) {
+          console.error("Error loading squad member:", error);
+        }
+      };
+      
+      loadRequester();
+    }, [request.requesterId]);
+    
+    return (
+      <div className="flex justify-between items-center border-b pb-2">
+        <div>
+          <div className="font-medium">{requester?.name || "Unknown User"}</div>
+          <div className="text-xs text-gray-500">@{requester?.username}</div>
+        </div>
+        <div className="space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={async () => {
+              await respondToSquadRequest(request.id, false);
+              toast.info("Request declined");
+              
+              // Update the local state
+              setSquadRequests(prev => prev.filter(r => r.id !== request.id));
+              setRequestsCount(prev => prev - 1);
+            }}
+          >
+            Decline
+          </Button>
+          <Button 
+            size="sm"
+            onClick={async () => {
+              await respondToSquadRequest(request.id, true);
+              toast.success("Added to your squad!");
+              
+              // Update the local state
+              setSquadRequests(prev => prev.filter(r => r.id !== request.id));
+              setRequestsCount(prev => prev - 1);
+              
+              // Add member to squad members if available
+              if (requester) {
+                setSquadMembers(prev => [...prev, requester]);
+              }
+            }}
+          >
+            Accept
+          </Button>
+        </div>
+      </div>
+    );
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -109,54 +188,9 @@ const CreateWishlistItem = () => {
                     
                     {requestsCount > 0 ? (
                       <div className="space-y-3">
-                        {requests.map(request => {
-                          const [requester, setRequester] = useState(null);
-                          
-                          useEffect(() => {
-                            if(getSquadMemberById) {
-                              const loadMember = async () => {
-                                try {
-                                  const member = await getSquadMemberById(request.requesterId);
-                                  setRequester(member);
-                                } catch (error) {
-                                  console.error("Error loading squad member:", error);
-                                }
-                              };
-                              
-                              loadMember();
-                            }
-                          }, [getSquadMemberById, request.requesterId]);
-                          
-                          return (
-                            <div key={request.id} className="flex justify-between items-center border-b pb-2">
-                              <div>
-                                <div className="font-medium">{requester?.name || "Unknown User"}</div>
-                                <div className="text-xs text-gray-500">@{requester?.username}</div>
-                              </div>
-                              <div className="space-x-2">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={async () => {
-                                    await respondToSquadRequest(request.id, false);
-                                    toast.info("Request declined");
-                                  }}
-                                >
-                                  Decline
-                                </Button>
-                                <Button 
-                                  size="sm"
-                                  onClick={async () => {
-                                    await respondToSquadRequest(request.id, true);
-                                    toast.success("Added to your squad!");
-                                  }}
-                                >
-                                  Accept
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
+                        {squadRequests.map(request => (
+                          <SquadRequestItem key={request.id} request={request} />
+                        ))}
                       </div>
                     ) : (
                       <div className="text-sm text-gray-500 text-center py-2">
@@ -174,26 +208,20 @@ const CreateWishlistItem = () => {
                       </Button>
                     </div>
                     
-                    {Array.isArray(acceptedSquadMembers) ? (
-                      acceptedSquadMembers.length > 0 ? (
-                        <div className="space-y-2">
-                          {acceptedSquadMembers.map(member => (
-                            <div key={member.id} className="flex justify-between items-center border-b pb-2">
-                              <div>
-                                <div className="font-medium">{member.name}</div>
-                                <div className="text-xs text-gray-500">@{member.username}</div>
-                              </div>
+                    {squadMembers.length > 0 ? (
+                      <div className="space-y-2">
+                        {squadMembers.map(member => (
+                          <div key={member.id} className="flex justify-between items-center border-b pb-2">
+                            <div>
+                              <div className="font-medium">{member.name}</div>
+                              <div className="text-xs text-gray-500">@{member.username}</div>
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-sm text-gray-500 text-center py-2">
-                          You haven't added any squad members yet
-                        </div>
-                      )
+                          </div>
+                        ))}
+                      </div>
                     ) : (
                       <div className="text-sm text-gray-500 text-center py-2">
-                        Loading squad members...
+                        You haven't added any squad members yet
                       </div>
                     )}
                   </div>

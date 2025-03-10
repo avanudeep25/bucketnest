@@ -27,7 +27,7 @@ const queryClient = new QueryClient({
 });
 
 const RequireProfile = ({ children }: { children: React.ReactNode }) => {
-  const { currentUser, setCurrentUser, fetchSquadData } = useUserStore();
+  const { currentUser, setCurrentUser, fetchSquadData, ensureUserHasProfile } = useUserStore();
   const { fetchItems } = useWishlistStore();
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,7 +41,14 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
         
         if (session) {
           console.log("RequireProfile: User is authenticated", session.user);
+          
+          // First set the user in the store (basic auth data)
           setCurrentUser(session.user);
+          
+          // Then ensure the user has a complete profile with username
+          await ensureUserHasProfile(session.user);
+          
+          // Then fetch other data
           await fetchItems();
           await fetchSquadData();
           setIsLoading(false);
@@ -61,7 +68,15 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
       async (event, session) => {
         console.log("Auth state changed:", event, session?.user);
         if (session) {
+          // First set the user in the store (basic auth data)
           setCurrentUser(session.user);
+          
+          // Then ensure the user has a complete profile with username
+          if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+            await ensureUserHasProfile(session.user);
+          }
+          
+          // Then fetch other data
           await fetchItems();
           await fetchSquadData();
         } else {
@@ -75,7 +90,7 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [setCurrentUser, navigate, fetchItems, fetchSquadData]);
+  }, [setCurrentUser, navigate, fetchItems, fetchSquadData, ensureUserHasProfile]);
   
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;

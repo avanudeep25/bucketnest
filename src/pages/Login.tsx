@@ -14,7 +14,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { currentUser, setCurrentUser } = useUserStore();
+  const { currentUser, setCurrentUser, ensureUserHasProfile } = useUserStore();
 
   // Get the intended destination from location state, or default to "/create" instead of "/wishlist"
   const from = location.state?.from || "/create";
@@ -42,6 +42,10 @@ const Login = () => {
       if (data.user) {
         // Explicitly set the current user in the store
         setCurrentUser(data.user);
+        
+        // Ensure user has a profile with username
+        await ensureUserHasProfile(data.user);
+        
         toast.success('Logged in successfully');
         // Immediate navigation in addition to the useEffect
         console.log("Login successful, redirecting to:", from);
@@ -69,6 +73,11 @@ const Login = () => {
       if (data.user) {
         // Explicitly set the current user in the store
         setCurrentUser(data.user);
+        
+        // Ensure the user has a profile with username immediately
+        if (data.session) {
+          await ensureUserHasProfile(data.user);
+        }
         
         if (data.session === null) {
           toast.success('Please check your email to confirm your account');
