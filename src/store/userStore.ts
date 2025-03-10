@@ -48,13 +48,17 @@ const mockSquadMembers: UserProfile[] = [
     id: '123',
     name: 'Jane Doe',
     username: 'janedoe',
-    avatarUrl: ''
+    avatarUrl: '',
+    createdAt: new Date(),
+    updatedAt: new Date()
   },
   {
     id: '789',
     name: 'John Smith',
     username: 'johnsmith',
-    avatarUrl: ''
+    avatarUrl: '',
+    createdAt: new Date(),
+    updatedAt: new Date()
   }
 ];
 
