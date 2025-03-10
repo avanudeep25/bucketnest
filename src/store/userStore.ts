@@ -43,11 +43,39 @@ interface UserState {
   getAcceptedSquadMembers: () => UserProfile[];
 }
 
+// Initialize with some dummy squad members for testing
+const dummySquadMembers: UserProfile[] = [
+  {
+    id: '1',
+    username: 'AdventurousTraveler123',
+    name: 'Alex Johnson',
+    bio: 'Love hiking and exploring new places',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: '2',
+    username: 'CuriousExplorer456',
+    name: 'Sam Miller',
+    bio: 'Foodie and culture enthusiast',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: '3',
+    username: 'DaringWanderer789',
+    name: 'Jordan Taylor',
+    bio: 'Photography and adventure sports',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }
+];
+
 export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
       currentUser: null,
-      squadMembers: [],
+      squadMembers: dummySquadMembers,
       squadRelationships: [],
       
       createUser: (name, bio, avatarUrl) => {
@@ -62,6 +90,20 @@ export const useUserStore = create<UserState>()(
         };
         
         set({ currentUser: newUser });
+        
+        // For testing: create some dummy relationships with the new user
+        const dummyRelationships = dummySquadMembers.map((member, index) => ({
+          id: uuidv4(),
+          requesterId: index < 1 ? member.id : newUser.id,
+          requesteeId: index < 1 ? newUser.id : member.id,
+          status: index === 0 ? 'accepted' : 'pending',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }));
+        
+        set((state) => ({
+          squadRelationships: [...state.squadRelationships, ...dummyRelationships]
+        }));
       },
       
       updateUserProfile: (updates) => {

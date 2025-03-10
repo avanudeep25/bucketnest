@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import { z } from "zod";
 import { format, parse, getWeek, getYear, getMonth } from "date-fns";
 import { CalendarIcon, X, UserPlus, CheckIcon, XIcon } from "lucide-react";
@@ -302,12 +302,12 @@ const WishlistForm = () => {
             className="space-y-4"
           >
             <div className="space-y-2">
-              <FormLabel htmlFor="name">Your Name</FormLabel>
+              <label htmlFor="name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Your Name</FormLabel>
               <Input id="name" name="name" placeholder="Enter your name" required />
             </div>
             
             <div className="space-y-2">
-              <FormLabel htmlFor="bio">About You (Optional)</FormLabel>
+              <label htmlFor="bio" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">About You (Optional)</FormLabel>
               <Textarea 
                 id="bio" 
                 name="bio" 
