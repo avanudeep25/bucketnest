@@ -1,8 +1,8 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { UserProfile, SquadRelationship } from '@/types/wishlist';
+import { supabase } from '@/integrations/supabase/client';
 
 // Fun username generator
 const generateUsername = (): string => {
@@ -32,22 +32,15 @@ const isValidEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
-interface AuthUser {
-  id: string;
-  email: string;
-  name: string;
-}
-
 interface UserState {
   currentUser: UserProfile | null;
   squadMembers: UserProfile[];
   squadRelationships: SquadRelationship[];
-  users: AuthUser[];
   
   // Auth methods
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signupWithEmail: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   
   // User profile methods
   createUser: (name: string, bio?: string, avatarUrl?: string) => void;
@@ -61,139 +54,75 @@ interface UserState {
   getAcceptedSquadMembers: () => UserProfile[];
 }
 
-// Initialize with some dummy squad members for testing
-const dummySquadMembers: UserProfile[] = [
-  {
-    id: '1',
-    username: 'AdventurousTraveler123',
-    name: 'Alex Johnson',
-    bio: 'Love hiking and exploring new places',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '2',
-    username: 'CuriousExplorer456',
-    name: 'Sam Miller',
-    bio: 'Foodie and culture enthusiast',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '3',
-    username: 'DaringWanderer789',
-    name: 'Jordan Taylor',
-    bio: 'Photography and adventure sports',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }
-];
-
 export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
       currentUser: null,
-      squadMembers: dummySquadMembers,
+      squadMembers: [],
       squadRelationships: [],
-      users: [
-        // Demo account for testing
-        { id: '1', email: 'demo@example.com', name: 'Demo User' }
-      ],
       
-      loginWithEmail: async (email, password) => {
+      loginWithEmail: async (email: string, password: string) => {
         if (!isValidEmail(email)) {
           throw new Error('Invalid email format');
         }
         
-        // In a real app, this would be a server request
-        // For now, we'll simulate a delay and do a simple lookup
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        const user = get().users.find(u => u.email.toLowerCase() === email.toLowerCase());
-        
-        if (!user) {
-          throw new Error('User not found');
-        }
-        
-        // Check if user already has a profile
-        let userProfile = get().currentUser;
-        
-        // If no profile exists, create one based on auth user
-        if (!userProfile) {
-          userProfile = {
-            id: user.id,
-            username: generateUsername(),
-            name: user.name,
-            bio: undefined,
-            avatarUrl: undefined,
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+          const userProfile: UserProfile = {
+            id: data.user.id,
+            username: data.user.email?.split('@')[0] || generateUsername(),
+            name: data.user.user_metadata.name || data.user.email?.split('@')[0] || '',
             createdAt: new Date(),
             updatedAt: new Date(),
           };
+          
+          set({ currentUser: userProfile });
         }
-        
-        set({ currentUser: userProfile });
       },
       
-      signupWithEmail: async (name, email, password) => {
+      signupWithEmail: async (name: string, email: string, password: string) => {
         if (!isValidEmail(email)) {
           throw new Error('Invalid email format');
         }
         
-        // In a real app, this would be a server request
-        // For now, we'll simulate a delay and do a simple check
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const userExists = get().users.some(u => u.email.toLowerCase() === email.toLowerCase());
-        
-        if (userExists) {
-          throw new Error('Email already in use');
-        }
-        
-        const newUserId = uuidv4();
-        
-        // Create auth user
-        const newUser: AuthUser = {
-          id: newUserId,
+        const { data, error } = await supabase.auth.signUp({
           email,
-          name,
-        };
-        
-        // Create profile
-        const newProfile: UserProfile = {
-          id: newUserId,
-          username: generateUsername(),
-          name,
-          bio: undefined,
-          avatarUrl: undefined,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        
-        set(state => ({
-          users: [...state.users, newUser],
-          currentUser: newProfile,
-        }));
-        
-        // For testing: create some dummy relationships with the new user
-        const dummyRelationships: SquadRelationship[] = dummySquadMembers.map((member, index) => ({
-          id: uuidv4(),
-          requesterId: index < 1 ? member.id : newUserId,
-          requesteeId: index < 1 ? newUserId : member.id,
-          status: index === 0 ? 'accepted' : 'pending',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }));
-        
-        set((state) => ({
-          squadRelationships: [...state.squadRelationships, ...dummyRelationships]
-        }));
+          password,
+          options: {
+            data: {
+              name,
+            },
+          },
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+          const userProfile: UserProfile = {
+            id: data.user.id,
+            username: generateUsername(),
+            name,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          
+          set({ currentUser: userProfile });
+        }
       },
       
-      logout: () => {
+      logout: async () => {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
         set({ currentUser: null });
       },
-      
-      createUser: (name, bio, avatarUrl) => {
+
+      createUser: (name: string, bio?: string, avatarUrl?: string) => {
         const newUser: UserProfile = {
           id: uuidv4(),
           username: generateUsername(),
@@ -207,14 +136,24 @@ export const useUserStore = create<UserState>()(
         set({ currentUser: newUser });
         
         // For testing: create some dummy relationships with the new user
-        const dummyRelationships: SquadRelationship[] = dummySquadMembers.map((member, index) => ({
-          id: uuidv4(),
-          requesterId: index < 1 ? member.id : newUser.id,
-          requesteeId: index < 1 ? newUser.id : member.id,
-          status: index === 0 ? 'accepted' : 'pending',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }));
+        const dummyRelationships: SquadRelationship[] = [
+          {
+            id: uuidv4(),
+            requesterId: '1',
+            requesteeId: newUser.id,
+            status: 'pending',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: uuidv4(),
+            requesterId: newUser.id,
+            requesteeId: '2',
+            status: 'pending',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }
+        ];
         
         set((state) => ({
           squadRelationships: [...state.squadRelationships, ...dummyRelationships]
