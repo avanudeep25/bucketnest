@@ -23,16 +23,6 @@ const Navigation = () => {
       }
     );
 
-    // Initial session check
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setCurrentUser(session.user);
-      }
-    };
-    
-    checkUser();
-
     // Clean up subscription on unmount
     return () => {
       subscription.unsubscribe();
@@ -41,8 +31,7 @@ const Navigation = () => {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
-      logout();
+      await logout();
       toast.success("Logged out successfully");
       navigate("/");
     } catch (error) {

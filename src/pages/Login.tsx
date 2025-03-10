@@ -1,11 +1,12 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useUserStore } from '@/store/userStore';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,25 +14,34 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { currentUser } = useUserStore();
 
   // Get the intended destination from location state, or default to "/wishlist"
   const from = location.state?.from || "/wishlist";
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (currentUser) {
+      navigate(from, { replace: true });
+    }
+  }, [currentUser, navigate, from]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
 
-      toast.success('Logged in successfully');
-      // Redirect to the intended destination or wishlist page
-      navigate(from, { replace: true });
+      if (data.user) {
+        toast.success('Logged in successfully');
+        // Navigate happens in the useEffect when currentUser is updated
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to log in');
     } finally {
@@ -55,8 +65,7 @@ const Login = () => {
         toast.success('Please check your email to confirm your account');
       } else {
         toast.success('Signed up successfully');
-        // Redirect to the intended destination or wishlist page
-        navigate(from, { replace: true });
+        // Navigate happens in the useEffect when currentUser is updated
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign up');
