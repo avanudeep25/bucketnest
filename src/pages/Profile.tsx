@@ -76,11 +76,11 @@ const Profile = () => {
       }
       
       toast.success("Profile updated successfully!");
+      setIsSaving(false); // Ensure isSaving is reset even on success
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile. Please try again.");
-    } finally {
-      setIsSaving(false);
+      setIsSaving(false); // Ensure isSaving is reset on error
     }
   };
 

@@ -61,7 +61,7 @@ const CreateWishlistItem = () => {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Your Profile & Squad</DialogTitle>
+                  <DialogTitle>My Profile & Squad</DialogTitle>
                   <DialogDescription>
                     Manage your profile and squad members
                   </DialogDescription>
@@ -69,12 +69,12 @@ const CreateWishlistItem = () => {
                 
                 <div className="space-y-4 mt-4">
                   <div className="border rounded-md p-4 space-y-2">
-                    <h3 className="font-medium">Your Profile</h3>
+                    <h3 className="font-medium">My Profile</h3>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="text-gray-500">Username:</div>
-                      <div>@{currentUser.username}</div>
+                      <div>@{currentUser.username || "Not set"}</div>
                       <div className="text-gray-500">Name:</div>
-                      <div>{currentUser.name}</div>
+                      <div>{currentUser.user_metadata?.name || "Not set"}</div>
                       {currentUser.bio && (
                         <>
                           <div className="text-gray-500">Bio:</div>
