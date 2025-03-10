@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -74,13 +75,35 @@ export const useUserStore = create<UserState>()(
         if (error) throw error;
 
         if (data.user) {
-          const userProfile: UserProfile = {
+          // Fetch or create user profile
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+            
+          if (profileError && profileError.code !== 'PGRST116') {
+            console.error('Error fetching user profile:', profileError);
+          }
+          
+          const userProfile: UserProfile = profileData || {
             id: data.user.id,
             username: data.user.email?.split('@')[0] || generateUsername(),
             name: data.user.user_metadata.name || data.user.email?.split('@')[0] || '',
             createdAt: new Date(),
             updatedAt: new Date(),
           };
+          
+          // If profile doesn't exist, create it
+          if (!profileData) {
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert([userProfile]);
+              
+            if (insertError) {
+              console.error('Error creating user profile:', insertError);
+            }
+          }
           
           set({ currentUser: userProfile });
         }
@@ -104,15 +127,31 @@ export const useUserStore = create<UserState>()(
         if (error) throw error;
 
         if (data.user) {
+          const username = generateUsername();
+          
           const userProfile: UserProfile = {
             id: data.user.id,
-            username: generateUsername(),
+            username,
             name,
             createdAt: new Date(),
             updatedAt: new Date(),
           };
           
+          // Create profile record
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([userProfile]);
+            
+          if (profileError) {
+            console.error('Error creating user profile:', profileError);
+          }
+          
           set({ currentUser: userProfile });
+          
+          // If email confirmation is enabled, inform user to check email
+          if (data.session === null) {
+            console.log('Please check your email for the confirmation link');
+          }
         }
       },
       
