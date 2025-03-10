@@ -1,5 +1,4 @@
-
-import { Calendar, DollarSign, Tag } from "lucide-react";
+import { Calendar, MapPin, Tag } from "lucide-react";
 import { WishlistItem } from "@/types/wishlist";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -13,21 +12,18 @@ interface WishlistCardProps {
 }
 
 const WishlistCard = ({ item, onDelete }: WishlistCardProps) => {
-  const placeholderImage = "https://images.unsplash.com/photo-1488085061387-422e29b40080?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1031&q=80";
-  
   return (
     <Card className="h-full flex flex-col overflow-hidden group hover:shadow-lg transition-all duration-300">
-      <div className="relative aspect-video overflow-hidden">
-        <img 
-          src={item.imageUrl || placeholderImage} 
-          alt={item.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-        />
+      <div className="relative aspect-video overflow-hidden bg-gray-100 flex items-center justify-center">
+        {item.itemType === 'places' && <MapPin className="h-12 w-12 text-gray-400" />}
+        {item.itemType === 'activities' && <Calendar className="h-12 w-12 text-gray-400" />}
+        {item.itemType === 'products' && <Tag className="h-12 w-12 text-gray-400" />}
+        {item.itemType === 'other' && <Tag className="h-12 w-12 text-gray-400" />}
+        
         {item.budgetRange && (
           <div className="absolute top-3 right-3">
             <Badge className="bg-wishwise-500 hover:bg-wishwise-600">
-              <DollarSign className="h-3 w-3 mr-1" />
-              {item.budgetRange}
+              ₹ {item.budgetRange}
             </Badge>
           </div>
         )}

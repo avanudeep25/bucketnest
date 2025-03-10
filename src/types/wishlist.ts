@@ -1,4 +1,3 @@
-
 export type WishItemType = 'places' | 'activities' | 'products' | 'other';
 
 export type ActivityType = 
@@ -32,7 +31,6 @@ export interface WishlistItem {
   targetMonth?: string;
   targetYear?: number;
   budgetRange?: BudgetRange;
-  imageUrl?: string;
   link?: string;
   notes?: string;
   tags?: string[];
@@ -40,6 +38,7 @@ export interface WishlistItem {
   createdAt?: Date;
   updatedAt?: Date;
   completedAt?: Date;
+  imageUrl?: string;
 }
 
 export interface UserProfile {

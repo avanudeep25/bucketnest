@@ -356,13 +356,10 @@ const WishlistForm = () => {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Add a New Experience</CardTitle>
-      </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-4 items-end">
               <FormField
                 control={form.control}
                 name="title"
@@ -459,6 +456,63 @@ const WishlistForm = () => {
                           {activityTypes.map((type) => (
                             <SelectItem key={type} value={type}>
                               {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              
+              <FormField
+                control={form.control}
+                name="timeframeType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>When's the Plan?</FormLabel>
+                    <Select 
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                      }} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="When do you plan to go?" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {timeframeTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {timePickerType === 'Year' && (
+                <FormField
+                  control={form.control}
+                  name="targetYear"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Select Year</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value?.toString()}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select year" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() + i).map(year => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -586,36 +640,6 @@ const WishlistForm = () => {
                   </div>
                 </FormItem>
               )}
-              
-              <FormField
-                control={form.control}
-                name="timeframeType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Time Clarity</FormLabel>
-                    <Select 
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                      }} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="When do you plan to go?" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {timeframeTypes.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               
               {timePickerType === 'Specific Date' && (
                 <FormField
@@ -761,26 +785,6 @@ const WishlistForm = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="imageUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image URL</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="https://example.com/image.jpg"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Add an image to visualize your experience
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

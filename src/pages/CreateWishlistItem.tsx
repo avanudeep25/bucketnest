@@ -38,7 +38,12 @@ const CreateWishlistItem = () => {
       <div className="container px-4 py-6 md:px-6 max-w-4xl">
         {currentUser && (
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Add a New Upcoming Experience</h1>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Let's go...</h1>
+              <p className="text-gray-500 mt-1">
+                Add your new upcoming experience
+              </p>
+            </div>
             
             <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
               <DialogTrigger asChild>

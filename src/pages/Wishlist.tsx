@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useWishlistStore } from "@/store/wishlistStore";
 import WishlistCard from "@/components/wishlist/WishlistCard";
@@ -43,7 +42,6 @@ const Wishlist = () => {
         case "alphabetical":
           return a.title.localeCompare(b.title);
         case "target-date":
-          // Sort by target date if available, otherwise push to the end
           if (a.targetDate && b.targetDate) {
             return new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime();
           } else if (a.targetDate) {
@@ -64,16 +62,16 @@ const Wishlist = () => {
       <div className="container px-4 py-8 md:px-6 flex-1">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Wishlist</h1>
+            <h1 className="text-3xl font-bold tracking-tight">My BuckNest</h1>
             <p className="text-gray-500 mt-1">
-              Manage all your dream places and activities.
+              Curation of your activities and dream escapes
             </p>
           </div>
           
           <Button asChild className="bg-wishwise-500 hover:bg-wishwise-600">
             <Link to="/create">
               <Plus className="mr-2 h-4 w-4" />
-              Add New Wish
+              Add New Experience
             </Link>
           </Button>
         </div>
