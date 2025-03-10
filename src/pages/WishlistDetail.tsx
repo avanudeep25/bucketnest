@@ -2,7 +2,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { ArrowLeft, CalendarIcon, MapPinIcon, DollarSignIcon, UsersIcon, TagIcon, ExternalLinkIcon, PencilIcon, TrashIcon } from "lucide-react";
+import { 
+  ArrowLeft, CalendarIcon, MapPinIcon, DollarSignIcon, 
+  UsersIcon, TagIcon, ExternalLinkIcon, PencilIcon, 
+  TrashIcon, Calendar, MapPin, Tag, Activity, Package, 
+  ShoppingBag, Heart
+} from "lucide-react";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useUserStore } from "@/store/userStore";
 import { Button } from "@/components/ui/button";
@@ -72,11 +77,27 @@ const WishlistDetail = () => {
       const [year, month] = item.targetMonth.split('-');
       const date = new Date(parseInt(year), parseInt(month) - 1, 1);
       return format(date, "MMMM yyyy");
+    } else if (item.timeframeType === "Year" && item.targetYear) {
+      return `${item.targetYear}`;
     } else if (item.timeframeType) {
       return item.timeframeType;
     }
     
     return "Not specified";
+  };
+
+  const getItemTypeIcon = () => {
+    switch (item?.itemType) {
+      case 'places':
+        return <MapPin className="h-32 w-32 text-blue-400" />;
+      case 'activities':
+        return <Activity className="h-32 w-32 text-green-400" />;
+      case 'products':
+        return <ShoppingBag className="h-32 w-32 text-purple-400" />;
+      case 'other':
+      default:
+        return <Heart className="h-32 w-32 text-red-400" />;
+    }
   };
   
   if (!item) {
@@ -116,8 +137,8 @@ const WishlistDetail = () => {
                 className="w-full h-[300px] object-cover rounded-lg shadow-md"
               />
             ) : (
-              <div className="w-full h-[300px] bg-gray-200 rounded-lg shadow-md flex items-center justify-center">
-                <span className="text-gray-500">No image available</span>
+              <div className="w-full h-[300px] bg-gray-100 rounded-lg shadow-md flex items-center justify-center">
+                {getItemTypeIcon()}
               </div>
             )}
             

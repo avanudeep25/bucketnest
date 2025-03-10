@@ -36,7 +36,7 @@ const Navigation = () => {
             Home
           </Link>
           <Link to="/wishlist" className="text-sm font-medium transition-colors hover:text-blue-500">
-            My Experiences
+            My BucketNest
           </Link>
         </nav>
 
@@ -66,7 +66,7 @@ const Navigation = () => {
           </Link>
           <Link to="/wishlist" className="flex flex-col items-center justify-center text-xs font-medium">
             <List className="h-5 w-5 mb-1" />
-            Experiences
+            BucketNest
           </Link>
           <button 
             onClick={handleAddExperience} 

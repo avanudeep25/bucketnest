@@ -1,4 +1,5 @@
-import { Calendar, MapPin, Tag } from "lucide-react";
+
+import { Calendar, MapPin, Tag, Activity, ShoppingBag, Heart } from "lucide-react";
 import { WishlistItem } from "@/types/wishlist";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -12,13 +13,24 @@ interface WishlistCardProps {
 }
 
 const WishlistCard = ({ item, onDelete }: WishlistCardProps) => {
+  const getItemTypeIcon = () => {
+    switch (item.itemType) {
+      case 'places':
+        return <MapPin className="h-12 w-12 text-blue-400" />;
+      case 'activities':
+        return <Activity className="h-12 w-12 text-green-400" />;
+      case 'products':
+        return <ShoppingBag className="h-12 w-12 text-purple-400" />;
+      case 'other':
+      default:
+        return <Heart className="h-12 w-12 text-red-400" />;
+    }
+  };
+  
   return (
     <Card className="h-full flex flex-col overflow-hidden group hover:shadow-lg transition-all duration-300">
       <div className="relative aspect-video overflow-hidden bg-gray-100 flex items-center justify-center">
-        {item.itemType === 'places' && <MapPin className="h-12 w-12 text-gray-400" />}
-        {item.itemType === 'activities' && <Calendar className="h-12 w-12 text-gray-400" />}
-        {item.itemType === 'products' && <Tag className="h-12 w-12 text-gray-400" />}
-        {item.itemType === 'other' && <Tag className="h-12 w-12 text-gray-400" />}
+        {getItemTypeIcon()}
         
         {item.budgetRange && (
           <div className="absolute top-3 right-3">
