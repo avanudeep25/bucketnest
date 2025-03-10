@@ -1,7 +1,8 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/layout/Navigation";
-import { Plus } from "lucide-react";
+import { Plus, MapPin, Users, ListChecks, Clock } from "lucide-react";
 
 const Index = () => {
   return (
@@ -20,18 +21,17 @@ const Index = () => {
                     Your Personal Bucket List Planner
                   </div>
                   <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-white">
-                    <span className="font-normal">Plan your</span> <span className="font-feelfree italic text-blue-300">experiences</span>
+                    <span className="font-normal">BucketNest:</span> <span className="font-feelfree italic text-blue-300">Your Next Adventure Awaits!</span>
                   </h1>
                   <p className="mt-4 text-gray-200 md:text-xl">
-                    BucketNest helps you organize all your planned experiences - 
-                    from weekend restaurant visits to dream vacations.
+                    From your next vacation to your next friends' outing, from tasting a new whisky to taking out your girlfriends—BucketNest keeps all your bucket-list dreams in one place.
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button asChild size="lg" className="bg-blue-500 hover:bg-blue-600">
                     <Link to="/create">
                       <Plus className="mr-2 h-5 w-5" />
-                      Add New Experience
+                      Start Your Journey
                     </Link>
                   </Button>
                 </div>
@@ -55,21 +55,54 @@ const Index = () => {
           </div>
         </section>
 
-        {/* CTA section */}
+        {/* Features section */}
         <section className="py-16 md:py-24 bg-blue-50">
-          <div className="container px-4 md:px-6 text-center">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl max-w-xl mx-auto">
-              Start Planning Your Next Experience
-            </h2>
-            <p className="mt-4 text-gray-500 md:text-xl max-w-2xl mx-auto mb-8">
-              From a dinner date this weekend to your dream vacation - track everything in one place.
-            </p>
-            <Button asChild size="lg" className="bg-blue-500 hover:bg-blue-600">
-              <Link to="/create">
-                <Plus className="mr-2 h-5 w-5" />
-                Add Your First Experience
-              </Link>
-            </Button>
+          <div className="container px-4 md:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold tracking-tighter mb-4">Plan Together, Experience Together</h2>
+              <p className="text-gray-600 md:text-lg max-w-2xl mx-auto">
+                Invite friends, create shared bucket lists, and collaborate seamlessly. No more scattered chats—just effortless planning for unforgettable adventures.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+              <div className="p-6 bg-white rounded-lg shadow-sm">
+                <MapPin className="h-10 w-10 text-blue-500 mb-4" />
+                <h3 className="font-bold mb-2">Travel Plans</h3>
+                <p className="text-gray-600">Map your dream destinations and upcoming adventures.</p>
+              </div>
+              <div className="p-6 bg-white rounded-lg shadow-sm">
+                <ListChecks className="h-10 w-10 text-blue-500 mb-4" />
+                <h3 className="font-bold mb-2">Taste Trails</h3>
+                <p className="text-gray-600">Track restaurants, whiskies, cuisines, and more.</p>
+              </div>
+              <div className="p-6 bg-white rounded-lg shadow-sm">
+                <Users className="h-10 w-10 text-blue-500 mb-4" />
+                <h3 className="font-bold mb-2">Social Outings</h3>
+                <p className="text-gray-600">Coordinate group activities effortlessly.</p>
+              </div>
+              <div className="p-6 bg-white rounded-lg shadow-sm">
+                <Clock className="h-10 w-10 text-blue-500 mb-4" />
+                <h3 className="font-bold mb-2">Personal Goals</h3>
+                <p className="text-gray-600">Skills to learn, books to read, milestones to reach.</p>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <h2 className="text-3xl font-bold tracking-tighter mb-4">Track Your Memories</h2>
+              <p className="text-gray-600 md:text-lg max-w-2xl mx-auto mb-8">
+                Check off completed experiences and build a visual timeline of your life's best moments.
+              </p>
+              <Button asChild size="lg" className="bg-blue-500 hover:bg-blue-600">
+                <Link to="/create">
+                  <Plus className="mr-2 h-5 w-5" />
+                  Start Your Journey
+                </Link>
+              </Button>
+              <p className="mt-6 text-xl font-feelfree italic text-blue-600">
+                BucketNest. Dream. Plan. Share.
+              </p>
+            </div>
           </div>
         </section>
       </div>
@@ -78,3 +111,4 @@ const Index = () => {
 };
 
 export default Index;
+
