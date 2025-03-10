@@ -37,25 +37,31 @@ const WishlistDetail = () => {
   const navigate = useNavigate();
   const getItem = useWishlistStore((state) => state.getItem);
   const deleteItem = useWishlistStore((state) => state.deleteItem);
+  const fetchItems = useWishlistStore((state) => state.fetchItems);
+  const isLoading = useWishlistStore((state) => state.isLoading);
   const getSquadMemberById = useUserStore((state) => state.getSquadMemberById);
   const [item, setItem] = useState(id ? getItem(id) : undefined);
 
   useEffect(() => {
-    if (id) {
-      const wishlistItem = getItem(id);
-      setItem(wishlistItem);
-      
-      if (!wishlistItem) {
-        navigate("/wishlist");
-        toast.error("Experience not found");
+    const loadData = async () => {
+      await fetchItems();
+      if (id) {
+        const wishlistItem = getItem(id);
+        setItem(wishlistItem);
+        
+        if (!wishlistItem) {
+          navigate("/wishlist");
+          toast.error("Experience not found");
+        }
       }
-    }
-  }, [id, getItem, navigate]);
+    };
+    
+    loadData();
+  }, [id, getItem, navigate, fetchItems]);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (id) {
-      deleteItem(id);
-      toast.success("Experience deleted successfully");
+      await deleteItem(id);
       navigate("/wishlist");
     }
   };
@@ -100,13 +106,29 @@ const WishlistDetail = () => {
     }
   };
   
-  if (!item) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation />
         <div className="container px-4 py-8">
           <div className="text-center py-12">
             <h2 className="text-2xl font-semibold">Loading experience...</h2>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!item) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <div className="container px-4 py-8">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-semibold">Experience not found</h2>
+            <Button className="mt-4" onClick={() => navigate("/wishlist")}>
+              Go to My BucketNest
+            </Button>
           </div>
         </div>
       </div>

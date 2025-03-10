@@ -251,15 +251,16 @@ const WishlistForm = () => {
     }
   }, [selectedWeekDate, timeframeType, form]);
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     if (!currentUser) {
       toast.error("Please create a profile first");
-      navigate("/create");
+      navigate("/login");
       return;
     }
     
     const newItem = {
       title: data.title,
+      destination: data.destination,
       itemType: data.itemType as WishItemType,
       description: data.description || undefined,
       activityType: data.activityType as ActivityType | undefined,
@@ -268,6 +269,7 @@ const WishlistForm = () => {
       targetDate: data.targetDate,
       targetWeek: data.targetWeek,
       targetMonth: data.targetMonth,
+      targetYear: data.targetYear !== undefined ? data.targetYear.toString() : undefined,
       budgetRange: data.budgetRange as BudgetRange | undefined,
       imageUrl: data.imageUrl || undefined,
       link: data.link || undefined,
@@ -276,10 +278,17 @@ const WishlistForm = () => {
       squadMembers: selectedSquadMembers.length > 0 ? selectedSquadMembers : undefined,
     };
     
-    addItem(newItem);
-    
-    toast.success("Experience added successfully!");
-    navigate("/wishlist");
+    try {
+      const id = await addItem(newItem);
+      
+      if (id) {
+        toast.success("Experience added successfully!");
+        navigate("/wishlist");
+      }
+    } catch (error) {
+      console.error("Error adding experience:", error);
+      toast.error("Failed to add experience. Please try again.");
+    }
   };
 
   const addTag = () => {

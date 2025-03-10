@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useUserStore } from "@/store/userStore";
 import WishlistCard from "@/components/wishlist/WishlistCard";
@@ -7,8 +7,7 @@ import Navigation from "@/components/layout/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
-import { Search, Plus, BookmarkPlus, Filter, X } from "lucide-react";
-import { toast } from "sonner";
+import { Search, Plus, BookmarkPlus, Filter, X, Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -27,8 +26,7 @@ import { Label } from "@/components/ui/label";
 import { BudgetRange, TimeframeType } from "@/types/wishlist";
 
 const Wishlist = () => {
-  const items = useWishlistStore((state) => state.items);
-  const deleteItem = useWishlistStore((state) => state.deleteItem);
+  const { items, isLoading, fetchItems, deleteItem } = useWishlistStore();
   const getSquadMemberById = useUserStore((state) => state.getSquadMemberById);
   const getAcceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers);
   
@@ -43,6 +41,10 @@ const Wishlist = () => {
   
   const squadMembers = useMemo(() => getAcceptedSquadMembers(), [getAcceptedSquadMembers]);
   
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+  
   // Get all unique tags from items
   const allTags = useMemo(() => {
     const tags = new Set<string>();
@@ -54,9 +56,8 @@ const Wishlist = () => {
     return Array.from(tags);
   }, [items]);
   
-  const handleDelete = (id: string) => {
-    deleteItem(id);
-    toast.success("Experience deleted successfully!");
+  const handleDelete = async (id: string) => {
+    await deleteItem(id);
   };
   
   const toggleTimeframeFilter = (timeframe: TimeframeType) => {
@@ -371,7 +372,12 @@ const Wishlist = () => {
           </div>
         )}
         
-        {sortedAndFilteredItems.length > 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <Loader2 className="h-12 w-12 text-gray-400 animate-spin mb-4" />
+            <p className="text-lg text-gray-600">Loading your experiences...</p>
+          </div>
+        ) : sortedAndFilteredItems.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {sortedAndFilteredItems.map((item) => (
               <WishlistCard

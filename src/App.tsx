@@ -11,6 +11,7 @@ import WishlistDetail from "./pages/WishlistDetail";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import { useUserStore } from "./store/userStore";
+import { useWishlistStore } from "./store/wishlistStore";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
 
@@ -19,6 +20,7 @@ const queryClient = new QueryClient();
 // Auth guard component with redirection to login
 const RequireProfile = ({ children }: { children: React.ReactNode }) => {
   const { currentUser, setCurrentUser } = useUserStore();
+  const { fetchItems } = useWishlistStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
@@ -31,6 +33,8 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
       
       if (session) {
         setCurrentUser(session.user);
+        // Fetch wishlist items when user is authenticated
+        await fetchItems();
         setIsLoading(false);
       } else {
         setCurrentUser(null);
@@ -40,9 +44,11 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (session) {
           setCurrentUser(session.user);
+          // Fetch wishlist items when auth state changes to logged in
+          await fetchItems();
         } else {
           setCurrentUser(null);
         }
@@ -55,7 +61,7 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [setCurrentUser, navigate]);
+  }, [setCurrentUser, navigate, fetchItems]);
   
   // Show loading while checking auth
   if (isLoading) {

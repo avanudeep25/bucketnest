@@ -54,6 +54,78 @@ export type Database = {
         }
         Relationships: []
       }
+      wishlist_items: {
+        Row: {
+          activity_type: string | null
+          budget_range: string | null
+          created_at: string | null
+          description: string | null
+          destination: string | null
+          id: string
+          image_url: string | null
+          item_type: string
+          link: string | null
+          notes: string | null
+          squad_members: string[] | null
+          tags: string[] | null
+          target_date: string | null
+          target_month: string | null
+          target_week: string | null
+          target_year: string | null
+          timeframe_type: string | null
+          title: string
+          travel_type: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_type?: string | null
+          budget_range?: string | null
+          created_at?: string | null
+          description?: string | null
+          destination?: string | null
+          id?: string
+          image_url?: string | null
+          item_type: string
+          link?: string | null
+          notes?: string | null
+          squad_members?: string[] | null
+          tags?: string[] | null
+          target_date?: string | null
+          target_month?: string | null
+          target_week?: string | null
+          target_year?: string | null
+          timeframe_type?: string | null
+          title: string
+          travel_type?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string | null
+          budget_range?: string | null
+          created_at?: string | null
+          description?: string | null
+          destination?: string | null
+          id?: string
+          image_url?: string | null
+          item_type?: string
+          link?: string | null
+          notes?: string | null
+          squad_members?: string[] | null
+          tags?: string[] | null
+          target_date?: string | null
+          target_month?: string | null
+          target_week?: string | null
+          target_year?: string | null
+          timeframe_type?: string | null
+          title?: string
+          travel_type?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
