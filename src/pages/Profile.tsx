@@ -40,7 +40,9 @@ const Profile = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormValues(prev => ({ ...prev, [name]: value }));
+    if (name !== 'username') { // Prevent editing username
+      setFormValues(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,37 +53,24 @@ const Profile = () => {
       return;
     }
     
-    if (!formValues.username.trim()) {
-      toast.error("Username is required");
-      return;
-    }
-    
     try {
       setIsSaving(true);
+      
+      // Generate a username if not present
+      let username = formValues.username;
+      if (!username.trim()) {
+        username = formValues.name.toLowerCase().replace(/\s+/g, '');
+        setFormValues(prev => ({ ...prev, username }));
+      }
       
       // Use the createUser function from userStore instead of direct updates
       await createUser(formValues.name, formValues.bio);
       
-      // Update the username separately if needed
-      if (currentUser?.username !== formValues.username) {
-        const { error: usernameError } = await supabase
-          .from('profiles')
-          .update({ username: formValues.username })
-          .eq('id', currentUser?.id);
-          
-        if (usernameError) {
-          console.error("Error updating username:", usernameError);
-          throw usernameError;
-        }
-      }
-      
       toast.success("Profile updated successfully!");
       
-      // Make sure to reset saving state even on success
-      setTimeout(() => {
-        setIsSaving(false);
-        navigate('/wishlist');
-      }, 500);
+      // Reset saving state and navigate away
+      setIsSaving(false);
+      navigate('/wishlist');
       
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -145,8 +134,12 @@ const Profile = () => {
                       value={formValues.username}
                       onChange={handleChange}
                       placeholder="Choose a unique username"
-                      required
+                      disabled
+                      className="bg-gray-50"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Username is generated from your name and cannot be changed
+                    </p>
                   </div>
                   
                   <div className="space-y-2">

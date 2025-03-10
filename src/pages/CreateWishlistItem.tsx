@@ -33,15 +33,25 @@ const CreateWishlistItem = () => {
   
   // Use state to track the loaded async values
   const [requestsCount, setRequestsCount] = useState(0);
+  const [requests, setRequests] = useState([]);
   
   // Load the requests count when the component mounts
   useMemo(async () => {
     if(squadRequests) {
       try {
-        const requests = await squadRequests;
-        setRequestsCount(requests.length);
+        // Handle the case when squadRequests is an array or a Promise
+        if (Array.isArray(squadRequests)) {
+          setRequestsCount(squadRequests.length);
+          setRequests(squadRequests);
+        } else if (typeof squadRequests.then === 'function') {
+          const requestsData = await squadRequests;
+          setRequestsCount(requestsData.length);
+          setRequests(requestsData);
+        }
       } catch (error) {
         console.error("Error loading squad requests:", error);
+        setRequestsCount(0);
+        setRequests([]);
       }
     }
   }, [squadRequests]);
@@ -107,53 +117,50 @@ const CreateWishlistItem = () => {
                     
                     {requestsCount > 0 ? (
                       <div className="space-y-3">
-                        {squadRequests.then(requests => 
-                          requests.map(request => {
-                            // Handle async getSquadMemberById
-                            const [requester, setRequester] = useState(null);
-                            
-                            useMemo(async () => {
-                              if(getSquadMemberById) {
-                                try {
-                                  const member = await getSquadMemberById(request.requesterId);
-                                  setRequester(member);
-                                } catch (error) {
-                                  console.error("Error loading squad member:", error);
-                                }
+                        {requests.map(request => {
+                          const [requester, setRequester] = useState(null);
+                          
+                          useMemo(async () => {
+                            if(getSquadMemberById) {
+                              try {
+                                const member = await getSquadMemberById(request.requesterId);
+                                setRequester(member);
+                              } catch (error) {
+                                console.error("Error loading squad member:", error);
                               }
-                            }, [getSquadMemberById, request.requesterId]);
-                            
-                            return (
-                              <div key={request.id} className="flex justify-between items-center border-b pb-2">
-                                <div>
-                                  <div className="font-medium">{requester?.name || "Unknown User"}</div>
-                                  <div className="text-xs text-gray-500">@{requester?.username}</div>
-                                </div>
-                                <div className="space-x-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={async () => {
-                                      await respondToSquadRequest(request.id, false);
-                                      toast.info("Request declined");
-                                    }}
-                                  >
-                                    Decline
-                                  </Button>
-                                  <Button 
-                                    size="sm"
-                                    onClick={async () => {
-                                      await respondToSquadRequest(request.id, true);
-                                      toast.success("Added to your squad!");
-                                    }}
-                                  >
-                                    Accept
-                                  </Button>
-                                </div>
+                            }
+                          }, [getSquadMemberById, request.requesterId]);
+                          
+                          return (
+                            <div key={request.id} className="flex justify-between items-center border-b pb-2">
+                              <div>
+                                <div className="font-medium">{requester?.name || "Unknown User"}</div>
+                                <div className="text-xs text-gray-500">@{requester?.username}</div>
                               </div>
-                            );
-                          })
-                        )}
+                              <div className="space-x-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={async () => {
+                                    await respondToSquadRequest(request.id, false);
+                                    toast.info("Request declined");
+                                  }}
+                                >
+                                  Decline
+                                </Button>
+                                <Button 
+                                  size="sm"
+                                  onClick={async () => {
+                                    await respondToSquadRequest(request.id, true);
+                                    toast.success("Added to your squad!");
+                                  }}
+                                >
+                                  Accept
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="text-sm text-gray-500 text-center py-2">
