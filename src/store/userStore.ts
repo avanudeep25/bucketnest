@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { UserProfile, SquadRelationship } from '@/types/wishlist';
 import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
 
 // Fun username generator
 const generateUsername = (): string => {
@@ -55,6 +56,35 @@ interface UserState {
   getAcceptedSquadMembers: () => UserProfile[];
 }
 
+// Type for database profile
+type DbProfile = Database['public']['Tables']['profiles']['Row'];
+
+// Function to convert database profile to UserProfile
+const dbProfileToUserProfile = (profile: DbProfile): UserProfile => {
+  return {
+    id: profile.id,
+    username: profile.username,
+    name: profile.name,
+    bio: profile.bio || undefined,
+    avatarUrl: profile.avatar_url || undefined,
+    createdAt: new Date(profile.created_at),
+    updatedAt: new Date(profile.updated_at),
+  };
+};
+
+// Function to convert UserProfile to database profile insert data
+const userProfileToDbProfile = (profile: UserProfile): Database['public']['Tables']['profiles']['Insert'] => {
+  return {
+    id: profile.id,
+    username: profile.username,
+    name: profile.name,
+    bio: profile.bio,
+    avatar_url: profile.avatarUrl,
+    created_at: profile.createdAt.toISOString(),
+    updated_at: profile.updatedAt.toISOString(),
+  };
+};
+
 export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
@@ -75,37 +105,46 @@ export const useUserStore = create<UserState>()(
         if (error) throw error;
 
         if (data.user) {
-          // Fetch or create user profile
+          // Fetch user profile
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', data.user.id)
             .single();
             
-          if (profileError && profileError.code !== 'PGRST116') {
-            console.error('Error fetching user profile:', profileError);
-          }
-          
-          const userProfile: UserProfile = profileData || {
-            id: data.user.id,
-            username: data.user.email?.split('@')[0] || generateUsername(),
-            name: data.user.user_metadata.name || data.user.email?.split('@')[0] || '',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-          
-          // If profile doesn't exist, create it
-          if (!profileData) {
-            const { error: insertError } = await supabase
-              .from('profiles')
-              .insert([userProfile]);
+          if (profileError) {
+            if (profileError.code === 'PGRST116') {
+              // Profile not found, create one
+              const username = data.user.email?.split('@')[0] || generateUsername();
+              const userProfile: UserProfile = {
+                id: data.user.id,
+                username,
+                name: data.user.user_metadata.name || data.user.email?.split('@')[0] || '',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              };
               
-            if (insertError) {
-              console.error('Error creating user profile:', insertError);
+              const dbProfile = userProfileToDbProfile(userProfile);
+              
+              const { error: insertError } = await supabase
+                .from('profiles')
+                .insert([dbProfile]);
+                
+              if (insertError) {
+                console.error('Error creating user profile:', insertError);
+                throw insertError;
+              }
+              
+              set({ currentUser: userProfile });
+            } else {
+              console.error('Error fetching user profile:', profileError);
+              throw profileError;
             }
+          } else if (profileData) {
+            // Profile exists
+            const userProfile = dbProfileToUserProfile(profileData);
+            set({ currentUser: userProfile });
           }
-          
-          set({ currentUser: userProfile });
         }
       },
       
@@ -137,13 +176,16 @@ export const useUserStore = create<UserState>()(
             updatedAt: new Date(),
           };
           
-          // Create profile record
+          // Create profile record in database
+          const dbProfile = userProfileToDbProfile(userProfile);
+          
           const { error: profileError } = await supabase
             .from('profiles')
-            .insert([userProfile]);
+            .insert([dbProfile]);
             
           if (profileError) {
             console.error('Error creating user profile:', profileError);
+            throw profileError;
           }
           
           set({ currentUser: userProfile });
