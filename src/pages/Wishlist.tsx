@@ -7,7 +7,10 @@ import Navigation from "@/components/layout/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
-import { Search, Plus, BookmarkPlus, Loader2 } from "lucide-react";
+import { 
+  Search, Plus, BookmarkPlus, Loader2, 
+  CalendarIcon, User, Tag, Activity 
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -16,7 +19,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { BudgetRange, TimeframeType } from "@/types/wishlist";
+import { BudgetRange, TimeframeType, ActivityType } from "@/types/wishlist";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 
 const Wishlist = () => {
   const { items, isLoading, fetchItems, deleteItem } = useWishlistStore();
@@ -26,17 +36,48 @@ const Wishlist = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   
-  // Filters as direct dropdowns
-  const [timeframeFilter, setTimeframeFilter] = useState<string>("all");
+  // Filters
   const [budgetFilter, setBudgetFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [squadMemberFilter, setSquadMemberFilter] = useState<string>("all");
+  const [activityTypeFilter, setActivityTypeFilter] = useState<string>("all");
+  const [soloTravelFilter, setSoloTravelFilter] = useState<boolean>(false);
+  
+  // New date filters
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedMonth, setSelectedMonth] = useState<string | undefined>(undefined);
+  const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
   
   const squadMembers = useMemo(() => getAcceptedSquadMembers(), [getAcceptedSquadMembers]);
   
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
+  
+  // Generate month and year options
+  const monthOptions = useMemo(() => {
+    const months = [];
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(2024, i, 1);
+      months.push({
+        value: `${i + 1}`,
+        label: format(date, 'MMMM')
+      });
+    }
+    return months;
+  }, []);
+  
+  const yearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let i = currentYear; i <= currentYear + 10; i++) {
+      years.push({
+        value: `${i}`,
+        label: `${i}`
+      });
+    }
+    return years;
+  }, []);
   
   // Get all unique tags from items
   const allTags = useMemo(() => {
@@ -49,15 +90,30 @@ const Wishlist = () => {
     return Array.from(tags);
   }, [items]);
   
+  // Get all unique activity types from items
+  const allActivityTypes = useMemo(() => {
+    const types = new Set<string>();
+    items.forEach(item => {
+      if (item.activityType) {
+        types.add(item.activityType);
+      }
+    });
+    return Array.from(types);
+  }, [items]);
+  
   const handleDelete = async (id: string) => {
     await deleteItem(id);
   };
   
   const clearAllFilters = () => {
-    setTimeframeFilter("all");
     setBudgetFilter("all");
     setTagFilter("all");
     setSquadMemberFilter("all");
+    setActivityTypeFilter("all");
+    setSoloTravelFilter(false);
+    setSelectedDate(undefined);
+    setSelectedMonth(undefined);
+    setSelectedYear(undefined);
   };
   
   const filteredItems = useMemo(() => {
@@ -70,9 +126,50 @@ const Wishlist = () => {
         item.destination?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         false;
       
-      // Timeframe filter
-      const matchesTimeframe = timeframeFilter === "all" || 
-        item.timeframeType === timeframeFilter;
+      // Date filter
+      let matchesDate = true;
+      if (selectedDate && item.targetDate) {
+        const itemDate = new Date(item.targetDate);
+        matchesDate = 
+          itemDate.getDate() === selectedDate.getDate() &&
+          itemDate.getMonth() === selectedDate.getMonth() &&
+          itemDate.getFullYear() === selectedDate.getFullYear();
+      } else if (selectedDate) {
+        matchesDate = false;
+      }
+      
+      // Month filter
+      let matchesMonth = true;
+      if (selectedMonth) {
+        if (item.targetMonth) {
+          const [_, month] = item.targetMonth.split('-');
+          matchesMonth = month === selectedMonth;
+        } else if (item.targetDate) {
+          const itemMonth = new Date(item.targetDate).getMonth() + 1;
+          matchesMonth = itemMonth.toString() === selectedMonth;
+        } else {
+          matchesMonth = false;
+        }
+      }
+      
+      // Year filter
+      let matchesYear = true;
+      if (selectedYear) {
+        if (item.targetYear) {
+          matchesYear = item.targetYear === selectedYear;
+        } else if (item.targetDate) {
+          const itemYear = new Date(item.targetDate).getFullYear().toString();
+          matchesYear = itemYear === selectedYear;
+        } else if (item.targetMonth) {
+          const [year, _] = item.targetMonth.split('-');
+          matchesYear = year === selectedYear;
+        } else if (item.targetWeek) {
+          const [year, _] = item.targetWeek.split('-');
+          matchesYear = year === selectedYear;
+        } else {
+          matchesYear = false;
+        }
+      }
       
       // Budget filter
       const matchesBudget = budgetFilter === "all" || 
@@ -86,9 +183,22 @@ const Wishlist = () => {
       const matchesSquadMember = squadMemberFilter === "all" || 
         (item.squadMembers && item.squadMembers.includes(squadMemberFilter));
       
-      return matchesSearch && matchesTimeframe && matchesBudget && matchesTag && matchesSquadMember;
+      // Activity type filter
+      const matchesActivityType = activityTypeFilter === "all" || 
+        item.activityType === activityTypeFilter;
+      
+      // Solo travel filter
+      const matchesSoloTravel = !soloTravelFilter || 
+        item.travelType === "Solo";
+      
+      return matchesSearch && matchesBudget && matchesTag && 
+             matchesSquadMember && matchesActivityType && 
+             matchesSoloTravel && matchesDate && matchesMonth && matchesYear;
     });
-  }, [items, searchTerm, timeframeFilter, budgetFilter, tagFilter, squadMemberFilter]);
+  }, [
+    items, searchTerm, budgetFilter, tagFilter, squadMemberFilter,
+    activityTypeFilter, soloTravelFilter, selectedDate, selectedMonth, selectedYear
+  ]);
   
   const sortedAndFilteredItems = useMemo(() => {
     return [...filteredItems].sort((a, b) => {
@@ -114,11 +224,19 @@ const Wishlist = () => {
     });
   }, [filteredItems, sortBy]);
   
-  const hasActiveFilters = timeframeFilter !== "all" || budgetFilter !== "all" || 
-                           tagFilter !== "all" || squadMemberFilter !== "all";
+  const hasActiveFilters = budgetFilter !== "all" || 
+                           tagFilter !== "all" || 
+                           squadMemberFilter !== "all" ||
+                           activityTypeFilter !== "all" ||
+                           soloTravelFilter ||
+                           selectedDate !== undefined ||
+                           selectedMonth !== undefined ||
+                           selectedYear !== undefined;
   
-  const timeframeTypes: TimeframeType[] = [
-    'Specific Date', 'Week', 'Month', 'Year', 'Someday'
+  const activityTypes: ActivityType[] = [
+    'Food & Dining', 'Adventure Sports', 'Cultural Experience', 
+    'Entertainment', 'Wellness & Relaxation', 'Shopping', 
+    'Exploration', 'Education', 'Volunteering', 'Other'
   ];
   
   const budgetRanges: BudgetRange[] = [
@@ -130,7 +248,7 @@ const Wishlist = () => {
       <Navigation />
       
       <div className="container px-4 py-8 md:px-6 flex-1">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">My BucketNest</h1>
             <p className="text-gray-500 mt-1">
@@ -138,12 +256,14 @@ const Wishlist = () => {
             </p>
           </div>
           
-          <Button asChild className="bg-wishwise-500 hover:bg-wishwise-600">
-            <Link to="/create">
-              <Plus className="mr-2 h-4 w-4" />
-              Add New Experience
-            </Link>
-          </Button>
+          <div className="flex gap-3">
+            <Button asChild size="lg" className="bg-wishwise-500 hover:bg-wishwise-600">
+              <Link to="/create">
+                <Plus className="mr-2 h-5 w-5" />
+                Add Experience
+              </Link>
+            </Button>
+          </div>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -174,23 +294,106 @@ const Wishlist = () => {
           </Select>
         </div>
         
-        {/* Dropdown filters row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {/* Date/Time filters row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          {/* Date filter */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-full justify-start text-left">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {selectedDate ? format(selectedDate, 'PPP') : "Select date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+              {selectedDate && (
+                <div className="p-3 border-t border-gray-100">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setSelectedDate(undefined)}
+                    className="w-full"
+                  >
+                    Clear date
+                  </Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+          
+          {/* Month filter */}
           <Select
-            value={timeframeFilter}
-            onValueChange={setTimeframeFilter}
+            value={selectedMonth}
+            onValueChange={setSelectedMonth}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Timeframe" />
+              <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
+              <SelectValue placeholder="Select month" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Timeframes</SelectItem>
-              {timeframeTypes.map((type) => (
-                <SelectItem key={type} value={type}>{type}</SelectItem>
+              <SelectItem value={undefined}>All months</SelectItem>
+              {monthOptions.map((month) => (
+                <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           
+          {/* Year filter */}
+          <Select
+            value={selectedYear}
+            onValueChange={setSelectedYear}
+          >
+            <SelectTrigger>
+              <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
+              <SelectValue placeholder="Select year" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={undefined}>All years</SelectItem>
+              {yearOptions.map((year) => (
+                <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {/* Activity Type filter */}
+          <Select
+            value={activityTypeFilter}
+            onValueChange={setActivityTypeFilter}
+          >
+            <SelectTrigger>
+              <Activity className="mr-2 h-4 w-4 text-gray-500" />
+              <SelectValue placeholder="Activity type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All activities</SelectItem>
+              {activityTypes.map((type) => (
+                <SelectItem key={type} value={type}>{type}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {/* Additional filters row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {/* Solo travel filter */}
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant={soloTravelFilter ? "default" : "outline"} 
+              className={`w-full ${soloTravelFilter ? 'bg-wishwise-500' : ''}`}
+              onClick={() => setSoloTravelFilter(!soloTravelFilter)}
+            >
+              <User className="mr-2 h-4 w-4" />
+              Solo travel only
+            </Button>
+          </div>
+          
+          {/* Budget filter */}
           <Select
             value={budgetFilter}
             onValueChange={setBudgetFilter}
@@ -206,12 +409,14 @@ const Wishlist = () => {
             </SelectContent>
           </Select>
           
+          {/* Tags filter */}
           {allTags.length > 0 && (
             <Select
               value={tagFilter}
               onValueChange={setTagFilter}
             >
               <SelectTrigger>
+                <Tag className="mr-2 h-4 w-4 text-gray-500" />
                 <SelectValue placeholder="Tag" />
               </SelectTrigger>
               <SelectContent>
@@ -223,6 +428,7 @@ const Wishlist = () => {
             </Select>
           )}
           
+          {/* Squad member filter */}
           {squadMembers.length > 0 && (
             <Select
               value={squadMemberFilter}
@@ -244,9 +450,33 @@ const Wishlist = () => {
         {/* Active filters display */}
         {hasActiveFilters && (
           <div className="flex flex-wrap gap-2 mb-6">
-            {timeframeFilter !== "all" && (
-              <Badge variant="secondary" className="capitalize">
-                {timeframeFilter}
+            {selectedDate && (
+              <Badge variant="secondary">
+                Date: {format(selectedDate, 'MMM d, yyyy')}
+              </Badge>
+            )}
+            
+            {selectedMonth && (
+              <Badge variant="secondary">
+                Month: {monthOptions.find(m => m.value === selectedMonth)?.label}
+              </Badge>
+            )}
+            
+            {selectedYear && (
+              <Badge variant="secondary">
+                Year: {selectedYear}
+              </Badge>
+            )}
+            
+            {activityTypeFilter !== "all" && (
+              <Badge variant="secondary">
+                Activity: {activityTypeFilter}
+              </Badge>
+            )}
+            
+            {soloTravelFilter && (
+              <Badge variant="secondary">
+                Solo Travel
               </Badge>
             )}
             
@@ -258,13 +488,13 @@ const Wishlist = () => {
             
             {tagFilter !== "all" && (
               <Badge variant="secondary">
-                {tagFilter}
+                Tag: {tagFilter}
               </Badge>
             )}
             
             {squadMemberFilter !== "all" && (
               <Badge variant="secondary">
-                {getSquadMemberById(squadMemberFilter)?.name || 'Unknown'}
+                Member: {getSquadMemberById(squadMemberFilter)?.name || 'Unknown'}
               </Badge>
             )}
             
@@ -306,7 +536,7 @@ const Wishlist = () => {
                 : "Start by adding your first dream destination or activity to your BucketNest."}
             </p>
             {!searchTerm && !hasActiveFilters ? (
-              <Button asChild className="bg-wishwise-500 hover:bg-wishwise-600">
+              <Button asChild size="lg" className="bg-wishwise-500 hover:bg-wishwise-600">
                 <Link to="/create">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Your First Experience

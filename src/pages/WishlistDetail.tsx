@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { 
@@ -138,12 +137,22 @@ const WishlistDetail = () => {
                   </div>
                 </div>
               )}
+
+              {item.activityType && (
+                <div className="flex gap-3 items-center">
+                  <TagIcon className="text-gray-400" size={20} />
+                  <div>
+                    <p className="text-sm text-gray-500">Activity Type</p>
+                    <p className="font-medium">{item.activityType}</p>
+                  </div>
+                </div>
+              )}
             </div>
             
             {item.description && (
               <div className="mt-6">
                 <h3 className="text-lg font-medium mb-2">Description</h3>
-                <p className="text-gray-700">{item.description}</p>
+                <p className="text-gray-700 whitespace-pre-line">{item.description}</p>
               </div>
             )}
             
