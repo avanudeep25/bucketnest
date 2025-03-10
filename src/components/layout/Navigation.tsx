@@ -1,6 +1,7 @@
+
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Quill, LogOut, User, Home, List, Plus } from "lucide-react";
+import { PenLine, LogOut, User, Home, List, Plus } from "lucide-react";
 import { useUserStore } from "@/store/userStore";
 import { toast } from "sonner";
 
@@ -14,11 +15,19 @@ const Navigation = () => {
     navigate("/");
   };
 
+  const handleAddExperience = () => {
+    if (currentUser) {
+      navigate("/create");
+    } else {
+      navigate("/login");
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm border-b">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <Quill className="h-6 w-6 text-blue-500" />
+          <PenLine className="h-6 w-6 text-blue-500" />
           <span className="font-bold text-xl">BucketNest</span>
         </Link>
 
