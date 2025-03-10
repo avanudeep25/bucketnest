@@ -130,8 +130,6 @@ const formSchema = z.object({
   tags: z.array(z.string()).optional(),
   imageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   link: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
-  notes: z.string().optional(),
-  squadMembers: z.array(z.string()).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -228,8 +226,6 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
       tags: editItem?.tags || [],
       imageUrl: editItem?.imageUrl || "",
       link: editItem?.link || "",
-      notes: editItem?.notes || "",
-      squadMembers: editItem?.squadMembers || [],
     },
   });
 
@@ -287,7 +283,6 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
       budgetRange: data.budgetRange as BudgetRange | undefined,
       imageUrl: data.imageUrl || undefined,
       link: data.link || undefined,
-      notes: data.notes || undefined,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
       squadMembers: selectedSquadMembers.length > 0 ? selectedSquadMembers : undefined,
     };
@@ -903,23 +898,6 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
                 </div>
               )}
             </FormItem>
-            
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Additional Notes</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Any additional details or notes about your experience"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             
             <div className="flex justify-end gap-4">
               <Button

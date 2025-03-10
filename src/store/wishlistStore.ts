@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { WishlistItem, ActivityType, WishItemType, TimeframeType, TravelType, BudgetRange } from '@/types/wishlist';
@@ -72,7 +71,6 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
           budgetRange: item.budget_range ? (item.budget_range as BudgetRange) : undefined,
           destination: item.destination || undefined,
           link: item.link || undefined,
-          notes: item.notes || undefined,
           imageUrl: item.image_url || undefined,
           tags: item.tags || undefined,
           squadMembers: item.squad_members || undefined,
@@ -118,7 +116,6 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         budget_range: newItem.budgetRange,
         destination: newItem.destination,
         link: newItem.link,
-        notes: newItem.notes,
         image_url: newItem.imageUrl,
         tags: newItem.tags,
         squad_members: newItem.squadMembers,
@@ -174,7 +171,6 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       if (updatedItem.budgetRange !== undefined) dbItem.budget_range = updatedItem.budgetRange;
       if (updatedItem.destination !== undefined) dbItem.destination = updatedItem.destination;
       if (updatedItem.link !== undefined) dbItem.link = updatedItem.link;
-      if (updatedItem.notes !== undefined) dbItem.notes = updatedItem.notes;
       if (updatedItem.imageUrl !== undefined) dbItem.image_url = updatedItem.imageUrl;
       if (updatedItem.tags !== undefined) dbItem.tags = updatedItem.tags;
       if (updatedItem.squadMembers !== undefined) dbItem.squad_members = updatedItem.squadMembers;

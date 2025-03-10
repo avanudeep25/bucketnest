@@ -140,6 +140,13 @@ const WishlistDetail = () => {
               )}
             </div>
             
+            {item.description && (
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-2">Description</h3>
+                <p className="text-gray-700">{item.description}</p>
+              </div>
+            )}
+            
             {item.squadMembers && item.squadMembers.length > 0 && (
               <div className="mt-6">
                 <div className="flex items-center gap-2 mb-2">
@@ -174,13 +181,6 @@ const WishlistDetail = () => {
                     <Badge key={tag} variant="secondary">{tag}</Badge>
                   ))}
                 </div>
-              </div>
-            )}
-            
-            {item.notes && (
-              <div className="mt-6">
-                <h3 className="text-lg font-medium mb-2">Notes</h3>
-                <p className="text-gray-700 whitespace-pre-line">{item.notes}</p>
               </div>
             )}
           </div>

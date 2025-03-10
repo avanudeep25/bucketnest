@@ -7,7 +7,7 @@ import Navigation from "@/components/layout/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
-import { Search, Plus, BookmarkPlus, Filter, X, Loader2 } from "lucide-react";
+import { Search, Plus, BookmarkPlus, Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -15,14 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { BudgetRange, TimeframeType } from "@/types/wishlist";
 
 const Wishlist = () => {
@@ -33,11 +26,11 @@ const Wishlist = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   
-  // Filters
-  const [selectedTimeframes, setSelectedTimeframes] = useState<TimeframeType[]>([]);
-  const [selectedBudgets, setSelectedBudgets] = useState<BudgetRange[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedSquadMembers, setSelectedSquadMembers] = useState<string[]>([]);
+  // Filters as direct dropdowns
+  const [timeframeFilter, setTimeframeFilter] = useState<string>("all");
+  const [budgetFilter, setBudgetFilter] = useState<string>("all");
+  const [tagFilter, setTagFilter] = useState<string>("all");
+  const [squadMemberFilter, setSquadMemberFilter] = useState<string>("all");
   
   const squadMembers = useMemo(() => getAcceptedSquadMembers(), [getAcceptedSquadMembers]);
   
@@ -60,43 +53,11 @@ const Wishlist = () => {
     await deleteItem(id);
   };
   
-  const toggleTimeframeFilter = (timeframe: TimeframeType) => {
-    setSelectedTimeframes(prev => 
-      prev.includes(timeframe) 
-        ? prev.filter(t => t !== timeframe) 
-        : [...prev, timeframe]
-    );
-  };
-  
-  const toggleBudgetFilter = (budget: BudgetRange) => {
-    setSelectedBudgets(prev => 
-      prev.includes(budget) 
-        ? prev.filter(b => b !== budget) 
-        : [...prev, budget]
-    );
-  };
-  
-  const toggleTagFilter = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) 
-        ? prev.filter(t => t !== tag) 
-        : [...prev, tag]
-    );
-  };
-  
-  const toggleSquadMemberFilter = (memberId: string) => {
-    setSelectedSquadMembers(prev => 
-      prev.includes(memberId) 
-        ? prev.filter(id => id !== memberId) 
-        : [...prev, memberId]
-    );
-  };
-  
   const clearAllFilters = () => {
-    setSelectedTimeframes([]);
-    setSelectedBudgets([]);
-    setSelectedTags([]);
-    setSelectedSquadMembers([]);
+    setTimeframeFilter("all");
+    setBudgetFilter("all");
+    setTagFilter("all");
+    setSquadMemberFilter("all");
   };
   
   const filteredItems = useMemo(() => {
@@ -110,24 +71,24 @@ const Wishlist = () => {
         false;
       
       // Timeframe filter
-      const matchesTimeframe = selectedTimeframes.length === 0 || 
-        selectedTimeframes.includes(item.timeframeType);
+      const matchesTimeframe = timeframeFilter === "all" || 
+        item.timeframeType === timeframeFilter;
       
       // Budget filter
-      const matchesBudget = selectedBudgets.length === 0 || 
-        (item.budgetRange && selectedBudgets.includes(item.budgetRange));
+      const matchesBudget = budgetFilter === "all" || 
+        (item.budgetRange === budgetFilter);
       
       // Tags filter
-      const matchesTags = selectedTags.length === 0 || 
-        (item.tags && selectedTags.some(tag => item.tags?.includes(tag)));
+      const matchesTag = tagFilter === "all" || 
+        (item.tags && item.tags.includes(tagFilter));
       
       // Squad members filter
-      const matchesSquadMembers = selectedSquadMembers.length === 0 || 
-        (item.squadMembers && selectedSquadMembers.some(memberId => item.squadMembers?.includes(memberId)));
+      const matchesSquadMember = squadMemberFilter === "all" || 
+        (item.squadMembers && item.squadMembers.includes(squadMemberFilter));
       
-      return matchesSearch && matchesTimeframe && matchesBudget && matchesTags && matchesSquadMembers;
+      return matchesSearch && matchesTimeframe && matchesBudget && matchesTag && matchesSquadMember;
     });
-  }, [items, searchTerm, selectedTimeframes, selectedBudgets, selectedTags, selectedSquadMembers]);
+  }, [items, searchTerm, timeframeFilter, budgetFilter, tagFilter, squadMemberFilter]);
   
   const sortedAndFilteredItems = useMemo(() => {
     return [...filteredItems].sort((a, b) => {
@@ -153,8 +114,8 @@ const Wishlist = () => {
     });
   }, [filteredItems, sortBy]);
   
-  const hasActiveFilters = selectedTimeframes.length > 0 || selectedBudgets.length > 0 || 
-                           selectedTags.length > 0 || selectedSquadMembers.length > 0;
+  const hasActiveFilters = timeframeFilter !== "all" || budgetFilter !== "all" || 
+                           tagFilter !== "all" || squadMemberFilter !== "all";
   
   const timeframeTypes: TimeframeType[] = [
     'Specific Date', 'Week', 'Month', 'Year', 'Someday'
@@ -185,7 +146,7 @@ const Wishlist = () => {
           </Button>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -195,108 +156,6 @@ const Wishlist = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="whitespace-nowrap">
-                <Filter className="mr-2 h-4 w-4" />
-                Filter
-                {hasActiveFilters && (
-                  <Badge variant="secondary" className="ml-2 bg-blue-100">
-                    {selectedTimeframes.length + selectedBudgets.length + selectedTags.length + selectedSquadMembers.length}
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-4" align="end">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Timeframe</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {timeframeTypes.map((timeframe) => (
-                      <div key={timeframe} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`timeframe-${timeframe}`} 
-                          checked={selectedTimeframes.includes(timeframe)}
-                          onCheckedChange={() => toggleTimeframeFilter(timeframe)}
-                        />
-                        <Label htmlFor={`timeframe-${timeframe}`} className="text-sm">
-                          {timeframe}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Budget</h3>
-                  <div className="space-y-2">
-                    {budgetRanges.map((budget) => (
-                      <div key={budget} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`budget-${budget}`} 
-                          checked={selectedBudgets.includes(budget)}
-                          onCheckedChange={() => toggleBudgetFilter(budget)}
-                        />
-                        <Label htmlFor={`budget-${budget}`} className="text-sm">
-                          {budget}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                {squadMembers.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Squad Members</h3>
-                    <div className="space-y-2 max-h-28 overflow-y-auto">
-                      {squadMembers.map((member) => (
-                        <div key={member.id} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`member-${member.id}`} 
-                            checked={selectedSquadMembers.includes(member.id)}
-                            onCheckedChange={() => toggleSquadMemberFilter(member.id)}
-                          />
-                          <Label htmlFor={`member-${member.id}`} className="text-sm">
-                            {member.name}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {allTags.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Tags</h3>
-                    <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
-                      {allTags.map((tag) => (
-                        <Badge 
-                          key={tag} 
-                          variant={selectedTags.includes(tag) ? "default" : "outline"}
-                          className="cursor-pointer"
-                          onClick={() => toggleTagFilter(tag)}
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                <div className="flex justify-between pt-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={clearAllFilters}
-                    disabled={!hasActiveFilters}
-                  >
-                    Clear all
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
           
           <Select
             defaultValue="newest"
@@ -315,51 +174,99 @@ const Wishlist = () => {
           </Select>
         </div>
         
+        {/* Dropdown filters row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Select
+            value={timeframeFilter}
+            onValueChange={setTimeframeFilter}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Timeframe" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Timeframes</SelectItem>
+              {timeframeTypes.map((type) => (
+                <SelectItem key={type} value={type}>{type}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Select
+            value={budgetFilter}
+            onValueChange={setBudgetFilter}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Budget" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Budgets</SelectItem>
+              {budgetRanges.map((range) => (
+                <SelectItem key={range} value={range}>{range}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {allTags.length > 0 && (
+            <Select
+              value={tagFilter}
+              onValueChange={setTagFilter}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Tag" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Tags</SelectItem>
+                {allTags.map((tag) => (
+                  <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          
+          {squadMembers.length > 0 && (
+            <Select
+              value={squadMemberFilter}
+              onValueChange={setSquadMemberFilter}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Squad Member" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Squad Members</SelectItem>
+                {squadMembers.map((member) => (
+                  <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+        
         {/* Active filters display */}
         {hasActiveFilters && (
           <div className="flex flex-wrap gap-2 mb-6">
-            {selectedTimeframes.map(timeframe => (
-              <Badge key={`tf-${timeframe}`} variant="secondary" className="flex items-center gap-1">
-                {timeframe}
-                <X 
-                  className="h-3 w-3 cursor-pointer" 
-                  onClick={() => toggleTimeframeFilter(timeframe)}
-                />
+            {timeframeFilter !== "all" && (
+              <Badge variant="secondary" className="capitalize">
+                {timeframeFilter}
               </Badge>
-            ))}
+            )}
             
-            {selectedBudgets.map(budget => (
-              <Badge key={`budget-${budget}`} variant="secondary" className="flex items-center gap-1">
-                {budget}
-                <X 
-                  className="h-3 w-3 cursor-pointer" 
-                  onClick={() => toggleBudgetFilter(budget)}
-                />
+            {budgetFilter !== "all" && (
+              <Badge variant="secondary">
+                {budgetFilter}
               </Badge>
-            ))}
+            )}
             
-            {selectedTags.map(tag => (
-              <Badge key={`tag-${tag}`} variant="secondary" className="flex items-center gap-1">
-                {tag}
-                <X 
-                  className="h-3 w-3 cursor-pointer" 
-                  onClick={() => toggleTagFilter(tag)}
-                />
+            {tagFilter !== "all" && (
+              <Badge variant="secondary">
+                {tagFilter}
               </Badge>
-            ))}
+            )}
             
-            {selectedSquadMembers.map(memberId => {
-              const member = getSquadMemberById(memberId);
-              return (
-                <Badge key={`member-${memberId}`} variant="secondary" className="flex items-center gap-1">
-                  {member?.name || 'Unknown'}
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => toggleSquadMemberFilter(memberId)}
-                  />
-                </Badge>
-              );
-            })}
+            {squadMemberFilter !== "all" && (
+              <Badge variant="secondary">
+                {getSquadMemberById(squadMemberFilter)?.name || 'Unknown'}
+              </Badge>
+            )}
             
             <Button 
               variant="ghost" 
