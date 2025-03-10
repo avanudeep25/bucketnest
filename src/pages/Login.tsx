@@ -16,8 +16,8 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const { currentUser, setCurrentUser } = useUserStore();
 
-  // Get the intended destination from location state, or default to "/wishlist"
-  const from = location.state?.from || "/wishlist";
+  // Get the intended destination from location state, or default to "/create" instead of "/wishlist"
+  const from = location.state?.from || "/create";
 
   // Redirect if user is already logged in
   useEffect(() => {
