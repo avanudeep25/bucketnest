@@ -11,7 +11,15 @@ const Index = () => {
       
       <div className="flex-1">
         {/* Hero section */}
-        <section className="relative pt-16 pb-24 md:py-24 lg:py-32 bg-gradient-to-br from-blue-50 to-blue-200">
+        <section className="relative pt-16 pb-24 md:py-24 lg:py-32 bg-gradient-to-br from-blue-400/10 to-purple-500/20 overflow-hidden">
+          {/* Animated background shapes */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-0 left-[10%] w-64 h-64 rounded-full bg-yellow-300/20 mix-blend-multiply blur-3xl animate-float"></div>
+            <div className="absolute bottom-0 right-[10%] w-96 h-96 rounded-full bg-pink-400/20 mix-blend-multiply blur-3xl animate-float" style={{ animationDelay: "2s" }}></div>
+            <div className="absolute top-1/3 right-1/4 w-48 h-48 rounded-full bg-blue-400/20 mix-blend-multiply blur-3xl animate-float" style={{ animationDelay: "1s" }}></div>
+            <div className="absolute bottom-1/4 left-1/3 w-72 h-72 rounded-full bg-green-300/10 mix-blend-multiply blur-3xl animate-float" style={{ animationDelay: "1.5s" }}></div>
+          </div>
+          
           <div className="container px-4 md:px-6 relative z-10">
             <div className="grid gap-6 md:grid-cols-2 md:gap-16 items-center">
               <div className="flex flex-col gap-4">
@@ -55,8 +63,14 @@ const Index = () => {
         </section>
 
         {/* Features section */}
-        <section className="py-16 md:py-24 bg-blue-50">
-          <div className="container px-4 md:px-6">
+        <section className="py-16 md:py-24 bg-gradient-to-br from-purple-50 to-blue-100 relative overflow-hidden">
+          {/* Animated background elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-yellow-300/10 mix-blend-multiply blur-3xl animate-float" style={{ animationDelay: "0.5s" }}></div>
+            <div className="absolute bottom-20 left-10 w-60 h-60 rounded-full bg-pink-300/10 mix-blend-multiply blur-3xl animate-float" style={{ animationDelay: "2.5s" }}></div>
+          </div>
+          
+          <div className="container px-4 md:px-6 relative z-10">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold tracking-tighter mb-4">Plan Together, Experience Together</h2>
               <p className="text-gray-600 md:text-lg max-w-2xl mx-auto">
@@ -65,22 +79,22 @@ const Index = () => {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-              <div className="p-6 bg-white rounded-lg shadow-sm">
+              <div className="p-6 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
                 <MapPin className="h-10 w-10 text-blue-500 mb-4" />
                 <h3 className="font-bold mb-2">Travel Plans</h3>
                 <p className="text-gray-600">Map your dream destinations and upcoming adventures.</p>
               </div>
-              <div className="p-6 bg-white rounded-lg shadow-sm">
+              <div className="p-6 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
                 <ListChecks className="h-10 w-10 text-blue-500 mb-4" />
                 <h3 className="font-bold mb-2">Taste Trails</h3>
                 <p className="text-gray-600">Track restaurants, whiskies, cuisines, and more.</p>
               </div>
-              <div className="p-6 bg-white rounded-lg shadow-sm">
+              <div className="p-6 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
                 <Users className="h-10 w-10 text-blue-500 mb-4" />
                 <h3 className="font-bold mb-2">Social Outings</h3>
                 <p className="text-gray-600">Coordinate group activities effortlessly.</p>
               </div>
-              <div className="p-6 bg-white rounded-lg shadow-sm">
+              <div className="p-6 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
                 <Clock className="h-10 w-10 text-blue-500 mb-4" />
                 <h3 className="font-bold mb-2">Personal Goals</h3>
                 <p className="text-gray-600">Skills to learn, books to read, milestones to reach.</p>
