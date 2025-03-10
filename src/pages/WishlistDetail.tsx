@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -6,7 +5,7 @@ import {
   ArrowLeft, CalendarIcon, MapPinIcon, DollarSignIcon, 
   UsersIcon, TagIcon, ExternalLinkIcon, PencilIcon, 
   TrashIcon, Calendar, MapPin, Tag, Activity, Package, 
-  ShoppingBag, Heart
+  ShoppingBag, Heart, AlertTriangle
 } from "lucide-react";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useUserStore } from "@/store/userStore";
@@ -38,26 +37,50 @@ const WishlistDetail = () => {
   const getItem = useWishlistStore((state) => state.getItem);
   const deleteItem = useWishlistStore((state) => state.deleteItem);
   const fetchItems = useWishlistStore((state) => state.fetchItems);
+  const items = useWishlistStore((state) => state.items);
   const isLoading = useWishlistStore((state) => state.isLoading);
   const getSquadMemberById = useUserStore((state) => state.getSquadMemberById);
   const [item, setItem] = useState(id ? getItem(id) : undefined);
+  const [fetchAttempts, setFetchAttempts] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
-      await fetchItems();
-      if (id) {
-        const wishlistItem = getItem(id);
-        setItem(wishlistItem);
-        
-        if (!wishlistItem) {
-          navigate("/wishlist");
-          toast.error("Experience not found");
+      console.log("WishlistDetail: Loading data, attempt", fetchAttempts + 1);
+      try {
+        if (items.length === 0) {
+          console.log("WishlistDetail: No items loaded yet, fetching items...");
+          await fetchItems();
+          setFetchAttempts(prev => prev + 1);
+        } else if (id) {
+          console.log(`WishlistDetail: Looking for item with id ${id}`);
+          const wishlistItem = getItem(id);
+          
+          if (wishlistItem) {
+            console.log("WishlistDetail: Item found", wishlistItem);
+            setItem(wishlistItem);
+            setError(null);
+          } else {
+            console.log(`WishlistDetail: Item with id ${id} not found`);
+            if (fetchAttempts >= 2) {
+              setError(`Experience with ID ${id} not found`);
+              toast.error("Experience not found");
+            } else {
+              // Try fetching items again in case they weren't loaded properly
+              await fetchItems();
+              setFetchAttempts(prev => prev + 1);
+            }
+          }
         }
+      } catch (err) {
+        console.error("Error in WishlistDetail loadData:", err);
+        setError("Failed to load experience");
+        toast.error("Failed to load experience");
       }
     };
     
     loadData();
-  }, [id, getItem, navigate, fetchItems]);
+  }, [id, getItem, fetchItems, items, fetchAttempts]);
 
   const handleDelete = async () => {
     if (id) {
@@ -106,7 +129,7 @@ const WishlistDetail = () => {
     }
   };
   
-  if (isLoading) {
+  if (isLoading && fetchAttempts < 3) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation />
@@ -119,13 +142,19 @@ const WishlistDetail = () => {
     );
   }
   
-  if (!item) {
+  if (error || !item) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation />
         <div className="container px-4 py-8">
           <div className="text-center py-12">
-            <h2 className="text-2xl font-semibold">Experience not found</h2>
+            <AlertTriangle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-semibold mb-4">
+              {error || "Experience not found"}
+            </h2>
+            <p className="text-gray-500 mb-6">
+              The experience you're looking for could not be found or there was an error loading it.
+            </p>
             <Button className="mt-4" onClick={() => navigate("/wishlist")}>
               Go to My BucketNest
             </Button>

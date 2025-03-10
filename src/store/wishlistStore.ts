@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { WishlistItem, ActivityType, WishItemType, TimeframeType, TravelType, BudgetRange } from '@/types/wishlist';
@@ -25,10 +24,12 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) {
+        console.log('No active session found, clearing items');
         set({ items: [], isLoading: false });
         return;
       }
       
+      console.log('Fetching wishlist items...');
       const { data, error } = await supabase
         .from('wishlist_items')
         .select('*')
@@ -41,35 +42,47 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         return;
       }
       
-      // Transform the data to match our WishlistItem type
-      const wishlistItems: WishlistItem[] = data.map(item => ({
-        id: item.id,
-        title: item.title,
-        description: item.description || undefined,
-        itemType: item.item_type as WishItemType, 
-        activityType: item.activity_type ? (item.activity_type as ActivityType) : undefined,
-        timeframeType: item.timeframe_type ? (item.timeframe_type as TimeframeType) : undefined,
-        targetDate: item.target_date ? new Date(item.target_date) : undefined,
-        targetWeek: item.target_week || undefined,
-        targetMonth: item.target_month || undefined,
-        targetYear: item.target_year || undefined,
-        travelType: item.travel_type ? (item.travel_type as TravelType) : undefined,
-        budgetRange: item.budget_range ? (item.budget_range as BudgetRange) : undefined,
-        destination: item.destination || undefined,
-        link: item.link || undefined,
-        notes: item.notes || undefined,
-        imageUrl: item.image_url || undefined,
-        tags: item.tags || undefined,
-        squadMembers: item.squad_members || undefined,
-        createdAt: new Date(item.created_at),
-        updatedAt: new Date(item.updated_at)
-      }));
+      console.log('Received data from Supabase:', data);
       
+      if (!data || data.length === 0) {
+        console.log('No wishlist items found');
+        set({ items: [], isLoading: false });
+        return;
+      }
+      
+      // Transform the data to match our WishlistItem type
+      const wishlistItems: WishlistItem[] = data.map(item => {
+        console.log(`Processing item ${item.id}:`, item);
+        return {
+          id: item.id,
+          title: item.title,
+          description: item.description || undefined,
+          itemType: item.item_type as WishItemType, 
+          activityType: item.activity_type ? (item.activity_type as ActivityType) : undefined,
+          timeframeType: item.timeframe_type ? (item.timeframe_type as TimeframeType) : undefined,
+          targetDate: item.target_date ? new Date(item.target_date) : undefined,
+          targetWeek: item.target_week || undefined,
+          targetMonth: item.target_month || undefined,
+          targetYear: item.target_year || undefined,
+          travelType: item.travel_type ? (item.travel_type as TravelType) : undefined,
+          budgetRange: item.budget_range ? (item.budget_range as BudgetRange) : undefined,
+          destination: item.destination || undefined,
+          link: item.link || undefined,
+          notes: item.notes || undefined,
+          imageUrl: item.image_url || undefined,
+          tags: item.tags || undefined,
+          squadMembers: item.squad_members || undefined,
+          createdAt: new Date(item.created_at),
+          updatedAt: new Date(item.updated_at)
+        };
+      });
+      
+      console.log('Processed wishlist items:', wishlistItems);
       set({ items: wishlistItems, isLoading: false });
     } catch (error) {
-      console.error('Error fetching wishlist items:', error);
+      console.error('Exception caught in fetchItems:', error);
       toast.error('Failed to load your wishlist items');
-      set({ isLoading: false });
+      set({ isLoading: false, items: [] });
     }
   },
   
