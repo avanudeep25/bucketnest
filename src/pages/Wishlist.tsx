@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { 
   Search, Plus, BookmarkPlus, Loader2, 
-  CalendarIcon, User, Tag, Activity 
+  CalendarIcon, User, Tag, Activity, FilterIcon
 } from "lucide-react";
 import {
   Select,
@@ -27,6 +27,13 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const Wishlist = () => {
   const { items, isLoading, fetchItems, deleteItem } = useWishlistStore();
@@ -41,12 +48,13 @@ const Wishlist = () => {
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [squadMemberFilter, setSquadMemberFilter] = useState<string>("all");
   const [activityTypeFilter, setActivityTypeFilter] = useState<string>("all");
-  const [soloTravelFilter, setSoloTravelFilter] = useState<boolean>(false);
+  const [personalFilter, setPersonalFilter] = useState<boolean>(false);
   
-  // New date filters
+  // Date filters
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedMonth, setSelectedMonth] = useState<string | undefined>(undefined);
   const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   
   const squadMembers = useMemo(() => getAcceptedSquadMembers(), [getAcceptedSquadMembers]);
   
@@ -110,10 +118,11 @@ const Wishlist = () => {
     setTagFilter("all");
     setSquadMemberFilter("all");
     setActivityTypeFilter("all");
-    setSoloTravelFilter(false);
+    setPersonalFilter(false);
     setSelectedDate(undefined);
     setSelectedMonth(undefined);
     setSelectedYear(undefined);
+    setFilterDialogOpen(false);
   };
   
   const filteredItems = useMemo(() => {
@@ -187,17 +196,17 @@ const Wishlist = () => {
       const matchesActivityType = activityTypeFilter === "all" || 
         item.activityType === activityTypeFilter;
       
-      // Solo travel filter
-      const matchesSoloTravel = !soloTravelFilter || 
+      // Personal filter (solo travel)
+      const matchesPersonal = !personalFilter || 
         item.travelType === "Solo";
       
       return matchesSearch && matchesBudget && matchesTag && 
              matchesSquadMember && matchesActivityType && 
-             matchesSoloTravel && matchesDate && matchesMonth && matchesYear;
+             matchesPersonal && matchesDate && matchesMonth && matchesYear;
     });
   }, [
     items, searchTerm, budgetFilter, tagFilter, squadMemberFilter,
-    activityTypeFilter, soloTravelFilter, selectedDate, selectedMonth, selectedYear
+    activityTypeFilter, personalFilter, selectedDate, selectedMonth, selectedYear
   ]);
   
   const sortedAndFilteredItems = useMemo(() => {
@@ -228,7 +237,7 @@ const Wishlist = () => {
                            tagFilter !== "all" || 
                            squadMemberFilter !== "all" ||
                            activityTypeFilter !== "all" ||
-                           soloTravelFilter ||
+                           personalFilter ||
                            selectedDate !== undefined ||
                            selectedMonth !== undefined ||
                            selectedYear !== undefined;
@@ -277,6 +286,201 @@ const Wishlist = () => {
             />
           </div>
           
+          <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <FilterIcon className="h-4 w-4" />
+                Filters
+                {hasActiveFilters && (
+                  <Badge variant="secondary" className="ml-1 px-1.5 py-0.5 h-5">
+                    {Object.values([
+                      budgetFilter !== "all",
+                      tagFilter !== "all",
+                      squadMemberFilter !== "all",
+                      activityTypeFilter !== "all",
+                      personalFilter,
+                      selectedDate !== undefined,
+                      selectedMonth !== undefined,
+                      selectedYear !== undefined
+                    ]).filter(Boolean).length}
+                  </Badge>
+                )}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Filter Experiences</DialogTitle>
+              </DialogHeader>
+              
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <h3 className="mb-2 text-sm font-medium">Date Filters</h3>
+                    <div className="space-y-2">
+                      {/* Date filter */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start text-left">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {selectedDate ? format(selectedDate, 'PPP') : "Select date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={setSelectedDate}
+                            initialFocus
+                            className="p-3 pointer-events-auto"
+                          />
+                          {selectedDate && (
+                            <div className="p-3 border-t border-gray-100">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => setSelectedDate(undefined)}
+                                className="w-full"
+                              >
+                                Clear date
+                              </Button>
+                            </div>
+                          )}
+                        </PopoverContent>
+                      </Popover>
+                      
+                      {/* Month filter */}
+                      <Select
+                        value={selectedMonth}
+                        onValueChange={setSelectedMonth}
+                      >
+                        <SelectTrigger>
+                          <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
+                          <SelectValue placeholder="Select month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={undefined}>All months</SelectItem>
+                          {monthOptions.map((month) => (
+                            <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      
+                      {/* Year filter */}
+                      <Select
+                        value={selectedYear}
+                        onValueChange={setSelectedYear}
+                      >
+                        <SelectTrigger>
+                          <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
+                          <SelectValue placeholder="Select year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={undefined}>All years</SelectItem>
+                          {yearOptions.map((year) => (
+                            <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-2">
+                    {/* Activity Type filter */}
+                    <Select
+                      value={activityTypeFilter}
+                      onValueChange={setActivityTypeFilter}
+                    >
+                      <SelectTrigger>
+                        <Activity className="mr-2 h-4 w-4 text-gray-500" />
+                        <SelectValue placeholder="Activity type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All activities</SelectItem>
+                        {activityTypes.map((type) => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {/* Personal filter */}
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        variant={personalFilter ? "default" : "outline"} 
+                        className={`w-full ${personalFilter ? 'bg-wishwise-500' : ''}`}
+                        onClick={() => setPersonalFilter(!personalFilter)}
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        Personal
+                      </Button>
+                    </div>
+                    
+                    {/* Budget filter */}
+                    <Select
+                      value={budgetFilter}
+                      onValueChange={setBudgetFilter}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Budget" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Budget</SelectItem>
+                        {budgetRanges.map((range) => (
+                          <SelectItem key={range} value={range}>{range}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {/* Tags filter */}
+                    {allTags.length > 0 && (
+                      <Select
+                        value={tagFilter}
+                        onValueChange={setTagFilter}
+                      >
+                        <SelectTrigger>
+                          <Tag className="mr-2 h-4 w-4 text-gray-500" />
+                          <SelectValue placeholder="Tag" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Tags</SelectItem>
+                          {allTags.map((tag) => (
+                            <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    
+                    {/* Squad member filter */}
+                    {squadMembers.length > 0 && (
+                      <Select
+                        value={squadMemberFilter}
+                        onValueChange={setSquadMemberFilter}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Squad Member" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Squad Members</SelectItem>
+                          {squadMembers.map((member) => (
+                            <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={clearAllFilters}>
+                  Clear all filters
+                </Button>
+                <Button onClick={() => setFilterDialogOpen(false)}>
+                  Apply Filters
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
           <Select
             defaultValue="newest"
             value={sortBy}
@@ -292,159 +496,6 @@ const Wishlist = () => {
               <SelectItem value="target-date">Target Date</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-        
-        {/* Date/Time filters row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          {/* Date filter */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start text-left">
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedDate ? format(selectedDate, 'PPP') : "Select date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                initialFocus
-                className="p-3 pointer-events-auto"
-              />
-              {selectedDate && (
-                <div className="p-3 border-t border-gray-100">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setSelectedDate(undefined)}
-                    className="w-full"
-                  >
-                    Clear date
-                  </Button>
-                </div>
-              )}
-            </PopoverContent>
-          </Popover>
-          
-          {/* Month filter */}
-          <Select
-            value={selectedMonth}
-            onValueChange={setSelectedMonth}
-          >
-            <SelectTrigger>
-              <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
-              <SelectValue placeholder="Select month" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={undefined}>All months</SelectItem>
-              {monthOptions.map((month) => (
-                <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {/* Year filter */}
-          <Select
-            value={selectedYear}
-            onValueChange={setSelectedYear}
-          >
-            <SelectTrigger>
-              <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
-              <SelectValue placeholder="Select year" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={undefined}>All years</SelectItem>
-              {yearOptions.map((year) => (
-                <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {/* Activity Type filter */}
-          <Select
-            value={activityTypeFilter}
-            onValueChange={setActivityTypeFilter}
-          >
-            <SelectTrigger>
-              <Activity className="mr-2 h-4 w-4 text-gray-500" />
-              <SelectValue placeholder="Activity type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All activities</SelectItem>
-              {activityTypes.map((type) => (
-                <SelectItem key={type} value={type}>{type}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        {/* Additional filters row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          {/* Solo travel filter */}
-          <div className="flex items-center space-x-2">
-            <Button 
-              variant={soloTravelFilter ? "default" : "outline"} 
-              className={`w-full ${soloTravelFilter ? 'bg-wishwise-500' : ''}`}
-              onClick={() => setSoloTravelFilter(!soloTravelFilter)}
-            >
-              <User className="mr-2 h-4 w-4" />
-              Solo travel only
-            </Button>
-          </div>
-          
-          {/* Budget filter */}
-          <Select
-            value={budgetFilter}
-            onValueChange={setBudgetFilter}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Budget" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Budgets</SelectItem>
-              {budgetRanges.map((range) => (
-                <SelectItem key={range} value={range}>{range}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {/* Tags filter */}
-          {allTags.length > 0 && (
-            <Select
-              value={tagFilter}
-              onValueChange={setTagFilter}
-            >
-              <SelectTrigger>
-                <Tag className="mr-2 h-4 w-4 text-gray-500" />
-                <SelectValue placeholder="Tag" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Tags</SelectItem>
-                {allTags.map((tag) => (
-                  <SelectItem key={tag} value={tag}>{tag}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          
-          {/* Squad member filter */}
-          {squadMembers.length > 0 && (
-            <Select
-              value={squadMemberFilter}
-              onValueChange={setSquadMemberFilter}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Squad Member" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Squad Members</SelectItem>
-                {squadMembers.map((member) => (
-                  <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
         </div>
         
         {/* Active filters display */}
@@ -474,9 +525,9 @@ const Wishlist = () => {
               </Badge>
             )}
             
-            {soloTravelFilter && (
+            {personalFilter && (
               <Badge variant="secondary">
-                Solo Travel
+                Personal
               </Badge>
             )}
             
