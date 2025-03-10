@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -302,12 +303,12 @@ const WishlistForm = () => {
             className="space-y-4"
           >
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Your Name</FormLabel>
+              <label htmlFor="name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Your Name</label>
               <Input id="name" name="name" placeholder="Enter your name" required />
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="bio" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">About You (Optional)</FormLabel>
+              <label htmlFor="bio" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">About You (Optional)</label>
               <Textarea 
                 id="bio" 
                 name="bio" 
