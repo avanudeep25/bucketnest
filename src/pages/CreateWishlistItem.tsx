@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import WishlistForm from "@/components/wishlist/WishlistForm";
 import Navigation from "@/components/layout/Navigation";
 import { useUserStore } from "@/store/userStore";
@@ -17,8 +17,19 @@ import { toast } from "sonner";
 
 const CreateWishlistItem = () => {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  
+  // Use useMemo to prevent infinite renders with Zustand selectors
   const currentUser = useUserStore((state) => state.currentUser);
-  const squadRequests = useUserStore((state) => state.getSquadRequestsReceived());
+  
+  // Use useMemo to cache the result of getSquadRequestsReceived
+  const squadRequests = useMemo(() => {
+    return useUserStore.getState().getSquadRequestsReceived();
+  }, [currentUser?.id]); // Re-compute only when currentUser changes
+  
+  // Cache accepted squad members
+  const acceptedSquadMembers = useMemo(() => {
+    return useUserStore.getState().getAcceptedSquadMembers();
+  }, [currentUser?.id]); // Re-compute only when currentUser changes
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -75,6 +86,7 @@ const CreateWishlistItem = () => {
                     {squadRequests.length > 0 ? (
                       <div className="space-y-3">
                         {squadRequests.map(request => {
+                          // Get the requester info safely using a memoized approach
                           const requester = useUserStore.getState().getSquadMemberById(request.requesterId);
                           return (
                             <div key={request.id} className="flex justify-between items-center border-b pb-2">
@@ -123,9 +135,9 @@ const CreateWishlistItem = () => {
                       </Button>
                     </div>
                     
-                    {useUserStore.getState().getAcceptedSquadMembers().length > 0 ? (
+                    {acceptedSquadMembers.length > 0 ? (
                       <div className="space-y-2">
-                        {useUserStore.getState().getAcceptedSquadMembers().map(member => (
+                        {acceptedSquadMembers.map(member => (
                           <div key={member.id} className="flex justify-between items-center border-b pb-2">
                             <div>
                               <div className="font-medium">{member.name}</div>
