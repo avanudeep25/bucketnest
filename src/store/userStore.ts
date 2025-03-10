@@ -180,7 +180,7 @@ export const useUserStore = create<UserState>()(
           // Generate a username from name if none exists
           let username = currentUser.username;
           if (!username) {
-            username = name.toLowerCase().replace(/\s+/g, '');
+            username = get().generateUsername(name);
           }
           
           // Update user metadata in Supabase Auth

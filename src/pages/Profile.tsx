@@ -56,6 +56,7 @@ const Profile = () => {
     try {
       setIsSaving(true);
       
+      // Log the values we're submitting
       console.log("Submitting profile update with:", formValues);
       
       // Use the createUser function from userStore to update profile
@@ -63,13 +64,12 @@ const Profile = () => {
       
       toast.success("Profile updated successfully!");
       
-      // Reset saving state and navigate away
-      setIsSaving(false);
+      // Only navigate away when update is successful
       navigate('/wishlist');
-      
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile. Please try again.");
+    } finally {
       setIsSaving(false);
     }
   };
