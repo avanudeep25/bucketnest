@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import WishlistForm from "@/components/wishlist/WishlistForm";
 import Navigation from "@/components/layout/Navigation";
@@ -169,6 +168,7 @@ const CreateWishlistItem = () => {
           </div>
         )}
         
+        {/* Pass the wishlistItem as the editItem prop */}
         <WishlistForm editItem={wishlistItem} />
       </div>
     </div>

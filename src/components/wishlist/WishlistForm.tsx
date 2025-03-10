@@ -65,7 +65,7 @@ import {
 } from "@/components/ui/avatar";
 import LocationAutocomplete from "./LocationAutocomplete";
 
-interface WishlistFormProps {
+export interface WishlistFormProps {
   editItem?: WishlistItem;
 }
 
