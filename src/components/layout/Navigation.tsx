@@ -1,9 +1,28 @@
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Bookmark, Plus, Home, List } from "lucide-react";
+import { Bookmark, Plus, Home, List, LogOut, User } from "lucide-react";
+import { useUserStore } from "@/store/userStore";
+import { toast } from "sonner";
 
 const Navigation = () => {
+  const { currentUser, logout } = useUserStore();
+  const navigate = useNavigate();
+
+  const handleAddExperience = () => {
+    if (!currentUser) {
+      navigate("/login", { state: { from: "/create" } });
+    } else {
+      navigate("/create");
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out successfully");
+    navigate("/");
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm border-b">
       <div className="container flex h-16 items-center justify-between">
@@ -22,12 +41,31 @@ const Navigation = () => {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Link to="/create">
-            <Button className="gap-2 bg-blue-500 hover:bg-blue-600">
-              <Plus className="h-4 w-4" />
-              <span>Add Experience</span>
-            </Button>
-          </Link>
+          {currentUser ? (
+            <>
+              <Button variant="ghost" onClick={handleLogout} className="gap-2">
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </Button>
+              <Button onClick={handleAddExperience} className="gap-2 bg-blue-500 hover:bg-blue-600">
+                <Plus className="h-4 w-4" />
+                <span>Add Experience</span>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" asChild>
+                <Link to="/login">
+                  <User className="h-4 w-4 mr-2" />
+                  Login
+                </Link>
+              </Button>
+              <Button onClick={handleAddExperience} className="gap-2 bg-blue-500 hover:bg-blue-600">
+                <Plus className="h-4 w-4" />
+                <span>Add Experience</span>
+              </Button>
+            </>
+          )}
         </div>
       </div>
       
@@ -42,10 +80,13 @@ const Navigation = () => {
             <List className="h-5 w-5 mb-1" />
             Experiences
           </Link>
-          <Link to="/create" className="flex flex-col items-center justify-center text-xs font-medium">
+          <button 
+            onClick={handleAddExperience} 
+            className="flex flex-col items-center justify-center text-xs font-medium"
+          >
             <Plus className="h-5 w-5 mb-1" />
             Add
-          </Link>
+          </button>
         </div>
       </div>
     </header>

@@ -26,10 +26,28 @@ const generateUsername = (): string => {
   return `${randomAdjective}${randomNoun}${randomNum}`;
 };
 
+// Simple email validation
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+}
+
 interface UserState {
   currentUser: UserProfile | null;
   squadMembers: UserProfile[];
   squadRelationships: SquadRelationship[];
+  users: AuthUser[];
+  
+  // Auth methods
+  loginWithEmail: (email: string, password: string) => Promise<void>;
+  signupWithEmail: (name: string, email: string, password: string) => Promise<void>;
+  logout: () => void;
   
   // User profile methods
   createUser: (name: string, bio?: string, avatarUrl?: string) => void;
@@ -77,6 +95,103 @@ export const useUserStore = create<UserState>()(
       currentUser: null,
       squadMembers: dummySquadMembers,
       squadRelationships: [],
+      users: [
+        // Demo account for testing
+        { id: '1', email: 'demo@example.com', name: 'Demo User' }
+      ],
+      
+      loginWithEmail: async (email, password) => {
+        if (!isValidEmail(email)) {
+          throw new Error('Invalid email format');
+        }
+        
+        // In a real app, this would be a server request
+        // For now, we'll simulate a delay and do a simple lookup
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        const user = get().users.find(u => u.email.toLowerCase() === email.toLowerCase());
+        
+        if (!user) {
+          throw new Error('User not found');
+        }
+        
+        // Check if user already has a profile
+        let userProfile = get().currentUser;
+        
+        // If no profile exists, create one based on auth user
+        if (!userProfile) {
+          userProfile = {
+            id: user.id,
+            username: generateUsername(),
+            name: user.name,
+            bio: undefined,
+            avatarUrl: undefined,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+        }
+        
+        set({ currentUser: userProfile });
+      },
+      
+      signupWithEmail: async (name, email, password) => {
+        if (!isValidEmail(email)) {
+          throw new Error('Invalid email format');
+        }
+        
+        // In a real app, this would be a server request
+        // For now, we'll simulate a delay and do a simple check
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const userExists = get().users.some(u => u.email.toLowerCase() === email.toLowerCase());
+        
+        if (userExists) {
+          throw new Error('Email already in use');
+        }
+        
+        const newUserId = uuidv4();
+        
+        // Create auth user
+        const newUser: AuthUser = {
+          id: newUserId,
+          email,
+          name,
+        };
+        
+        // Create profile
+        const newProfile: UserProfile = {
+          id: newUserId,
+          username: generateUsername(),
+          name,
+          bio: undefined,
+          avatarUrl: undefined,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        
+        set(state => ({
+          users: [...state.users, newUser],
+          currentUser: newProfile,
+        }));
+        
+        // For testing: create some dummy relationships with the new user
+        const dummyRelationships: SquadRelationship[] = dummySquadMembers.map((member, index) => ({
+          id: uuidv4(),
+          requesterId: index < 1 ? member.id : newUserId,
+          requesteeId: index < 1 ? newUserId : member.id,
+          status: index === 0 ? 'accepted' : 'pending',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }));
+        
+        set((state) => ({
+          squadRelationships: [...state.squadRelationships, ...dummyRelationships]
+        }));
+      },
+      
+      logout: () => {
+        set({ currentUser: null });
+      },
       
       createUser: (name, bio, avatarUrl) => {
         const newUser: UserProfile = {
