@@ -137,11 +137,23 @@ const WishlistForm = () => {
   const itemType = form.watch("itemType");
 
   const onSubmit = (data: FormValues) => {
-    addItem({
-      ...data,
+    // Create an object with required fields explicitly set
+    const newItem = {
+      title: data.title, // Explicitly set required field
+      itemType: data.itemType as WishItemType, // Explicitly set required field
+      description: data.description || undefined,
+      activityType: data.activityType as ActivityType | undefined,
+      purposeOfVisit: data.purposeOfVisit || undefined,
+      targetDate: data.targetDate,
+      budgetRange: data.budgetRange as BudgetRange | undefined,
+      imageUrl: data.imageUrl || undefined,
+      link: data.link || undefined,
+      notes: data.notes || undefined,
       natureOfPlace: selectedNatures,
-      tags: selectedTags,
-    });
+      tags: selectedTags.length > 0 ? selectedTags : undefined,
+    };
+    
+    addItem(newItem);
     
     toast.success("Wishlist item created successfully!");
     navigate("/wishlist");
