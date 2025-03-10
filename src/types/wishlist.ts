@@ -35,21 +35,42 @@ export type TravelType = 'Solo' | 'Friends' | 'Family' | 'Work' | 'Other';
 
 export type TimeframeType = 'Specific Date' | 'Week' | 'Month' | 'Year' | 'Someday';
 
+export type UserProfile = {
+  id: string;
+  username: string;
+  name: string;
+  bio?: string;
+  avatarUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type SquadRelationship = {
+  id: string;
+  requesterId: string;
+  requesteeId: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export type WishlistItem = {
   id: string;
   title: string;
   description?: string;
   itemType: WishItemType;
-  natureOfPlace?: PlaceNature[];
   activityType?: ActivityType;
   travelType?: TravelType;
   targetDate?: Date;
+  targetWeek?: string; // Format: "YYYY-WW" (year and week number)
+  targetMonth?: string; // Format: "YYYY-MM" (year and month)
   timeframeType?: TimeframeType;
   budgetRange?: BudgetRange;
   tags?: string[];
   imageUrl?: string;
   link?: string;
   notes?: string;
+  squadMembers?: string[]; // IDs of squad members included in this experience
   createdAt: Date;
   updatedAt: Date;
 };

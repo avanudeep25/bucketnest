@@ -1,13 +1,14 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { format, parse, getWeek, getYear, getMonth } from "date-fns";
+import { CalendarIcon, X, UserPlus, CheckIcon, XIcon } from "lucide-react";
 import { ActivityType, BudgetRange, TravelType, TimeframeType, WishItemType } from "@/types/wishlist";
 import { useWishlistStore } from "@/store/wishlistStore";
+import { useUserStore } from "@/store/userStore";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -50,7 +51,19 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
-import { CheckIcon, XIcon } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
 
 const itemTypes: WishItemType[] = ['places', 'activities', 'products', 'other'];
 
@@ -100,21 +113,87 @@ const formSchema = z.object({
   travelType: z.string().optional(),
   timeframeType: z.string(),
   targetDate: z.date().optional(),
+  targetWeek: z.string().optional(),
+  targetMonth: z.string().optional(),
   budgetRange: z.string().optional(),
   tags: z.array(z.string()).optional(),
   imageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   link: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   notes: z.string().optional(),
+  squadMembers: z.array(z.string()).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
+// Generate array of months for the next 2 years
+const generateMonthOptions = () => {
+  const months = [];
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+
+  for (let year = currentYear; year <= currentYear + 2; year++) {
+    const startMonth = year === currentYear ? currentMonth : 0;
+    for (let month = startMonth; month < 12; month++) {
+      const date = new Date(year, month, 1);
+      months.push({
+        value: `${year}-${String(month + 1).padStart(2, '0')}`,
+        label: format(date, 'MMMM yyyy')
+      });
+    }
+  }
+
+  return months;
+};
+
+// Generate array of weeks for the next 6 months
+const generateWeekOptions = () => {
+  const weeks = [];
+  const currentDate = new Date();
+  let tempDate = new Date(currentDate);
+
+  // Generate next 26 weeks (approximately 6 months)
+  for (let i = 0; i < 26; i++) {
+    const year = getYear(tempDate);
+    const weekNum = getWeek(tempDate);
+    const weekStart = new Date(tempDate);
+    const weekEnd = new Date(tempDate);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+
+    weeks.push({
+      value: `${year}-${String(weekNum).padStart(2, '0')}`,
+      label: `Week ${weekNum}: ${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`
+    });
+
+    // Move to next week
+    tempDate.setDate(tempDate.getDate() + 7);
+  }
+
+  return weeks;
+};
+
+const monthOptions = generateMonthOptions();
+const weekOptions = generateWeekOptions();
+
 const WishlistForm = () => {
   const navigate = useNavigate();
   const addItem = useWishlistStore((state) => state.addItem);
+  const currentUser = useUserStore((state) => state.currentUser);
+  const getAcceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState("");
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [timePickerType, setTimePickerType] = useState<string | null>(null);
+  const [selectedSquadMembers, setSelectedSquadMembers] = useState<string[]>([]);
+  const [userDialogOpen, setUserDialogOpen] = useState(false);
+
+  const acceptedSquadMembers = getAcceptedSquadMembers();
+
+  useEffect(() => {
+    // If user selects friends as travel type, reset squad members
+    if (form.getValues("travelType") !== "Friends") {
+      setSelectedSquadMembers([]);
+    }
+  }, [form.watch("travelType")]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -126,16 +205,28 @@ const WishlistForm = () => {
       travelType: undefined,
       timeframeType: "Month",
       targetDate: undefined,
+      targetWeek: undefined,
+      targetMonth: undefined,
       budgetRange: undefined,
       tags: [],
       imageUrl: "",
       link: "",
       notes: "",
+      squadMembers: [],
     },
   });
 
   const itemType = form.watch("itemType");
   const timeframeType = form.watch("timeframeType");
+  const travelType = form.watch("travelType");
+
+  useEffect(() => {
+    setTimePickerType(timeframeType);
+    // Reset date fields when timeframe type changes
+    form.setValue("targetDate", undefined);
+    form.setValue("targetWeek", undefined);
+    form.setValue("targetMonth", undefined);
+  }, [timeframeType, form]);
 
   const onSubmit = (data: FormValues) => {
     // Create an object with required fields explicitly set
@@ -147,11 +238,14 @@ const WishlistForm = () => {
       travelType: data.travelType as TravelType | undefined,
       timeframeType: data.timeframeType as TimeframeType,
       targetDate: data.targetDate,
+      targetWeek: data.targetWeek,
+      targetMonth: data.targetMonth,
       budgetRange: data.budgetRange as BudgetRange | undefined,
       imageUrl: data.imageUrl || undefined,
       link: data.link || undefined,
       notes: data.notes || undefined,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
+      squadMembers: selectedSquadMembers.length > 0 ? selectedSquadMembers : undefined,
     };
     
     addItem(newItem);
@@ -174,6 +268,65 @@ const WishlistForm = () => {
       setSelectedTags([...selectedTags, tag]);
     }
   };
+
+  const toggleSquadMember = (memberId: string) => {
+    if (selectedSquadMembers.includes(memberId)) {
+      setSelectedSquadMembers(selectedSquadMembers.filter(id => id !== memberId));
+    } else {
+      setSelectedSquadMembers([...selectedSquadMembers, memberId]);
+    }
+  };
+
+  // If no user profile exists, show create profile form
+  if (!currentUser) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Create Your Profile</CardTitle>
+          <CardDescription>
+            Set up your profile before adding experiences
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const name = formData.get('name') as string;
+              const bio = formData.get('bio') as string;
+              
+              if (name) {
+                useUserStore.getState().createUser(name, bio);
+                toast.success("Profile created successfully!");
+              }
+            }} 
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <FormLabel htmlFor="name">Your Name</FormLabel>
+              <Input id="name" name="name" placeholder="Enter your name" required />
+            </div>
+            
+            <div className="space-y-2">
+              <FormLabel htmlFor="bio">About You (Optional)</FormLabel>
+              <Textarea 
+                id="bio" 
+                name="bio" 
+                placeholder="Tell us a bit about yourself"
+                className="min-h-[100px]"
+              />
+            </div>
+            
+            <div className="pt-2">
+              <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600">
+                Create Profile
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -226,11 +379,11 @@ const WishlistForm = () => {
                 name="itemType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Experience Type</FormLabel>
+                    <FormLabel>Wish Type</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select experience type" />
+                          <SelectValue placeholder="Select wish type" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -298,6 +451,99 @@ const WishlistForm = () => {
                 )}
               />
               
+              {travelType === "Friends" && (
+                <FormItem>
+                  <FormLabel>Squad Members</FormLabel>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedSquadMembers.length > 0 ? (
+                        selectedSquadMembers.map((memberId) => {
+                          const member = acceptedSquadMembers.find(m => m.id === memberId);
+                          return (
+                            <Badge 
+                              key={memberId} 
+                              className="px-3 py-1 gap-1 bg-blue-100 text-blue-800"
+                            >
+                              {member?.name || 'Unknown'}
+                              <X 
+                                className="h-3 w-3 cursor-pointer" 
+                                onClick={() => toggleSquadMember(memberId)}
+                              />
+                            </Badge>
+                          );
+                        })
+                      ) : (
+                        <div className="text-sm text-muted-foreground">No squad members selected</div>
+                      )}
+                    </div>
+                    
+                    <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="flex items-center gap-2 mt-2"
+                          disabled={acceptedSquadMembers.length === 0}
+                        >
+                          <UserPlus className="h-4 w-4" />
+                          Add Squad Members
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Select Squad Members</DialogTitle>
+                          <DialogDescription>
+                            Choose who you'd like to join you on this experience
+                          </DialogDescription>
+                        </DialogHeader>
+                        
+                        <div className="space-y-4 mt-4 max-h-[300px] overflow-y-auto">
+                          {acceptedSquadMembers.length > 0 ? (
+                            acceptedSquadMembers.map((member) => (
+                              <div 
+                                key={member.id} 
+                                className={cn(
+                                  "flex items-center justify-between p-3 rounded-md hover:bg-slate-100 cursor-pointer",
+                                  selectedSquadMembers.includes(member.id) && "bg-blue-50 border border-blue-200"
+                                )}
+                                onClick={() => toggleSquadMember(member.id)}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="h-10 w-10">
+                                    <AvatarImage src={member.avatarUrl} />
+                                    <AvatarFallback>{member.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <div className="font-medium">{member.name}</div>
+                                    <div className="text-xs text-muted-foreground">@{member.username}</div>
+                                  </div>
+                                </div>
+                                {selectedSquadMembers.includes(member.id) && (
+                                  <CheckIcon className="h-5 w-5 text-blue-500" />
+                                )}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-center p-4 text-muted-foreground">
+                              You haven't added any squad members yet
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex justify-end pt-2">
+                          <Button 
+                            type="button" 
+                            onClick={() => setUserDialogOpen(false)}
+                          >
+                            Done
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </FormItem>
+              )}
+              
               <FormField
                 control={form.control}
                 name="timeframeType"
@@ -307,7 +553,6 @@ const WishlistForm = () => {
                     <Select 
                       onValueChange={(value) => {
                         field.onChange(value);
-                        setShowDatePicker(value === 'Specific Date');
                       }} 
                       defaultValue={field.value}
                     >
@@ -329,7 +574,7 @@ const WishlistForm = () => {
                 )}
               />
               
-              {showDatePicker && (
+              {timePickerType === 'Specific Date' && (
                 <FormField
                   control={form.control}
                   name="targetDate"
@@ -365,6 +610,60 @@ const WishlistForm = () => {
                           />
                         </PopoverContent>
                       </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              
+              {timePickerType === 'Week' && (
+                <FormField
+                  control={form.control}
+                  name="targetWeek"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Select Week</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select which week" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {weekOptions.map((week) => (
+                            <SelectItem key={week.value} value={week.value}>
+                              {week.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              
+              {timePickerType === 'Month' && (
+                <FormField
+                  control={form.control}
+                  name="targetMonth"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Select Month</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select which month" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {monthOptions.map((month) => (
+                            <SelectItem key={month.value} value={month.value}>
+                              {month.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
