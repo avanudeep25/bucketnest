@@ -11,8 +11,7 @@ const Index = () => {
       
       <div className="flex-1">
         {/* Hero section */}
-        <section className="relative pt-16 pb-24 md:py-24 lg:py-32 bg-[url('https://images.unsplash.com/photo-1527786356703-4b100091cd2c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1774&q=80')] bg-cover bg-center">
-          <div className="absolute inset-0 bg-black bg-opacity-60"></div>
+        <section className="relative pt-16 pb-24 md:py-24 lg:py-32 bg-gradient-to-br from-blue-50 to-blue-200">
           <div className="container px-4 md:px-6 relative z-10">
             <div className="grid gap-6 md:grid-cols-2 md:gap-16 items-center">
               <div className="flex flex-col gap-4">
@@ -20,10 +19,10 @@ const Index = () => {
                   <div className="inline-block rounded-lg bg-blue-100 px-3 py-1 text-sm text-blue-800 mb-4">
                     Your Personal Bucket List Planner
                   </div>
-                  <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-white">
+                  <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-gray-900">
                     <span className="font-normal">Your Next Adventure Awaits!</span>
                   </h1>
-                  <p className="mt-4 text-gray-200 md:text-xl">
+                  <p className="mt-4 text-gray-700 md:text-xl">
                     From your next vacation to your next friends' outing, from tasting a new whisky to fixing a place to meet your girlfriend—BucketNest keeps all your bucket-list items small to big all in one place.
                   </p>
                 </div>
@@ -43,8 +42,8 @@ const Index = () => {
                   <div className="p-3 md:p-6 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg animate-float">
                     <div className="aspect-video rounded-lg bg-gray-100 overflow-hidden">
                       <img
-                        src="https://images.unsplash.com/photo-1458668383970-8ddd3927deed"
-                        alt="Map Pin Location"
+                        src="/lovable-uploads/3a953276-735b-47fd-a3a8-0ebffb2ebb94.png"
+                        alt="Collection of vintage photographs"
                         className="w-full h-full object-cover"
                       />
                     </div>
