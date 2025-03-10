@@ -341,7 +341,7 @@ const Wishlist = () => {
                           <SelectValue placeholder="Select month" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value={undefined}>All months</SelectItem>
+                          <SelectItem value="undefined">All months</SelectItem>
                           {monthOptions.map((month) => (
                             <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
                           ))}
@@ -357,7 +357,7 @@ const Wishlist = () => {
                           <SelectValue placeholder="Select year" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value={undefined}>All years</SelectItem>
+                          <SelectItem value="undefined">All years</SelectItem>
                           {yearOptions.map((year) => (
                             <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
                           ))}
