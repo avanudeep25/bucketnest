@@ -11,8 +11,8 @@ const Index = () => {
       
       <div className="flex-1">
         {/* Hero section */}
-        <section className="relative pt-16 pb-24 md:py-24 lg:py-32 bg-[url('https://images.unsplash.com/photo-1612173214155-cd7c28a9f497?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80')] bg-cover bg-center">
-          <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+        <section className="relative pt-16 pb-24 md:py-24 lg:py-32 bg-[url('https://images.unsplash.com/photo-1527786356703-4b100091cd2c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1774&q=80')] bg-cover bg-center">
+          <div className="absolute inset-0 bg-black bg-opacity-60"></div>
           <div className="container px-4 md:px-6 relative z-10">
             <div className="grid gap-6 md:grid-cols-2 md:gap-16 items-center">
               <div className="flex flex-col gap-4">
@@ -21,7 +21,7 @@ const Index = () => {
                     Your Personal Bucket List Planner
                   </div>
                   <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-white">
-                    <span className="font-normal">Plan your</span> <span className="italic font-medium text-blue-300">experiences</span>
+                    <span className="font-normal">Plan your</span> <span className="font-feelfree italic text-blue-300">experiences</span>
                   </h1>
                   <p className="mt-4 text-gray-200 md:text-xl">
                     BucketNest helps you organize all your planned experiences - 
@@ -44,8 +44,8 @@ const Index = () => {
                   <div className="p-3 md:p-6 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg animate-float">
                     <div className="aspect-video rounded-lg bg-gray-100 overflow-hidden">
                       <img
-                        src="https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
-                        alt="Northern Lights"
+                        src="https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1488&q=80"
+                        alt="Bucket List Adventures"
                         className="w-full h-full object-cover"
                       />
                     </div>
