@@ -67,10 +67,16 @@ const Navigation = () => {
 
         <div className="flex items-center gap-4">
           {currentUser ? (
-            <Button variant="ghost" onClick={handleLogout} className="gap-2">
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Logout</span>
-            </Button>
+            <>
+              <Button variant="ghost" onClick={() => navigate('/profile')} className="text-blue-500">
+                <User className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Profile</span>
+              </Button>
+              <Button variant="ghost" onClick={handleLogout} className="gap-2">
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </Button>
+            </>
           ) : (
             <Button variant="outline" asChild>
               <Link to="/login">
@@ -84,7 +90,7 @@ const Navigation = () => {
       
       {/* Mobile navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background z-50">
-        <div className="grid grid-cols-3 py-2">
+        <div className="grid grid-cols-4 py-2">
           <Link to="/" className="flex flex-col items-center justify-center text-xs font-medium">
             <Home className="h-5 w-5 mb-1" />
             Home
@@ -97,9 +103,15 @@ const Navigation = () => {
             onClick={handleAddExperience} 
             className="flex flex-col items-center justify-center text-xs font-medium"
           >
-            <Plus className="h-5 w-5 mb-1" />
+            <Plus className="h-5 w-5 mb-1 text-blue-500" />
             Add
           </button>
+          {currentUser && (
+            <Link to="/profile" className="flex flex-col items-center justify-center text-xs font-medium">
+              <User className="h-5 w-5 mb-1 text-blue-500" />
+              Profile
+            </Link>
+          )}
         </div>
       </div>
     </header>
