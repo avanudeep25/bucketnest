@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { WishlistItem } from '@/types/wishlist';
+import { WishlistItem, ActivityType } from '@/types/wishlist';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -46,15 +46,15 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         id: item.id,
         title: item.title,
         description: item.description || undefined,
-        itemType: item.item_type as WishlistItem['itemType'], // Cast to correct type
-        activityType: item.activity_type || undefined,
-        timeframeType: item.timeframe_type as WishlistItem['timeframeType'] || undefined, // Cast to correct type
+        itemType: item.item_type as WishlistItem['itemType'], 
+        activityType: item.activity_type as ActivityType || undefined, // Cast to ActivityType explicitly
+        timeframeType: item.timeframe_type as WishlistItem['timeframeType'] || undefined,
         targetDate: item.target_date ? new Date(item.target_date) : undefined,
         targetWeek: item.target_week || undefined,
         targetMonth: item.target_month || undefined,
         targetYear: item.target_year || undefined,
-        travelType: item.travel_type as WishlistItem['travelType'] || undefined, // Cast to correct type
-        budgetRange: item.budget_range as WishlistItem['budgetRange'] || undefined, // Cast to correct type
+        travelType: item.travel_type as WishlistItem['travelType'] || undefined,
+        budgetRange: item.budget_range as WishlistItem['budgetRange'] || undefined,
         destination: item.destination || undefined,
         link: item.link || undefined,
         notes: item.notes || undefined,
