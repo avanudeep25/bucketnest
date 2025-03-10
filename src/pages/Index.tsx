@@ -28,7 +28,7 @@ const Index = () => {
                     Your Personal Bucket List Planner
                   </div>
                   <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-gray-900">
-                    <span className="font-normal">Your Next Adventure Awaits!</span>
+                    <span className="font-normal italic">Your Next Adventure Awaits!</span>
                   </h1>
                   <p className="mt-4 text-gray-700 md:text-xl">
                     From your next vacation to your next friends' outing, from tasting a new whisky to fixing a place to meet your girlfriend—BucketNest keeps all your bucket-list items small to big all in one place.
@@ -50,8 +50,8 @@ const Index = () => {
                   <div className="p-3 md:p-6 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg animate-float">
                     <div className="aspect-video rounded-lg bg-gray-100 overflow-hidden">
                       <img
-                        src="/lovable-uploads/3a953276-735b-47fd-a3a8-0ebffb2ebb94.png"
-                        alt="Collection of vintage photographs"
+                        src="https://images.unsplash.com/photo-1469474968028-56623f02e42e"
+                        alt="Landscape photography of mountain hit by sun rays"
                         className="w-full h-full object-cover"
                       />
                     </div>
