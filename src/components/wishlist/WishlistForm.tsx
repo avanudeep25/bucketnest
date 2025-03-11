@@ -1,15 +1,13 @@
-import { useState, useEffect, useMemo } from "react";
+
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, FormProvider } from "react-hook-form";
-import { z } from "zod";
-import { format, parse, getWeek, getYear, getMonth, startOfWeek, endOfWeek, addDays } from "date-fns";
-import { CalendarIcon, X, UserPlus, CheckIcon, XIcon } from "lucide-react";
-import { ActivityType, BudgetRange, TravelType, TimeframeType, WishItemType, WishlistItem } from "@/types/wishlist";
+import { useForm } from "react-hook-form";
+import { FormProvider } from "react-hook-form";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useUserStore } from "@/store/userStore";
+import { WishItemType, WishlistItem, ActivityType, TravelType, TimeframeType, BudgetRange } from "@/types/wishlist";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -28,242 +26,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 import { toast } from 'sonner';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { formSchema, FormValues } from "./schema";
+import { activityTypes, budgetRanges } from "@/constants/wishlistFormOptions";
+import TagsManager from "./TagsManager";
+import SquadMembersSelector from "./SquadMembersSelector";
+import TimeFrameSelector from "./TimeFrameSelector";
 import LocationAutocomplete from "./LocationAutocomplete";
+import UserProfileForm from "./UserProfileForm";
+import { getWeekStringFromDate } from "@/utils/dateUtils";
 
 export interface WishlistFormProps {
   editItem?: WishlistItem;
 }
-
-const itemTypes: WishItemType[] = ['places', 'activities', 'products', 'other'];
-
-const activityTypes: ActivityType[] = [
-  'Sight Seeing',
-  'Food & Dining',
-  'Adventure Sports',
-  'Cultural Experience',
-  'Entertainment',
-  'Wellness & Relaxation',
-  'Shopping',
-  'Exploration',
-  'Education',
-  'Volunteering',
-  'Other',
-];
-
-const travelTypes: TravelType[] = [
-  'Solo',
-  'Couple',
-  'Friends',
-  'Family',
-  'Work',
-  'Other',
-];
-
-const timeframeTypes: TimeframeType[] = [
-  'Specific Date',
-  'Week',
-  'Month',
-  'Year',
-  'Someday',
-];
-
-const budgetRanges: BudgetRange[] = [
-  'Below INR 5000',
-  'INR 5000 - INR 10,000',
-  'INR 10,000 - INR 50,000',
-  'Above INR 50,000'
-];
-
-const popularTags = [
-  "Thrilling", "Peaceful", "Family-friendly", "Solo", "Romantic", 
-  "Weekend", "Summer", "Winter", "Spring", "Fall",
-  "Hidden gem", "Popular", "Historical", "Modern", "Scenic",
-  "Quick", "Local", "International", "Spontaneous", "Planned"
-];
-
-const formSchema = z.object({
-  title: z.string().min(3, "Title must be at least 3 characters").max(100),
-  destination: z.string().min(3, "Please select a destination"),
-  description: z.string().optional(),
-  itemType: z.enum(['places', 'activities', 'products', 'other']),
-  activityType: z.string().optional(),
-  travelType: z.string().optional(),
-  timeframeType: z.string(),
-  targetDate: z.date().optional(),
-  targetWeek: z.string().optional(),
-  targetMonth: z.string().optional(),
-  targetYear: z.number().optional(),
-  budgetRange: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  imageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
-  link: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-const generateMonthOptions = () => {
-  const months = [];
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth();
-
-  for (let year = currentYear; year <= currentYear + 2; year++) {
-    const startMonth = year === currentYear ? currentMonth : 0;
-    for (let month = startMonth; month < 12; month++) {
-      const date = new Date(year, month, 1);
-      months.push({
-        value: `${year}-${String(month + 1).padStart(2, '0')}`,
-        label: format(date, 'MMMM yyyy')
-      });
-    }
-  }
-
-  return months;
-};
-
-const generateWeekOptions = () => {
-  const weeks = [];
-  const currentDate = new Date();
-  let tempDate = new Date(currentDate);
-
-  for (let i = 0; i < 26; i++) {
-    const year = getYear(tempDate);
-    const weekNum = getWeek(tempDate);
-    const weekStart = new Date(tempDate);
-    const weekEnd = new Date(tempDate);
-    weekEnd.setDate(weekEnd.getDate() + 6);
-
-    weeks.push({
-      value: `${year}-${String(weekNum).padStart(2, '0')}`,
-      label: `Week ${weekNum}: ${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`
-    });
-
-    tempDate.setDate(tempDate.getDate() + 7);
-  }
-
-  return weeks;
-};
-
-const monthOptions = generateMonthOptions();
-const weekOptions = generateWeekOptions();
 
 const WishlistForm = ({ editItem }: WishlistFormProps) => {
   const navigate = useNavigate();
   const addItem = useWishlistStore((state) => state.addItem);
   const updateItem = useWishlistStore((state) => state.updateItem);
   const currentUser = useUserStore((state) => state.currentUser);
-  const getAcceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers);
-  const searchUsers = useUserStore((state) => state.searchUsers);
+  
   const [selectedTags, setSelectedTags] = useState<string[]>(editItem?.tags || []);
-  const [customTag, setCustomTag] = useState("");
   const [timePickerType, setTimePickerType] = useState<string | null>(editItem?.timeframeType || null);
   const [selectedSquadMembers, setSelectedSquadMembers] = useState<string[]>(editItem?.squadMembers || []);
-  const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [selectedWeekDate, setSelectedWeekDate] = useState<Date | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loadedSquadMembers, setLoadedSquadMembers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-
-  useEffect(() => {
-    const loadSquadMembers = async () => {
-      try {
-        setIsLoading(true);
-        const members = await getAcceptedSquadMembers();
-        setLoadedSquadMembers(members || []);
-      } catch (error) {
-        console.error("Error loading squad members:", error);
-        setLoadedSquadMembers([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadSquadMembers();
-  }, [getAcceptedSquadMembers]);
-
-  const handleUserSearch = async () => {
-    if (!searchQuery || searchQuery.length < 3) {
-      setSearchResults([]);
-      return;
-    }
-    
-    setIsSearching(true);
-    try {
-      const results = await searchUsers(searchQuery);
-      setSearchResults(results);
-    } catch (error) {
-      console.error("Error searching for users:", error);
-      toast.error("Failed to search users");
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const sendSquadRequest = async (username: string) => {
-    try {
-      const success = await useUserStore.getState().sendSquadRequest(username);
-      if (success) {
-        toast.success(`Request sent to @${username}`);
-        setSearchQuery("");
-        setSearchResults([]);
-      } else {
-        toast.error("Failed to send request");
-      }
-    } catch (error) {
-      console.error("Error sending squad request:", error);
-      toast.error("Failed to send request");
-    }
-  };
-
-  const getWeekStringFromDate = (date: Date) => {
-    const year = getYear(date);
-    const weekNum = getWeek(date);
-    return `${year}-${String(weekNum).padStart(2, '0')}`;
-  };
-
-  const getSelectedWeekText = (date: Date) => {
-    const weekStart = startOfWeek(date);
-    const weekEnd = endOfWeek(date);
-    return `Week ${getWeek(date)}: ${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`;
-  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -375,82 +162,13 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
     }
   };
 
-  const addTag = () => {
-    if (customTag.trim() && !selectedTags.includes(customTag.trim())) {
-      setSelectedTags([...selectedTags, customTag.trim()]);
-      setCustomTag("");
-    }
-  };
-
-  const toggleTag = (tag: string) => {
-    if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter((t) => t !== tag));
-    } else {
-      setSelectedTags([...selectedTags, tag]);
-    }
-  };
-
-  const toggleSquadMember = (memberId: string) => {
-    if (selectedSquadMembers.includes(memberId)) {
-      setSelectedSquadMembers(selectedSquadMembers.filter(id => id !== memberId));
-    } else {
-      setSelectedSquadMembers([...selectedSquadMembers, memberId]);
-    }
-  };
-
   if (!currentUser) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Create Your Profile</CardTitle>
-          <CardDescription>
-            Set up your profile before adding Bucket List Goals
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form 
-            onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const name = formData.get('name') as string;
-              const bio = formData.get('bio') as string;
-              
-              if (name) {
-                useUserStore.getState().createUser(name, bio);
-                toast.success("Profile created successfully!");
-              }
-            }} 
-            className="space-y-4"
-          >
-            <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Your Name</label>
-              <Input id="name" name="name" placeholder="Enter your name" required />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="bio" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">About You (Optional)</label>
-              <Textarea 
-                id="bio" 
-                name="bio" 
-                placeholder="Tell us a bit about yourself"
-                className="min-h-[100px]"
-              />
-            </div>
-            
-            <div className="pt-2">
-              <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600">
-                Create Profile
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    );
+    return <UserProfileForm />;
   }
 
   return (
-    <Card>
-      <CardContent>
+    <div className="card">
+      <div className="card-content">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-4 items-end">
@@ -541,66 +259,14 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="timeframeType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>When's the Plan?</FormLabel>
-                    <Select 
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                      }} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="When do you plan to go?" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {timeframeTypes.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+              <TimeFrameSelector
+                form={form}
+                timePickerType={timePickerType}
+                setTimePickerType={setTimePickerType}
+                selectedWeekDate={selectedWeekDate}
+                setSelectedWeekDate={setSelectedWeekDate}
               />
 
-              {timePickerType === 'Year' && (
-                <FormField
-                  control={form.control}
-                  name="targetYear"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Select Year</FormLabel>
-                      <Select 
-                        onValueChange={(value) => field.onChange(parseInt(value, 10))} 
-                        defaultValue={field.value?.toString()}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select year" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() + i).map(year => (
-                            <SelectItem key={year} value={year.toString()}>
-                              {year}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              
               <FormField
                 control={form.control}
                 name="travelType"
@@ -614,7 +280,7 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {travelTypes.map((type) => (
+                        {['Solo', 'Couple', 'Friends', 'Family', 'Work', 'Other'].map((type) => (
                           <SelectItem key={type} value={type}>
                             {type}
                           </SelectItem>
@@ -627,292 +293,9 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
               />
               
               {travelType === "Friends" && (
-                <FormItem>
-                  <FormLabel>Squad Members</FormLabel>
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex flex-wrap gap-2">
-                      {selectedSquadMembers.length > 0 ? (
-                        selectedSquadMembers.map((memberId) => {
-                          const member = loadedSquadMembers.find(m => m.id === memberId);
-                          return (
-                            <Badge 
-                              key={memberId} 
-                              className="px-3 py-1 gap-1 bg-blue-100 text-blue-800"
-                            >
-                              {member?.name || 'Unknown'}
-                              <X 
-                                className="h-3 w-3 cursor-pointer" 
-                                onClick={() => toggleSquadMember(memberId)}
-                              />
-                            </Badge>
-                          );
-                        })
-                      ) : (
-                        <div className="text-sm text-muted-foreground">No squad members selected</div>
-                      )}
-                    </div>
-                    
-                    <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          className="flex items-center gap-2 mt-2"
-                        >
-                          <UserPlus className="h-4 w-4" />
-                          Add Squad Members
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Select Squad Members</DialogTitle>
-                          <DialogDescription>
-                            Choose who you'd like to join you on this experience
-                          </DialogDescription>
-                        </DialogHeader>
-                        
-                        <div className="space-y-4 mt-4">
-                          <div className="space-y-2">
-                            <label htmlFor="search-username" className="text-sm font-medium">
-                              Search for users by name or username
-                            </label>
-                            <div className="flex gap-2">
-                              <Input
-                                id="search-username"
-                                placeholder="Search for users"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    handleUserSearch();
-                                  }
-                                }}
-                              />
-                              <Button 
-                                type="button" 
-                                onClick={handleUserSearch}
-                                disabled={isSearching || searchQuery.length < 3}
-                              >
-                                {isSearching ? "Searching..." : "Search"}
-                              </Button>
-                            </div>
-                          </div>
-                          
-                          {searchResults.length > 0 && (
-                            <div className="space-y-2">
-                              <p className="text-sm font-medium">Search Results</p>
-                              <div className="max-h-[200px] overflow-y-auto space-y-2">
-                                {searchResults.map((user) => (
-                                  <div 
-                                    key={user.id} 
-                                    className="flex items-center justify-between p-3 rounded-md border hover:bg-slate-50"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <Avatar className="h-8 w-8">
-                                        <AvatarImage src={user.avatarUrl} />
-                                        <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                      </Avatar>
-                                      <div>
-                                        <div className="font-medium">{user.name}</div>
-                                        <div className="text-xs text-muted-foreground">@{user.username}</div>
-                                      </div>
-                                    </div>
-                                    <Button 
-                                      type="button" 
-                                      size="sm" 
-                                      onClick={() => sendSquadRequest(user.username)}
-                                    >
-                                      Send Request
-                                    </Button>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          
-                          {searchQuery && searchResults.length === 0 && !isSearching && (
-                            <p className="text-sm text-muted-foreground text-center">
-                              No users found. Try a different search term.
-                            </p>
-                          )}
-                          
-                          <div className="border-t pt-4">
-                            <p className="text-sm font-medium mb-2">Your Squad Members</p>
-                            <div className="max-h-[200px] overflow-y-auto space-y-2">
-                              {isLoading ? (
-                                <div className="text-center p-4 text-muted-foreground">
-                                  Loading squad members...
-                                </div>
-                              ) : loadedSquadMembers.length > 0 ? (
-                                loadedSquadMembers.map((member) => (
-                                  <div 
-                                    key={member.id} 
-                                    className={cn(
-                                      "flex items-center justify-between p-3 rounded-md hover:bg-slate-100 cursor-pointer",
-                                      selectedSquadMembers.includes(member.id) && "bg-blue-50 border border-blue-200"
-                                    )}
-                                    onClick={() => toggleSquadMember(member.id)}
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <Avatar className="h-10 w-10">
-                                        <AvatarImage src={member.avatarUrl} />
-                                        <AvatarFallback>{member.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                      </Avatar>
-                                      <div>
-                                        <div className="font-medium">{member.name}</div>
-                                        <div className="text-xs text-muted-foreground">@{member.username}</div>
-                                      </div>
-                                    </div>
-                                    {selectedSquadMembers.includes(member.id) && (
-                                      <CheckIcon className="h-5 w-5 text-blue-500" />
-                                    )}
-                                  </div>
-                                ))
-                              ) : (
-                                <div className="text-center p-4 text-muted-foreground">
-                                  You haven't added any squad members yet
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex justify-end pt-2">
-                          <Button 
-                            type="button" 
-                            onClick={() => setUserDialogOpen(false)}
-                          >
-                            Done
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </FormItem>
-              )}
-              
-              {timePickerType === 'Specific Date' && (
-                <FormField
-                  control={form.control}
-                  name="targetDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Select Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "MMMM d, yyyy")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                            className={cn("p-3 pointer-events-auto")}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              
-              {timePickerType === 'Week' && (
-                <FormField
-                  control={form.control}
-                  name="targetWeek"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Select Week</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {selectedWeekDate ? (
-                                getSelectedWeekText(selectedWeekDate)
-                              ) : (
-                                <span>Pick a week</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={selectedWeekDate}
-                            onSelect={(date) => {
-                              if (date) {
-                                setSelectedWeekDate(date);
-                                const weekString = getWeekStringFromDate(date);
-                                field.onChange(weekString);
-                              }
-                            }}
-                            initialFocus
-                            className={cn("p-3 pointer-events-auto")}
-                          />
-                          {selectedWeekDate && (
-                            <div className="px-4 py-2 border-t border-gray-100">
-                              <p className="text-sm font-medium">
-                                {getSelectedWeekText(selectedWeekDate)}
-                              </p>
-                            </div>
-                          )}
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              
-              {timePickerType === 'Month' && (
-                <FormField
-                  control={form.control}
-                  name="targetMonth"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Select Month</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select which month" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {monthOptions.map((month) => (
-                            <SelectItem key={month.value} value={month.value}>
-                              {month.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                <SquadMembersSelector
+                  selectedSquadMembers={selectedSquadMembers}
+                  setSelectedSquadMembers={setSelectedSquadMembers}
                 />
               )}
               
@@ -962,55 +345,10 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
               />
             </div>
             
-            <FormItem>
-              <FormLabel>Tags/Mood</FormLabel>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {popularTags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    className={cn(
-                      "cursor-pointer",
-                      selectedTags.includes(tag)
-                        ? "bg-blue-500 hover:bg-blue-600"
-                        : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                    )}
-                    onClick={() => toggleTag(tag)}
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add a custom tag"
-                  value={customTag}
-                  onChange={(e) => setCustomTag(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addTag();
-                    }
-                  }}
-                  className="flex-1"
-                />
-                <Button type="button" onClick={addTag} variant="outline">
-                  Add
-                </Button>
-              </div>
-              {selectedTags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {selectedTags.filter(tag => !popularTags.includes(tag)).map((tag) => (
-                    <Badge key={tag} className="gap-1 bg-blue-100 text-blue-800 hover:bg-blue-200">
-                      {tag}
-                      <XIcon
-                        className="h-3 w-3 cursor-pointer"
-                        onClick={() => toggleTag(tag)}
-                      />
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </FormItem>
+            <TagsManager 
+              selectedTags={selectedTags}
+              setSelectedTags={setSelectedTags}
+            />
             
             <div className="flex justify-end gap-4">
               <Button
@@ -1032,8 +370,8 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
             </div>
           </form>
         </Form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
