@@ -73,7 +73,6 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
           link: item.link || undefined,
           imageUrl: item.image_url || undefined,
           tags: item.tags || undefined,
-          squadMembers: item.squad_members || undefined,
           createdAt: new Date(item.created_at),
           updatedAt: new Date(item.updated_at),
           completedAt: item.completed_at ? new Date(item.completed_at) : undefined
@@ -118,7 +117,6 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         link: newItem.link,
         image_url: newItem.imageUrl,
         tags: newItem.tags,
-        squad_members: newItem.squadMembers,
         user_id: session.session.user.id
       };
       
@@ -172,7 +170,6 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       if (updatedItem.link !== undefined) dbItem.link = updatedItem.link;
       if (updatedItem.imageUrl !== undefined) dbItem.image_url = updatedItem.imageUrl;
       if (updatedItem.tags !== undefined) dbItem.tags = updatedItem.tags;
-      if (updatedItem.squadMembers !== undefined) dbItem.squad_members = updatedItem.squadMembers;
       
       const { error } = await supabase
         .from('wishlist_items')

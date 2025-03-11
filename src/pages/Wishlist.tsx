@@ -1,6 +1,6 @@
+
 import { useState, useMemo, useEffect } from "react";
 import { useWishlistStore } from "@/store/wishlistStore";
-import { useUserStore } from "@/store/userStore";
 import WishlistCard from "@/components/wishlist/WishlistCard";
 import Navigation from "@/components/layout/Navigation";
 import { Button } from "@/components/ui/button";
@@ -43,8 +43,6 @@ import {
 
 const Wishlist = () => {
   const { items, isLoading, fetchItems, deleteItem, toggleComplete } = useWishlistStore();
-  const getSquadMemberById = useUserStore((state) => state.getSquadMemberById);
-  const getAcceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
@@ -52,7 +50,6 @@ const Wishlist = () => {
   
   const [budgetFilter, setBudgetFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
-  const [squadMemberFilter, setSquadMemberFilter] = useState<string>("all");
   const [activityTypeFilter, setActivityTypeFilter] = useState<string>("all");
   const [personalFilter, setPersonalFilter] = useState<boolean>(false);
   
@@ -60,8 +57,6 @@ const Wishlist = () => {
   const [selectedMonth, setSelectedMonth] = useState<string | undefined>(undefined);
   const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  
-  const squadMembers = getAcceptedSquadMembers();
   
   useEffect(() => {
     fetchItems();
@@ -122,7 +117,6 @@ const Wishlist = () => {
   const clearAllFilters = () => {
     setBudgetFilter("all");
     setTagFilter("all");
-    setSquadMemberFilter("all");
     setActivityTypeFilter("all");
     setPersonalFilter(false);
     setSelectedDate(undefined);
@@ -198,9 +192,6 @@ const Wishlist = () => {
       const matchesTag = tagFilter === "all" || 
         (item.tags && item.tags.includes(tagFilter));
       
-      const matchesSquadMember = squadMemberFilter === "all" || 
-        (item.squadMembers && item.squadMembers.includes(squadMemberFilter));
-      
       const matchesActivityType = activityTypeFilter === "all" || 
         item.activityType === activityTypeFilter;
       
@@ -208,12 +199,12 @@ const Wishlist = () => {
         item.travelType === "Solo";
       
       return matchesSearch && matchesBudget && matchesTag && 
-             matchesSquadMember && matchesActivityType && 
-             matchesPersonal && matchesDate && matchesMonth && matchesYear;
+             matchesActivityType && matchesPersonal && 
+             matchesDate && matchesMonth && matchesYear;
     });
   }, [
     activeTab, upcomingItems, completedItems, searchTerm, budgetFilter, tagFilter, 
-    squadMemberFilter, activityTypeFilter, personalFilter, selectedDate, 
+    activityTypeFilter, personalFilter, selectedDate, 
     selectedMonth, selectedYear
   ]);
   
@@ -243,7 +234,6 @@ const Wishlist = () => {
   
   const hasActiveFilters = budgetFilter !== "all" || 
                            tagFilter !== "all" || 
-                           squadMemberFilter !== "all" ||
                            activityTypeFilter !== "all" ||
                            personalFilter ||
                            selectedDate !== undefined ||
@@ -325,7 +315,6 @@ const Wishlist = () => {
                       {Object.values([
                         budgetFilter !== "all",
                         tagFilter !== "all",
-                        squadMemberFilter !== "all",
                         activityTypeFilter !== "all",
                         personalFilter,
                         selectedDate !== undefined,
@@ -470,23 +459,6 @@ const Wishlist = () => {
                           </SelectContent>
                         </Select>
                       )}
-                      
-                      {squadMembers.length > 0 && (
-                        <Select
-                          value={squadMemberFilter}
-                          onValueChange={setSquadMemberFilter}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Squad Member" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Squad Members</SelectItem>
-                            {squadMembers.map((member) => (
-                              <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -560,12 +532,6 @@ const Wishlist = () => {
               {tagFilter !== "all" && (
                 <Badge variant="secondary">
                   Tag: {tagFilter}
-                </Badge>
-              )}
-              
-              {squadMemberFilter !== "all" && (
-                <Badge variant="secondary">
-                  Member: {getSquadMemberById(squadMemberFilter)?.name || 'Unknown'}
                 </Badge>
               )}
               
