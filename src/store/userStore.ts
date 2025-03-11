@@ -380,14 +380,31 @@ export const useUserStore = create<UserState>()(
           
           const recipientUser = userProfiles[0];
           
-          // Check if we're trying to add ourselves
-          if (recipientUser.id === currentUser.id) {
+          // Fix: Compare username instead of ID to avoid the self-add issue 
+          // that's causing the error in the console logs
+          if (currentUser.username === username) {
             console.error('Cannot add yourself to your squad');
             return false;
           }
           
           // In a real implementation, this would create a squad request in the database
           console.log(`Squad request sent to ${recipientUser.username}`);
+          
+          // Mock successful addition of a squad member
+          const newMember: UserProfile = {
+            id: recipientUser.id,
+            username: recipientUser.username,
+            name: recipientUser.name,
+            avatarUrl: '',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+          
+          // Add the new member to the squadMembers array for mock implementation
+          const currentMembers = get().squadMembers;
+          if (!currentMembers.some(member => member.id === newMember.id)) {
+            set({ squadMembers: [...currentMembers, newMember] });
+          }
           
           return true;
         } catch (error) {
