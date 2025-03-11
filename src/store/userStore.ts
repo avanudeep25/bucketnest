@@ -279,18 +279,26 @@ export const useUserStore = create<UserState>()(
           const currentUser = get().currentUser;
           if (!currentUser) return;
           
+          // Get the user's profiles from the database
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('*');
+            
+          if (profilesError) {
+            console.error('Error fetching profiles:', profilesError);
+            return;
+          }
+          
+          const profilesById = new Map();
+          profiles.forEach(profile => {
+            profilesById.set(profile.id, profile);
+          });
+          
           // Fetch squad requests
           const { data: requestsData, error: requestsError } = await supabase
-            .from('squad_requests')
-            .select(`
-              id, 
-              status, 
-              created_at,
-              requester:requester_id(id, name, username),
-              recipient:recipient_id(id, name, username)
-            `)
-            .or(`recipient_id.eq.${currentUser.id},requester_id.eq.${currentUser.id}`)
-            .order('created_at', { ascending: false });
+            .rpc('get_squad_requests', {
+              user_id: currentUser.id
+            });
             
           if (requestsError) {
             console.error('Error fetching squad requests:', requestsError);
@@ -298,15 +306,20 @@ export const useUserStore = create<UserState>()(
           }
           
           // Process the requests data
-          const processedRequests: SquadRequest[] = requestsData.map(request => ({
-            id: request.id,
-            requesterId: request.requester.id,
-            requesterName: request.requester.name,
-            requesterUsername: request.requester.username,
-            recipientId: request.recipient.id,
-            status: request.status,
-            createdAt: new Date(request.created_at)
-          }));
+          const processedRequests: SquadRequest[] = requestsData.map(request => {
+            const requester = profilesById.get(request.requester_id);
+            const recipient = profilesById.get(request.recipient_id);
+            
+            return {
+              id: request.id,
+              requesterId: request.requester_id,
+              requesterName: requester?.name,
+              requesterUsername: requester?.username,
+              recipientId: request.recipient_id,
+              status: request.status,
+              createdAt: new Date(request.created_at)
+            };
+          });
           
           // Get accepted squad members
           const acceptedRequests = requestsData.filter(req => req.status === 'accepted');
@@ -314,10 +327,10 @@ export const useUserStore = create<UserState>()(
           // Create a unique list of squad member IDs from both sent and received requests
           const squadMemberIds = new Set<string>();
           acceptedRequests.forEach(req => {
-            if (req.requester.id === currentUser.id) {
-              squadMemberIds.add(req.recipient.id);
+            if (req.requester_id === currentUser.id) {
+              squadMemberIds.add(req.recipient_id);
             } else {
-              squadMemberIds.add(req.requester.id);
+              squadMemberIds.add(req.requester_id);
             }
           });
           
@@ -358,29 +371,44 @@ export const useUserStore = create<UserState>()(
         if (!currentUser) return [];
         
         try {
-          const { data, error } = await supabase
-            .from('squad_requests')
-            .select(`
-              id, 
-              status, 
-              created_at,
-              requester:requester_id(id, name, username)
-            `)
-            .eq('recipient_id', currentUser.id)
-            .eq('status', 'pending')
-            .order('created_at', { ascending: false });
+          // Get the user's profiles from the database for better data display
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('*');
             
-          if (error) throw error;
+          if (profilesError) {
+            console.error('Error fetching profiles:', profilesError);
+            return [];
+          }
           
-          const pendingRequests: SquadRequest[] = data.map(request => ({
-            id: request.id,
-            requesterId: request.requester.id,
-            requesterName: request.requester.name,
-            requesterUsername: request.requester.username,
-            recipientId: currentUser.id,
-            status: 'pending',
-            createdAt: new Date(request.created_at)
-          }));
+          const profilesById = new Map();
+          profiles.forEach(profile => {
+            profilesById.set(profile.id, profile);
+          });
+          
+          // Get pending requests where current user is the recipient
+          const { data, error } = await supabase
+            .rpc('get_pending_received_requests', {
+              user_id: currentUser.id
+            });
+            
+          if (error) {
+            throw error;
+          }
+          
+          const pendingRequests: SquadRequest[] = data.map(request => {
+            const requester = profilesById.get(request.requester_id);
+            
+            return {
+              id: request.id,
+              requesterId: request.requester_id,
+              requesterName: requester?.name,
+              requesterUsername: requester?.username,
+              recipientId: currentUser.id,
+              status: 'pending',
+              createdAt: new Date(request.created_at)
+            };
+          });
           
           return pendingRequests;
         } catch (error) {
@@ -430,9 +458,10 @@ export const useUserStore = create<UserState>()(
           const newStatus = accept ? 'accepted' : 'rejected';
           
           const { error } = await supabase
-            .from('squad_requests')
-            .update({ status: newStatus })
-            .eq('id', requestId);
+            .rpc('update_squad_request_status', { 
+              request_id: requestId, 
+              new_status: newStatus 
+            });
             
           if (error) throw error;
           
@@ -499,30 +528,21 @@ export const useUserStore = create<UserState>()(
             return false;
           }
           
-          // Check if a request already exists
-          const { data: existingRequests, error: checkError } = await supabase
-            .from('squad_requests')
-            .select('*')
-            .or(`and(requester_id.eq.${currentUser.id},recipient_id.eq.${recipientUser.id}),and(requester_id.eq.${recipientUser.id},recipient_id.eq.${currentUser.id})`)
-            .not('status', 'eq', 'rejected');
-            
-          if (checkError) throw checkError;
-          
-          if (existingRequests && existingRequests.length > 0) {
-            console.error('Request already exists');
-            return false;
-          }
-          
-          // Create the squad request
+          // Send the squad request using RPC function
           const { error: insertError } = await supabase
-            .from('squad_requests')
-            .insert({
-              requester_id: currentUser.id,
-              recipient_id: recipientUser.id,
-              status: 'pending'
+            .rpc('send_squad_request', {
+              recipient_id: recipientUser.id
             });
             
-          if (insertError) throw insertError;
+          if (insertError) {
+            console.error('Error sending squad request:', insertError);
+            // Check if it's a unique constraint violation error (user already has pending request)
+            if (insertError.message.includes('unique constraint') || 
+                insertError.message.includes('already exists')) {
+              toast.error('A request to this user already exists');
+            }
+            return false;
+          }
           
           // Refresh squad data
           await get().fetchSquadData();

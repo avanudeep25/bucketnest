@@ -27,7 +27,7 @@ const SquadRequests = () => {
 
   useEffect(() => {
     loadRequests();
-  }, [getSquadRequestsReceived]);
+  }, []);
 
   const handleRespond = async (requestId: string, accept: boolean) => {
     setProcessingRequests(prev => ({ ...prev, [requestId]: true }));

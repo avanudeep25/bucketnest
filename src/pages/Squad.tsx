@@ -55,7 +55,7 @@ const Squad = () => {
     }
   };
 
-  const handleSendRequest = async (username: string) => {
+  const handleSendRequest = async (username) => {
     try {
       const success = await sendSquadRequest(username);
       if (success) {
