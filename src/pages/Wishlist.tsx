@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useEffect } from "react";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useUserStore } from "@/store/userStore";
@@ -6,6 +7,7 @@ import Navigation from "@/components/layout/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
+import { UserProfile } from "@/types/wishlist";
 import { 
   Search, Plus, BookmarkPlus, Loader2, 
   CalendarIcon, User, Tag, Activity, FilterIcon,
@@ -50,6 +52,9 @@ const Wishlist = () => {
   const [sortBy, setSortBy] = useState("newest");
   const [activeTab, setActiveTab] = useState("upcoming");
   
+  const [squadMembers, setSquadMembers] = useState<UserProfile[]>([]);
+  const [memberDetails, setMemberDetails] = useState<Record<string, UserProfile | undefined>>({});
+  
   const [budgetFilter, setBudgetFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [squadMemberFilter, setSquadMemberFilter] = useState<string>("all");
@@ -61,11 +66,40 @@ const Wishlist = () => {
   const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   
-  const squadMembers = getAcceptedSquadMembers();
-  
+  // Fetch items and squad members
   useEffect(() => {
     fetchItems();
-  }, [fetchItems]);
+    
+    const loadSquadMembers = async () => {
+      try {
+        const members = await getAcceptedSquadMembers();
+        setSquadMembers(members);
+      } catch (error) {
+        console.error("Error loading squad members:", error);
+      }
+    };
+    
+    loadSquadMembers();
+  }, [fetchItems, getAcceptedSquadMembers]);
+  
+  // Load member details by ID when needed
+  useEffect(() => {
+    const loadMemberDetails = async () => {
+      if (squadMemberFilter !== "all" && !memberDetails[squadMemberFilter]) {
+        try {
+          const member = await getSquadMemberById(squadMemberFilter);
+          setMemberDetails(prev => ({
+            ...prev,
+            [squadMemberFilter]: member
+          }));
+        } catch (error) {
+          console.error("Error loading squad member details:", error);
+        }
+      }
+    };
+    
+    loadMemberDetails();
+  }, [squadMemberFilter, memberDetails, getSquadMemberById]);
   
   const monthOptions = useMemo(() => {
     const months = [];
@@ -259,6 +293,10 @@ const Wishlist = () => {
   const budgetRanges: BudgetRange[] = [
     'Below INR 5000', 'INR 5000 - INR 10,000', 'INR 10,000 - INR 50,000', 'Above INR 50,000'
   ];
+  
+  const getMemberName = (id: string) => {
+    return memberDetails[id]?.name || 'Unknown';
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -565,7 +603,7 @@ const Wishlist = () => {
               
               {squadMemberFilter !== "all" && (
                 <Badge variant="secondary">
-                  Member: {getSquadMemberById(squadMemberFilter)?.name || 'Unknown'}
+                  Member: {getMemberName(squadMemberFilter)}
                 </Badge>
               )}
               

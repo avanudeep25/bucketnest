@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import WishlistForm from "@/components/wishlist/WishlistForm";
 import Navigation from "@/components/layout/Navigation";
@@ -48,17 +47,13 @@ const CreateWishlistItem = () => {
         await fetchSquadData();
         
         // Get squad requests and set state
-        const requests = getSquadRequestsReceived();
-        if (Array.isArray(requests)) {
-          setSquadRequests(requests);
-          setRequestsCount(requests.length);
-        }
+        const requests = await getSquadRequestsReceived();
+        setSquadRequests(requests);
+        setRequestsCount(requests.length);
         
         // Get squad members and set state
-        const members = getAcceptedSquadMembers();
-        if (Array.isArray(members)) {
-          setSquadMembers(members);
-        }
+        const members = await getAcceptedSquadMembers();
+        setSquadMembers(members);
         
         // Set loading to false once data is loaded
         setIsLoading(false);
@@ -81,7 +76,7 @@ const CreateWishlistItem = () => {
     useEffect(() => {
       const loadRequester = async () => {
         try {
-          const member = getSquadMemberById(request.requesterId);
+          const member = await getSquadMemberById(request.requesterId);
           if (member) {
             setRequester(member);
           }

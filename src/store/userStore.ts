@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 import { UserProfile } from '@/types/wishlist';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
+import { toast } from 'sonner';
 
 // Extending the User type with the additional fields we need
 export interface ExtendedUser extends User {
@@ -290,9 +291,11 @@ export const useUserStore = create<UserState>()(
           }
           
           const profilesById = new Map();
-          profiles.forEach(profile => {
-            profilesById.set(profile.id, profile);
-          });
+          if (profiles) {
+            profiles.forEach(profile => {
+              profilesById.set(profile.id, profile);
+            });
+          }
           
           // Fetch squad requests
           const { data: requestsData, error: requestsError } = await supabase
@@ -306,23 +309,26 @@ export const useUserStore = create<UserState>()(
           }
           
           // Process the requests data
-          const processedRequests: SquadRequest[] = requestsData.map(request => {
-            const requester = profilesById.get(request.requester_id);
-            const recipient = profilesById.get(request.recipient_id);
-            
-            return {
-              id: request.id,
-              requesterId: request.requester_id,
-              requesterName: requester?.name,
-              requesterUsername: requester?.username,
-              recipientId: request.recipient_id,
-              status: request.status,
-              createdAt: new Date(request.created_at)
-            };
-          });
+          const processedRequests: SquadRequest[] = [];
+          if (requestsData) {
+            requestsData.forEach(request => {
+              const requester = profilesById.get(request.requester_id);
+              const recipient = profilesById.get(request.recipient_id);
+              
+              processedRequests.push({
+                id: request.id,
+                requesterId: request.requester_id,
+                requesterName: requester?.name,
+                requesterUsername: requester?.username,
+                recipientId: request.recipient_id,
+                status: request.status,
+                createdAt: new Date(request.created_at)
+              });
+            });
+          }
           
           // Get accepted squad members
-          const acceptedRequests = requestsData.filter(req => req.status === 'accepted');
+          const acceptedRequests = requestsData ? requestsData.filter(req => req.status === 'accepted') : [];
           
           // Create a unique list of squad member IDs from both sent and received requests
           const squadMemberIds = new Set<string>();
@@ -382,9 +388,11 @@ export const useUserStore = create<UserState>()(
           }
           
           const profilesById = new Map();
-          profiles.forEach(profile => {
-            profilesById.set(profile.id, profile);
-          });
+          if (profiles) {
+            profiles.forEach(profile => {
+              profilesById.set(profile.id, profile);
+            });
+          }
           
           // Get pending requests where current user is the recipient
           const { data, error } = await supabase
@@ -396,19 +404,22 @@ export const useUserStore = create<UserState>()(
             throw error;
           }
           
-          const pendingRequests: SquadRequest[] = data.map(request => {
-            const requester = profilesById.get(request.requester_id);
-            
-            return {
-              id: request.id,
-              requesterId: request.requester_id,
-              requesterName: requester?.name,
-              requesterUsername: requester?.username,
-              recipientId: currentUser.id,
-              status: 'pending',
-              createdAt: new Date(request.created_at)
-            };
-          });
+          const pendingRequests: SquadRequest[] = [];
+          if (data) {
+            data.forEach(request => {
+              const requester = profilesById.get(request.requester_id);
+              
+              pendingRequests.push({
+                id: request.id,
+                requesterId: request.requester_id,
+                requesterName: requester?.name,
+                requesterUsername: requester?.username,
+                recipientId: currentUser.id,
+                status: 'pending',
+                createdAt: new Date(request.created_at)
+              });
+            });
+          }
           
           return pendingRequests;
         } catch (error) {
@@ -427,7 +438,7 @@ export const useUserStore = create<UserState>()(
         }
       },
       
-      getSquadMemberById: async (id) => {
+      getSquadMemberById: async (id: string) => {
         try {
           const { data, error } = await supabase
             .from('profiles')
@@ -453,7 +464,7 @@ export const useUserStore = create<UserState>()(
         }
       },
       
-      respondToSquadRequest: async (requestId, accept) => {
+      respondToSquadRequest: async (requestId: string, accept: boolean) => {
         try {
           const newStatus = accept ? 'accepted' : 'rejected';
           
@@ -473,7 +484,7 @@ export const useUserStore = create<UserState>()(
         }
       },
       
-      searchUsers: async (query) => {
+      searchUsers: async (query: string) => {
         if (!query || query.length < 3) return [];
         
         try {
@@ -501,7 +512,7 @@ export const useUserStore = create<UserState>()(
         }
       },
       
-      sendSquadRequest: async (username) => {
+      sendSquadRequest: async (username: string) => {
         const currentUser = get().currentUser;
         if (!currentUser) return false;
         

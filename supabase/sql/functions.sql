@@ -63,6 +63,16 @@ SECURITY DEFINER
 LANGUAGE plpgsql
 AS $$
 BEGIN
+  -- Make sure a request doesn't already exist
+  IF EXISTS (
+    SELECT 1 FROM public.squad_requests 
+    WHERE (requester_id = auth.uid() AND recipient_id = recipient_id)
+    OR (requester_id = recipient_id AND recipient_id = auth.uid())
+  ) THEN
+    RAISE EXCEPTION 'A request between these users already exists';
+  END IF;
+
+  -- Insert the new request
   INSERT INTO public.squad_requests (
     requester_id,
     recipient_id

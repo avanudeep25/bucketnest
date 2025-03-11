@@ -1,6 +1,7 @@
 
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { useEffect, useState } from "react";
 import { 
   CalendarIcon, MapPinIcon, DollarSignIcon, 
   UsersIcon, TagIcon, ExternalLinkIcon 
@@ -17,6 +18,7 @@ import { WishlistDetailActions } from "@/components/wishlist/detail/WishlistDeta
 import { LoadingState } from "@/components/wishlist/detail/LoadingState";
 import { ErrorState } from "@/components/wishlist/detail/ErrorState";
 import { useWishlistItem } from "@/hooks/useWishlistItem";
+import { UserProfile } from "@/types/wishlist";
 
 const WishlistDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +28,9 @@ const WishlistDetail = () => {
   const getSquadMemberById = useUserStore((state) => state.getSquadMemberById);
   
   const { item, isLoading, error, fetchAttempts, storeError } = useWishlistItem(id);
+  
+  // Add state to store the loaded squad members
+  const [squadMembers, setSquadMembers] = useState<Record<string, UserProfile | undefined>>({});
 
   const handleDelete = async () => {
     if (id) {
@@ -37,6 +42,29 @@ const WishlistDetail = () => {
   const handleToggleComplete = async (itemId: string, isComplete: boolean) => {
     await toggleComplete(itemId, isComplete);
   };
+
+  // Load squad member data when item changes
+  useEffect(() => {
+    const loadSquadMembers = async () => {
+      if (item?.squadMembers && item.squadMembers.length > 0) {
+        const newSquadMembers: Record<string, UserProfile | undefined> = {};
+        
+        for (const memberId of item.squadMembers) {
+          try {
+            const member = await getSquadMemberById(memberId);
+            newSquadMembers[memberId] = member;
+          } catch (error) {
+            console.error(`Error loading squad member ${memberId}:`, error);
+            newSquadMembers[memberId] = undefined;
+          }
+        }
+        
+        setSquadMembers(newSquadMembers);
+      }
+    };
+    
+    loadSquadMembers();
+  }, [item?.squadMembers, getSquadMemberById]);
 
   const formatDate = (date: Date | undefined) => {
     if (!date) return "Not specified";
@@ -175,7 +203,7 @@ const WishlistDetail = () => {
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {item.squadMembers.map((memberId) => {
-                    const member = getSquadMemberById(memberId);
+                    const member = squadMembers[memberId];
                     return (
                       <div key={memberId} className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full">
                         <Avatar className="h-6 w-6">
