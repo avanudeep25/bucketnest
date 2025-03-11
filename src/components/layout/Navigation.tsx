@@ -118,7 +118,7 @@ const Navigation = () => {
             className="flex flex-col items-center justify-center text-xs font-medium"
           >
             <Plus className="h-5 w-5 mb-1 text-blue-500" />
-            Add a new dream
+            Add to Nest
           </button>
           {currentUser && (
             <Link to="/profile" className="flex flex-col items-center justify-center text-xs font-medium">

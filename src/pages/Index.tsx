@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/layout/Navigation";
@@ -43,6 +42,7 @@ const Index = () => {
                   </Button>
                 </div>
               </div>
+              
               <div className="relative">
                 <div className="absolute -top-4 -left-4 w-24 h-24 bg-blue-300 rounded-full blur-xl opacity-30"></div>
                 <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-blue-300 rounded-full blur-xl opacity-30"></div>

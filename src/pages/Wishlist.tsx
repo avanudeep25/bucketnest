@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect } from "react";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useUserStore } from "@/store/userStore";
@@ -54,7 +53,6 @@ const Wishlist = () => {
   const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   
-  // Get squad members directly from the store
   const squadMembers = getAcceptedSquadMembers();
   
   useEffect(() => {
@@ -260,7 +258,7 @@ const Wishlist = () => {
             >
               <Link to="/create">
                 <Plus className="mr-2 h-5 w-5" />
-                Add Experience
+                Add to Nest
               </Link>
             </Button>
           </div>
@@ -545,7 +543,7 @@ const Wishlist = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Loader2 className="h-12 w-12 text-gray-400 animate-spin mb-4" />
-            <p className="text-lg text-gray-600">Loading your experiences...</p>
+            <p className="text-lg text-gray-600">Loading your Bucket List Goals...</p>
           </div>
         ) : sortedAndFilteredItems.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -562,7 +560,7 @@ const Wishlist = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-wishwise-100 rounded-full mb-4">
               <BookmarkPlus className="h-8 w-8 text-wishwise-600" />
             </div>
-            <h2 className="text-2xl font-semibold mb-2">No experiences found</h2>
+            <h2 className="text-2xl font-semibold mb-2">No Bucket List Goals found</h2>
             <p className="text-gray-500 mb-6 max-w-md mx-auto">
               {searchTerm || hasActiveFilters
                 ? "No items match your current search or filters. Try different criteria or clear the filters."
@@ -572,7 +570,7 @@ const Wishlist = () => {
               <Button asChild size="lg" className="bg-wishwise-500 hover:bg-wishwise-600">
                 <Link to="/create">
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Your First Experience
+                  Add to Nest
                 </Link>
               </Button>
             ) : (
