@@ -19,26 +19,64 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 
 const Profile = () => {
-  const { currentUser, createUser } = useUserStore();
+  const { currentUser, setCurrentUser, createUser } = useUserStore();
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [formValues, setFormValues] = useState({
-    name: currentUser?.user_metadata?.name || "",
-    username: currentUser?.username || "",
-    bio: currentUser?.bio || "",
+    name: "",
+    username: "",
+    bio: "",
   });
   
-  // Update form values when currentUser changes
+  // Fetch the latest profile data when the component mounts
   useEffect(() => {
-    if (currentUser) {
-      console.log("Profile: Current user data:", currentUser);
-      setFormValues({
-        name: currentUser?.user_metadata?.name || "",
-        username: currentUser?.username || "",
-        bio: currentUser?.bio || "",
-      });
-    }
-  }, [currentUser]);
+    const fetchProfileData = async () => {
+      setIsLoading(true);
+      
+      try {
+        if (currentUser?.id) {
+          // Get the latest profile data from Supabase
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+            
+          if (error) {
+            console.error("Error fetching profile:", error);
+            throw error;
+          }
+          
+          if (data) {
+            console.log("Profile fetched successfully:", data);
+            
+            // Update the form with the fetched data
+            setFormValues({
+              name: data.name || currentUser?.user_metadata?.name || "",
+              username: data.username || "",
+              bio: data.bio || "",
+            });
+            
+            // Update the current user with the fetched data
+            setCurrentUser({
+              ...currentUser,
+              username: data.username,
+              bio: data.bio,
+              name: data.name
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error in fetchProfileData:", error);
+        toast.error("Failed to load profile data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchProfileData();
+  }, [currentUser?.id, setCurrentUser]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -64,18 +102,28 @@ const Profile = () => {
       
       toast.success("Profile updated successfully!");
       
-      // Only navigate away when update is successful
-      navigate('/wishlist');
+      // Wait briefly before navigating to ensure the toast is seen
+      setTimeout(() => {
+        navigate('/wishlist');
+      }, 1500);
+      
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile. Please try again.");
-    } finally {
       setIsSaving(false);
     }
   };
 
-  if (!currentUser) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          <span className="ml-2">Loading profile...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
