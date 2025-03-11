@@ -72,6 +72,7 @@ export interface WishlistFormProps {
 const itemTypes: WishItemType[] = ['places', 'activities', 'products', 'other'];
 
 const activityTypes: ActivityType[] = [
+  'Sight Seeing',
   'Food & Dining',
   'Adventure Sports',
   'Cultural Experience',
@@ -101,10 +102,10 @@ const timeframeTypes: TimeframeType[] = [
 ];
 
 const budgetRanges: BudgetRange[] = [
-  "Don't Care",
-  "I can plan this",
-  "Need some serious saving",
-  "Have to sell my assets"
+  'Below INR 5000',
+  'INR 5000 - INR 10,000',
+  'INR 10,000 - INR 50,000',
+  'Above INR 50,000'
 ];
 
 const popularTags = [
@@ -496,7 +497,7 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
                   <FormLabel>Short Description</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Write a brief description of your experience"
+                      placeholder="Write a brief about why this is a bucket list item"
                       {...field}
                     />
                   </FormControl>
@@ -510,17 +511,25 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
                 control={form.control}
                 name="itemType"
                 render={({ field }) => (
+                  <input type="hidden" {...field} />
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="activityType"
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Plan Type</FormLabel>
+                    <FormLabel>Activity Type</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select plan type" />
+                          <SelectValue placeholder="Select activity type" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {itemTypes.map((type) => (
-                          <SelectItem key={type} value={type} className="capitalize">
+                        {activityTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
                             {type}
                           </SelectItem>
                         ))}
@@ -530,33 +539,6 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
                   </FormItem>
                 )}
               />
-              
-              {itemType === "activities" && (
-                <FormField
-                  control={form.control}
-                  name="activityType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Activity Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select activity type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {activityTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
               
               <FormField
                 control={form.control}
