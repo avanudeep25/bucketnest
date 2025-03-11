@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 
 const Profile = () => {
-  const { currentUser, setCurrentUser, createUser } = useUserStore();
+  const { currentUser, setCurrentUser } = useUserStore();
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -91,9 +91,9 @@ const Profile = () => {
       return;
     }
     
+    setIsSaving(true);
+    
     try {
-      setIsSaving(true);
-      
       // Log the values we're submitting
       console.log("Submitting profile update with:", formValues);
       
@@ -109,7 +109,9 @@ const Profile = () => {
         
       if (profileError) {
         console.error("Error updating profile in Supabase:", profileError);
-        throw profileError;
+        toast.error("Failed to update profile information");
+        setIsSaving(false);
+        return;
       }
       
       // Update user metadata in Auth
@@ -119,7 +121,9 @@ const Profile = () => {
       
       if (authError) {
         console.error("Error updating auth user data:", authError);
-        throw authError;
+        toast.error("Failed to update user data");
+        setIsSaving(false);
+        return;
       }
       
       // Update the local state
@@ -139,7 +143,6 @@ const Profile = () => {
       
       // Navigate after successful update
       setTimeout(() => {
-        setIsSaving(false);
         navigate('/wishlist');
       }, 1000);
       
@@ -210,8 +213,8 @@ const Profile = () => {
                     <Input 
                       id="username" 
                       name="username"
-                      value={formValues.username || ""}
-                      placeholder={formValues.username ? "" : "Your username"}
+                      value={formValues.username}
+                      placeholder="Your username"
                       disabled
                       className="bg-gray-50"
                     />
@@ -227,7 +230,7 @@ const Profile = () => {
                     <Textarea 
                       id="bio" 
                       name="bio"
-                      value={formValues.bio || ""}
+                      value={formValues.bio}
                       onChange={handleChange}
                       placeholder="Tell others about yourself"
                       className="min-h-[100px]"
@@ -240,6 +243,7 @@ const Profile = () => {
                     type="button" 
                     variant="outline"
                     onClick={() => navigate('/wishlist')}
+                    disabled={isSaving}
                   >
                     Cancel
                   </Button>
