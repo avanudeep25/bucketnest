@@ -87,6 +87,7 @@ const activityTypes: ActivityType[] = [
 
 const travelTypes: TravelType[] = [
   'Solo',
+  'Couple',
   'Friends',
   'Family',
   'Work',
@@ -349,7 +350,7 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
       if (editItem?.id) {
         console.log("Updating existing item with ID:", editItem.id);
         await updateItem(editItem.id, formattedItem);
-        toast.success("Experience updated successfully!");
+        toast.success("Bucket List Goal updated successfully!");
         setIsSubmitting(false);
         navigate('/wishlist');
       } else {
@@ -360,7 +361,7 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
         
         if (id) {
           console.log("Item added successfully with ID:", id);
-          toast.success("Experience added successfully!");
+          toast.success("Bucket List Goal added successfully!");
           navigate("/wishlist");
         } else {
           console.error("No ID returned after adding item");
@@ -368,8 +369,8 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
         }
       }
     } catch (error) {
-      console.error("Error with experience:", error);
-      toast.error(`Failed to ${editItem ? 'update' : 'add'} experience. Please try again.`);
+      console.error("Error with Bucket List Goal:", error);
+      toast.error(`Failed to ${editItem ? 'update' : 'add'} Bucket List Goal. Please try again.`);
       setIsSubmitting(false);
     }
   };
@@ -403,7 +404,7 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
         <CardHeader>
           <CardTitle>Create Your Profile</CardTitle>
           <CardDescription>
-            Set up your profile before adding experiences
+            Set up your profile before adding Bucket List Goals
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -1026,7 +1027,7 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
               >
                 {isSubmitting 
                   ? 'Processing...' 
-                  : (editItem ? "Update Experience" : "Add Experience")}
+                  : (editItem ? "Update Bucket List Goal" : "Add Bucket List Goal")}
               </Button>
             </div>
           </form>
