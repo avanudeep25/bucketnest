@@ -97,15 +97,51 @@ const Profile = () => {
       // Log the values we're submitting
       console.log("Submitting profile update with:", formValues);
       
-      // Use the createUser function from userStore to update profile
-      await createUser(formValues.name, formValues.bio);
+      // Update profile in Supabase
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          name: formValues.name,
+          bio: formValues.bio || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentUser?.id);
+        
+      if (profileError) {
+        console.error("Error updating profile in Supabase:", profileError);
+        throw profileError;
+      }
+      
+      // Update user metadata in Auth
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { name: formValues.name }
+      });
+      
+      if (authError) {
+        console.error("Error updating auth user data:", authError);
+        throw authError;
+      }
+      
+      // Update the local state
+      if (currentUser) {
+        setCurrentUser({
+          ...currentUser,
+          name: formValues.name,
+          bio: formValues.bio || null,
+          user_metadata: {
+            ...currentUser.user_metadata,
+            name: formValues.name
+          }
+        });
+      }
       
       toast.success("Profile updated successfully!");
       
-      // Wait briefly before navigating to ensure the toast is seen
+      // Navigate after successful update
       setTimeout(() => {
+        setIsSaving(false);
         navigate('/wishlist');
-      }, 1500);
+      }, 1000);
       
     } catch (error) {
       console.error("Error updating profile:", error);
