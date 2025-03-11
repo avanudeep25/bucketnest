@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { PencilIcon, TrashIcon } from "lucide-react";
+import { PencilIcon, TrashIcon, CheckIcon, UndoIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
@@ -16,26 +16,53 @@ import {
 
 interface WishlistDetailActionsProps {
   itemId: string;
+  isCompleted?: boolean;
   onDelete: (id: string) => Promise<void>;
+  onToggleComplete: (id: string, isComplete: boolean) => Promise<void>;
 }
 
-export const WishlistDetailActions = ({ itemId, onDelete }: WishlistDetailActionsProps) => {
+export const WishlistDetailActions = ({ 
+  itemId, 
+  isCompleted = false,
+  onDelete, 
+  onToggleComplete 
+}: WishlistDetailActionsProps) => {
   const navigate = useNavigate();
   
   return (
-    <div className="mt-4 flex justify-between">
-      <Button 
-        variant="outline" 
-        className="flex items-center gap-1"
-        onClick={() => navigate(`/wishlist/edit/${itemId}`)}
-      >
-        <PencilIcon size={16} />
-        <span>Edit</span>
-      </Button>
+    <div className="mt-4 flex flex-col gap-3">
+      <div className="grid grid-cols-2 gap-3">
+        <Button 
+          variant="outline" 
+          className="flex items-center gap-1"
+          onClick={() => navigate(`/wishlist/edit/${itemId}`)}
+        >
+          <PencilIcon size={16} />
+          <span>Edit</span>
+        </Button>
+        
+        <Button
+          variant={isCompleted ? "outline" : "default"}
+          className={`flex items-center gap-1 ${!isCompleted ? "bg-green-600 hover:bg-green-700" : ""}`}
+          onClick={() => onToggleComplete(itemId, !isCompleted)}
+        >
+          {isCompleted ? (
+            <>
+              <UndoIcon size={16} />
+              <span>Mark Incomplete</span>
+            </>
+          ) : (
+            <>
+              <CheckIcon size={16} />
+              <span>Mark Complete</span>
+            </>
+          )}
+        </Button>
+      </div>
       
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="destructive" className="flex items-center gap-1">
+          <Button variant="destructive" className="flex items-center gap-1 w-full">
             <TrashIcon size={16} />
             <span>Delete</span>
           </Button>

@@ -43,6 +43,7 @@ export type Database = {
         Row: {
           activity_type: string | null
           budget_range: string | null
+          completed_at: string | null
           created_at: string | null
           description: string | null
           destination: string | null
@@ -66,6 +67,7 @@ export type Database = {
         Insert: {
           activity_type?: string | null
           budget_range?: string | null
+          completed_at?: string | null
           created_at?: string | null
           description?: string | null
           destination?: string | null
@@ -89,6 +91,7 @@ export type Database = {
         Update: {
           activity_type?: string | null
           budget_range?: string | null
+          completed_at?: string | null
           created_at?: string | null
           description?: string | null
           destination?: string | null

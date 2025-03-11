@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { WishlistItem, ActivityType, WishItemType, TimeframeType, TravelType, BudgetRange } from '@/types/wishlist';
@@ -14,6 +13,7 @@ interface WishlistState {
   updateItem: (id: string, item: Partial<WishlistItem>) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
   getItem: (id: string) => WishlistItem | undefined;
+  toggleComplete: (id: string, isComplete: boolean) => Promise<void>;
 }
 
 export const useWishlistStore = create<WishlistState>((set, get) => ({
@@ -53,14 +53,12 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         return;
       }
       
-      // Transform the data to match our WishlistItem type with proper type casting
       const wishlistItems: WishlistItem[] = data.map(item => {
         console.log(`Processing item ${item.id}:`, item);
         return {
           id: item.id,
           title: item.title,
           description: item.description || undefined,
-          // Ensure proper type casting for enum types
           itemType: item.item_type as WishItemType, 
           activityType: item.activity_type ? (item.activity_type as ActivityType) : undefined,
           timeframeType: item.timeframe_type ? (item.timeframe_type as TimeframeType) : undefined,
@@ -102,7 +100,6 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       
       console.log("User is authenticated, preparing database item");
       
-      // Transform the item to match our database schema
       const dbItem = {
         title: newItem.title,
         description: newItem.description,
@@ -139,13 +136,12 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       
       console.log("Item added successfully with response:", data);
       
-      // Refetch the items to ensure we have the latest data
       await get().fetchItems();
       return data.id;
     } catch (error) {
       console.error('Exception in addItem:', error);
       toast.error('Failed to add your experience');
-      return undefined; // Explicitly return undefined on error
+      return undefined;
     }
   },
   
@@ -157,7 +153,6 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         return;
       }
       
-      // Transform the item to match our database schema
       const dbItem: any = {};
       
       if (updatedItem.title !== undefined) dbItem.title = updatedItem.title;
@@ -188,7 +183,6 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         return;
       }
       
-      // Refetch the items to ensure we have the latest data
       await get().fetchItems();
     } catch (error) {
       console.error('Error updating wishlist item:', error);
@@ -215,7 +209,6 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         return;
       }
       
-      // Update local state
       set((state) => ({
         items: state.items.filter((item) => item.id !== id)
       }));
@@ -233,5 +226,41 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     const foundItem = items.find((item) => item.id === id);
     console.log('Found item:', foundItem);
     return foundItem;
+  },
+  
+  toggleComplete: async (id, isComplete) => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        toast.error('You must be logged in to update items');
+        return;
+      }
+      
+      const completedAt = isComplete ? new Date().toISOString() : null;
+      
+      const { error } = await supabase
+        .from('wishlist_items')
+        .update({ completed_at: completedAt })
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error updating item completion status:', error);
+        toast.error(isComplete ? 'Failed to mark as completed' : 'Failed to mark as incomplete');
+        return;
+      }
+      
+      set((state) => ({
+        items: state.items.map((item) => 
+          item.id === id ? { ...item, completedAt: isComplete ? new Date() : undefined } : item
+        )
+      }));
+      
+      toast.success(isComplete ? 'Marked as completed!' : 'Marked as incomplete');
+      
+      await get().fetchItems();
+    } catch (error) {
+      console.error('Error toggling completion status:', error);
+      toast.error('Failed to update completion status');
+    }
   },
 }));

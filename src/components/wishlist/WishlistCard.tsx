@@ -1,5 +1,5 @@
 
-import { Calendar, MapPin, Tag, Activity, ShoppingBag, Heart } from "lucide-react";
+import { Calendar, MapPin, Tag, Activity, ShoppingBag, Heart, CheckCircle } from "lucide-react";
 import { WishlistItem } from "@/types/wishlist";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -10,9 +10,10 @@ import { format } from "date-fns";
 interface WishlistCardProps {
   item: WishlistItem;
   onDelete: (id: string) => void;
+  onToggleComplete?: (id: string, isComplete: boolean) => void;
 }
 
-const WishlistCard = ({ item, onDelete }: WishlistCardProps) => {
+const WishlistCard = ({ item, onDelete, onToggleComplete }: WishlistCardProps) => {
   const getItemTypeIcon = () => {
     switch (item.itemType) {
       case 'places':
@@ -27,18 +28,26 @@ const WishlistCard = ({ item, onDelete }: WishlistCardProps) => {
     }
   };
   
+  const isCompleted = !!item.completedAt;
+  
   return (
-    <Card className="h-full flex flex-col overflow-hidden group hover:shadow-lg transition-all duration-300">
+    <Card className={`h-full flex flex-col overflow-hidden group hover:shadow-lg transition-all duration-300 ${isCompleted ? 'border-green-200' : ''}`}>
       <div className="relative aspect-video overflow-hidden bg-gray-100 flex items-center justify-center">
         {getItemTypeIcon()}
         
-        {item.budgetRange && (
-          <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 flex gap-1 flex-wrap">
+          {isCompleted && (
+            <Badge className="bg-green-500 hover:bg-green-600">
+              Completed
+            </Badge>
+          )}
+          
+          {item.budgetRange && (
             <Badge className="bg-wishwise-500 hover:bg-wishwise-600">
               ₹ {item.budgetRange}
             </Badge>
-          </div>
-        )}
+          )}
+        </div>
       </div>
       
       <CardHeader className="pb-2">
@@ -83,6 +92,13 @@ const WishlistCard = ({ item, onDelete }: WishlistCardProps) => {
               <span>{format(new Date(item.targetDate), 'MMM yyyy')}</span>
             </div>
           )}
+          
+          {isCompleted && item.completedAt && (
+            <div className="flex items-center text-sm">
+              <CheckCircle className="h-3.5 w-3.5 mr-2 text-green-500" />
+              <span>Completed: {format(new Date(item.completedAt), 'MMM d, yyyy')}</span>
+            </div>
+          )}
         </div>
       </CardContent>
       
@@ -92,14 +108,26 @@ const WishlistCard = ({ item, onDelete }: WishlistCardProps) => {
             View Details
           </Link>
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-red-500 hover:text-red-700 hover:bg-red-50"
-          onClick={() => onDelete(item.id)}
-        >
-          Delete
-        </Button>
+        
+        {onToggleComplete ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className={isCompleted ? "text-red-500 hover:text-red-700 hover:bg-red-50" : "text-green-500 hover:text-green-700 hover:bg-green-50"}
+            onClick={() => onToggleComplete(item.id, !isCompleted)}
+          >
+            {isCompleted ? 'Mark Incomplete' : 'Mark Complete'}
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            onClick={() => onDelete(item.id)}
+          >
+            Delete
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

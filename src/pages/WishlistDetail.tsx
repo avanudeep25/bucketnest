@@ -22,6 +22,7 @@ const WishlistDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const deleteItem = useWishlistStore((state) => state.deleteItem);
+  const toggleComplete = useWishlistStore((state) => state.toggleComplete);
   const getSquadMemberById = useUserStore((state) => state.getSquadMemberById);
   
   const { item, isLoading, error, fetchAttempts, storeError } = useWishlistItem(id);
@@ -31,6 +32,10 @@ const WishlistDetail = () => {
       await deleteItem(id);
       navigate("/wishlist");
     }
+  };
+  
+  const handleToggleComplete = async (itemId: string, isComplete: boolean) => {
+    await toggleComplete(itemId, isComplete);
   };
 
   const formatDate = (date: Date | undefined) => {
@@ -91,7 +96,12 @@ const WishlistDetail = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-1">
             <WishlistDetailImage item={item} />
-            <WishlistDetailActions itemId={item.id} onDelete={handleDelete} />
+            <WishlistDetailActions 
+              itemId={item.id} 
+              isCompleted={!!item.completedAt}
+              onDelete={handleDelete}
+              onToggleComplete={handleToggleComplete}
+            />
           </div>
           
           <div className="md:col-span-2">
