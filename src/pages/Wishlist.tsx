@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useEffect } from "react";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useUserStore } from "@/store/userStore";
@@ -229,13 +230,13 @@ const Wishlist = () => {
                            selectedYear !== undefined;
   
   const activityTypes: ActivityType[] = [
-    'Food & Dining', 'Adventure Sports', 'Cultural Experience', 
+    'Sight Seeing', 'Food & Dining', 'Adventure Sports', 'Cultural Experience', 
     'Entertainment', 'Wellness & Relaxation', 'Shopping', 
     'Exploration', 'Education', 'Volunteering', 'Other'
   ];
   
   const budgetRanges: BudgetRange[] = [
-    "Don't Care", "I can plan this", "Need some serious saving", "Have to sell my assets"
+    'Below INR 5000', 'INR 5000 - INR 10,000', 'INR 10,000 - INR 50,000', 'Above INR 50,000'
   ];
   
   return (
