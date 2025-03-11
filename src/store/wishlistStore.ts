@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { WishlistItem, ActivityType, WishItemType, TimeframeType, TravelType, BudgetRange } from '@/types/wishlist';
@@ -74,7 +75,8 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
           tags: item.tags || undefined,
           squadMembers: item.squad_members || undefined,
           createdAt: new Date(item.created_at),
-          updatedAt: new Date(item.updated_at)
+          updatedAt: new Date(item.updated_at),
+          completedAt: item.completed_at ? new Date(item.completed_at) : undefined
         };
       });
       
