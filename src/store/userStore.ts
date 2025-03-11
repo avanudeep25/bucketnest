@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { UserProfile } from '@/types/wishlist';
@@ -291,16 +292,16 @@ export const useUserStore = create<UserState>()(
           
           const profilesById = new Map();
           if (profiles) {
-            profiles.forEach(profile => {
+            for (const profile of profiles) {
               profilesById.set(profile.id, profile);
-            });
+            }
           }
           
           // Fetch squad requests
           const { data: requestsData, error: requestsError } = await supabase
             .rpc('get_squad_requests', {
               user_id: currentUser.id
-            });
+            }) as { data: any[] | null, error: any };
             
           if (requestsError) {
             console.error('Error fetching squad requests:', requestsError);
@@ -309,7 +310,7 @@ export const useUserStore = create<UserState>()(
           
           // Process the requests data
           const processedRequests: SquadRequest[] = [];
-          if (requestsData) {
+          if (requestsData && Array.isArray(requestsData)) {
             for (const request of requestsData) {
               const requester = profilesById.get(request.requester_id);
               const recipient = profilesById.get(request.recipient_id);
@@ -327,11 +328,13 @@ export const useUserStore = create<UserState>()(
           }
           
           // Get accepted squad members
-          const acceptedRequests = requestsData ? requestsData.filter(req => req.status === 'accepted') : [];
+          const acceptedRequests = requestsData && Array.isArray(requestsData) 
+            ? requestsData.filter(req => req.status === 'accepted') 
+            : [];
           
           // Create a unique list of squad member IDs from both sent and received requests
           const squadMemberIds = new Set<string>();
-          if (acceptedRequests) {
+          if (acceptedRequests && acceptedRequests.length > 0) {
             for (const req of acceptedRequests) {
               if (req.requester_id === currentUser.id) {
                 squadMemberIds.add(req.recipient_id);
@@ -399,14 +402,14 @@ export const useUserStore = create<UserState>()(
           const { data, error } = await supabase
             .rpc('get_pending_received_requests', {
               user_id: currentUser.id
-            });
+            }) as { data: any[] | null, error: any };
             
           if (error) {
             throw error;
           }
           
           const pendingRequests: SquadRequest[] = [];
-          if (data) {
+          if (data && Array.isArray(data)) {
             for (const request of data) {
               const requester = profilesById.get(request.requester_id);
               
@@ -473,7 +476,7 @@ export const useUserStore = create<UserState>()(
             .rpc('update_squad_request_status', { 
               request_id: requestId, 
               new_status: newStatus 
-            });
+            }) as { data: any | null, error: any };
             
           if (error) throw error;
           
@@ -544,13 +547,13 @@ export const useUserStore = create<UserState>()(
           const { error: insertError } = await supabase
             .rpc('send_squad_request', {
               recipient_id: recipientUser.id
-            });
+            }) as { data: any | null, error: any };
             
           if (insertError) {
             console.error('Error sending squad request:', insertError);
             // Check if it's a unique constraint violation error (user already has pending request)
-            if (insertError.message.includes('unique constraint') || 
-                insertError.message.includes('already exists')) {
+            if (insertError.message && (insertError.message.includes('unique constraint') || 
+                insertError.message.includes('already exists'))) {
               toast.error('A request to this user already exists');
             }
             return false;
