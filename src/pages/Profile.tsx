@@ -139,12 +139,12 @@ const Profile = () => {
         });
       }
       
-      // Show success message and navigate
+      // Show success message
       toast.success("Profile updated successfully!");
       
-      // Set a short timeout to allow the toast to be visible before navigation
+      // Reset saving state and navigate after a delay
       setTimeout(() => {
-        setIsSaving(false); // Make sure to set saving to false before navigating
+        setIsSaving(false);
         navigate('/wishlist');
       }, 1500);
       
