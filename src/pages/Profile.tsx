@@ -139,12 +139,14 @@ const Profile = () => {
         });
       }
       
+      // Show success message and navigate
       toast.success("Profile updated successfully!");
       
-      // Navigate after successful update
+      // Set a short timeout to allow the toast to be visible before navigation
       setTimeout(() => {
+        setIsSaving(false); // Make sure to set saving to false before navigating
         navigate('/wishlist');
-      }, 1000);
+      }, 1500);
       
     } catch (error) {
       console.error("Error updating profile:", error);
