@@ -5,9 +5,47 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const UserProfileForm = () => {
-  const createUser = useUserStore((state) => state.createUser);
+  const { currentUser, setCurrentUser, createUser } = useUserStore((state) => ({
+    currentUser: state.currentUser,
+    setCurrentUser: state.setCurrentUser,
+    createUser: state.createUser
+  }));
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      const formData = new FormData(e.currentTarget);
+      const name = formData.get('name') as string;
+      const bio = formData.get('bio') as string;
+      
+      if (!name) {
+        toast.error("Name is required");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      await createUser(name, bio);
+      toast.success("Profile created successfully!");
+      
+      // Give the toast time to show
+      setTimeout(() => {
+        setIsSubmitting(false);
+      }, 1000);
+    } catch (error) {
+      console.error("Error creating profile:", error);
+      toast.error("Failed to create profile. Please try again.");
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <Card>
@@ -18,20 +56,7 @@ const UserProfileForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form 
-          onSubmit={(e) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            const name = formData.get('name') as string;
-            const bio = formData.get('bio') as string;
-            
-            if (name) {
-              createUser(name, bio);
-              toast.success("Profile created successfully!");
-            }
-          }} 
-          className="space-y-4"
-        >
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Your Name</label>
             <Input id="name" name="name" placeholder="Enter your name" required />
@@ -48,8 +73,19 @@ const UserProfileForm = () => {
           </div>
           
           <div className="pt-2">
-            <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600">
-              Create Profile
+            <Button 
+              type="submit" 
+              className="w-full bg-blue-500 hover:bg-blue-600"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Profile...
+                </>
+              ) : (
+                "Create Profile"
+              )}
             </Button>
           </div>
         </form>
