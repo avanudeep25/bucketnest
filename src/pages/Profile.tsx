@@ -174,8 +174,8 @@ const Profile = () => {
                     <Input 
                       id="username" 
                       name="username"
-                      value={formValues.username}
-                      placeholder="Your username"
+                      value={formValues.username || ""}
+                      placeholder={formValues.username ? "" : "Your username"}
                       disabled
                       className="bg-gray-50"
                     />
