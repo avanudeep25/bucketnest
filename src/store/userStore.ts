@@ -329,7 +329,7 @@ export const useUserStore = create<UserState>()(
           
           // Fetch squad requests with proper type parameters
           const { data: requestsData, error: requestsError } = await supabase
-            .rpc<SquadRequestResponse[]>('get_squad_requests', {
+            .rpc<SquadRequestResponse[], GetSquadRequestsParams>('get_squad_requests', {
               user_id: currentUser.id
             });
             
@@ -430,7 +430,7 @@ export const useUserStore = create<UserState>()(
           
           // Get pending requests where current user is the recipient - properly typed
           const { data, error } = await supabase
-            .rpc<SquadRequestResponse[]>('get_pending_received_requests', {
+            .rpc<SquadRequestResponse[], GetPendingReceivedRequestsParams>('get_pending_received_requests', {
               user_id: currentUser.id
             });
             
@@ -504,7 +504,7 @@ export const useUserStore = create<UserState>()(
           
           // Update squad request status with proper type parameters
           const { error } = await supabase
-            .rpc('update_squad_request_status', { 
+            .rpc<null, UpdateSquadRequestStatusParams>('update_squad_request_status', { 
               request_id: requestId, 
               new_status: newStatus 
             });
@@ -576,7 +576,7 @@ export const useUserStore = create<UserState>()(
           
           // Send the squad request using RPC function with proper type parameters
           const { error: insertError } = await supabase
-            .rpc('send_squad_request', {
+            .rpc<null, SendSquadRequestParams>('send_squad_request', {
               recipient_id: recipientUser.id
             });
             
