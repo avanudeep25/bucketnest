@@ -16,6 +16,8 @@ export interface ExtendedUser extends User {
 export interface SquadRequest {
   id: string;
   requesterId: string;
+  requesterName?: string;
+  requesterUsername?: string;
   recipientId: string;
   status: 'pending' | 'accepted' | 'rejected';
   createdAt: Date;
@@ -39,9 +41,9 @@ interface UserState {
   setCurrentUser: (user: ExtendedUser | null) => void;
   logout: () => void;
   createUser: (name: string, bio?: string) => Promise<void>;
-  getSquadRequestsReceived: () => SquadRequest[];
-  getAcceptedSquadMembers: () => UserProfile[];
-  getSquadMemberById: (id: string) => UserProfile | undefined;
+  getSquadRequestsReceived: () => Promise<SquadRequest[]>;
+  getAcceptedSquadMembers: () => Promise<UserProfile[]>;
+  getSquadMemberById: (id: string) => Promise<UserProfile | undefined>;
   respondToSquadRequest: (requestId: string, accept: boolean) => Promise<void>;
   searchUsers: (query: string) => Promise<UserProfile[]>;
   sendSquadRequest: (username: string) => Promise<boolean>;
@@ -274,57 +276,168 @@ export const useUserStore = create<UserState>()(
       
       fetchSquadData: async () => {
         try {
-          // In a real implementation, this would fetch from the database
-          // For now, set mock data
-          set({
-            squadRequests: [],
-            squadMembers: [
-              {
-                id: '123',
-                name: 'Jane Doe',
-                username: 'janedoe',
-                avatarUrl: '',
-                createdAt: new Date(),
-                updatedAt: new Date()
-              },
-              {
-                id: '789',
-                name: 'John Smith',
-                username: 'johnsmith',
-                avatarUrl: '',
-                createdAt: new Date(),
-                updatedAt: new Date()
-              }
-            ]
+          const currentUser = get().currentUser;
+          if (!currentUser) return;
+          
+          // Fetch squad requests
+          const { data: requestsData, error: requestsError } = await supabase
+            .from('squad_requests')
+            .select(`
+              id, 
+              status, 
+              created_at,
+              requester:requester_id(id, name, username),
+              recipient:recipient_id(id, name, username)
+            `)
+            .or(`recipient_id.eq.${currentUser.id},requester_id.eq.${currentUser.id}`)
+            .order('created_at', { ascending: false });
+            
+          if (requestsError) {
+            console.error('Error fetching squad requests:', requestsError);
+            return;
+          }
+          
+          // Process the requests data
+          const processedRequests: SquadRequest[] = requestsData.map(request => ({
+            id: request.id,
+            requesterId: request.requester.id,
+            requesterName: request.requester.name,
+            requesterUsername: request.requester.username,
+            recipientId: request.recipient.id,
+            status: request.status,
+            createdAt: new Date(request.created_at)
+          }));
+          
+          // Get accepted squad members
+          const acceptedRequests = requestsData.filter(req => req.status === 'accepted');
+          
+          // Create a unique list of squad member IDs from both sent and received requests
+          const squadMemberIds = new Set<string>();
+          acceptedRequests.forEach(req => {
+            if (req.requester.id === currentUser.id) {
+              squadMemberIds.add(req.recipient.id);
+            } else {
+              squadMemberIds.add(req.requester.id);
+            }
           });
+          
+          // Convert to array and fetch the full user profiles
+          const memberProfiles: UserProfile[] = [];
+          for (const memberId of squadMemberIds) {
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('id, name, username, avatar_url, created_at, updated_at')
+              .eq('id', memberId)
+              .single();
+              
+            if (!profileError && profile) {
+              memberProfiles.push({
+                id: profile.id,
+                name: profile.name,
+                username: profile.username,
+                avatarUrl: profile.avatar_url || '',
+                createdAt: new Date(profile.created_at),
+                updatedAt: new Date(profile.updated_at || profile.created_at)
+              });
+            }
+          }
+          
+          set({
+            squadRequests: processedRequests,
+            squadMembers: memberProfiles
+          });
+          
+          console.log("Squad data fetched:", { requests: processedRequests, members: memberProfiles });
         } catch (error) {
           console.error('Error fetching squad data:', error);
         }
       },
       
-      // These methods now return synchronous data from the store instead of Promises
-      getSquadRequestsReceived: () => {
-        return get().squadRequests;
+      getSquadRequestsReceived: async () => {
+        const currentUser = get().currentUser;
+        if (!currentUser) return [];
+        
+        try {
+          const { data, error } = await supabase
+            .from('squad_requests')
+            .select(`
+              id, 
+              status, 
+              created_at,
+              requester:requester_id(id, name, username)
+            `)
+            .eq('recipient_id', currentUser.id)
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+            
+          if (error) throw error;
+          
+          const pendingRequests: SquadRequest[] = data.map(request => ({
+            id: request.id,
+            requesterId: request.requester.id,
+            requesterName: request.requester.name,
+            requesterUsername: request.requester.username,
+            recipientId: currentUser.id,
+            status: 'pending',
+            createdAt: new Date(request.created_at)
+          }));
+          
+          return pendingRequests;
+        } catch (error) {
+          console.error('Error fetching squad requests:', error);
+          return [];
+        }
       },
       
-      getAcceptedSquadMembers: () => {
-        return get().squadMembers;
+      getAcceptedSquadMembers: async () => {
+        try {
+          await get().fetchSquadData();
+          return get().squadMembers;
+        } catch (error) {
+          console.error('Error getting accepted squad members:', error);
+          return [];
+        }
       },
       
-      getSquadMemberById: (id) => {
-        const allMembers = get().squadMembers;
-        return allMembers.find(member => member.id === id);
+      getSquadMemberById: async (id) => {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, name, username, avatar_url, created_at, updated_at')
+            .eq('id', id)
+            .single();
+            
+          if (error) throw error;
+          
+          if (!data) return undefined;
+          
+          return {
+            id: data.id,
+            name: data.name,
+            username: data.username,
+            avatarUrl: data.avatar_url || '',
+            createdAt: new Date(data.created_at),
+            updatedAt: new Date(data.updated_at || data.created_at)
+          };
+        } catch (error) {
+          console.error('Error getting squad member by ID:', error);
+          return undefined;
+        }
       },
       
       respondToSquadRequest: async (requestId, accept) => {
         try {
-          // This would update the status of a squad request
-          console.log(`Squad request ${requestId} ${accept ? 'accepted' : 'rejected'}`);
+          const newStatus = accept ? 'accepted' : 'rejected';
           
-          // In a real implementation, this would update the database
-          // For now, filter out the request from the local state
-          const updatedRequests = get().squadRequests.filter(request => request.id !== requestId);
-          set({ squadRequests: updatedRequests });
+          const { error } = await supabase
+            .from('squad_requests')
+            .update({ status: newStatus })
+            .eq('id', requestId);
+            
+          if (error) throw error;
+          
+          // Refresh squad data
+          await get().fetchSquadData();
         } catch (error) {
           console.error('Error responding to squad request:', error);
           throw error;
@@ -380,31 +493,39 @@ export const useUserStore = create<UserState>()(
           
           const recipientUser = userProfiles[0];
           
-          // Fix: Compare username instead of ID to avoid the self-add issue 
-          // that's causing the error in the console logs
+          // Don't allow adding yourself
           if (currentUser.username === username) {
             console.error('Cannot add yourself to your squad');
             return false;
           }
           
-          // In a real implementation, this would create a squad request in the database
-          console.log(`Squad request sent to ${recipientUser.username}`);
+          // Check if a request already exists
+          const { data: existingRequests, error: checkError } = await supabase
+            .from('squad_requests')
+            .select('*')
+            .or(`and(requester_id.eq.${currentUser.id},recipient_id.eq.${recipientUser.id}),and(requester_id.eq.${recipientUser.id},recipient_id.eq.${currentUser.id})`)
+            .not('status', 'eq', 'rejected');
+            
+          if (checkError) throw checkError;
           
-          // Mock successful addition of a squad member
-          const newMember: UserProfile = {
-            id: recipientUser.id,
-            username: recipientUser.username,
-            name: recipientUser.name,
-            avatarUrl: '',
-            createdAt: new Date(),
-            updatedAt: new Date()
-          };
-          
-          // Add the new member to the squadMembers array for mock implementation
-          const currentMembers = get().squadMembers;
-          if (!currentMembers.some(member => member.id === newMember.id)) {
-            set({ squadMembers: [...currentMembers, newMember] });
+          if (existingRequests && existingRequests.length > 0) {
+            console.error('Request already exists');
+            return false;
           }
+          
+          // Create the squad request
+          const { error: insertError } = await supabase
+            .from('squad_requests')
+            .insert({
+              requester_id: currentUser.id,
+              recipient_id: recipientUser.id,
+              status: 'pending'
+            });
+            
+          if (insertError) throw insertError;
+          
+          // Refresh squad data
+          await get().fetchSquadData();
           
           return true;
         } catch (error) {

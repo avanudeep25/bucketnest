@@ -119,7 +119,7 @@ const SquadMembersSelector = ({
                   key={memberId} 
                   className="px-3 py-1 gap-1 bg-blue-100 text-blue-800"
                 >
-                  {member?.name || 'Unknown'}
+                  {member?.name || 'Unknown'} {member?.username ? `(@${member.username})` : ''}
                   <X 
                     className="h-3 w-3 cursor-pointer" 
                     onClick={() => toggleSquadMember(memberId)}

@@ -11,6 +11,7 @@ import WishlistDetail from "./pages/WishlistDetail";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
+import Squad from "./pages/Squad";
 import { useUserStore } from "./store/userStore";
 import { useWishlistStore } from "./store/wishlistStore";
 import { useEffect, useState } from "react";
@@ -125,6 +126,11 @@ const App = () => (
           <Route path="/profile" element={
             <RequireProfile>
               <Profile />
+            </RequireProfile>
+          } />
+          <Route path="/squad" element={
+            <RequireProfile>
+              <Squad />
             </RequireProfile>
           } />
           <Route path="/wishlist/:id" element={
