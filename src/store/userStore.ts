@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { UserProfile } from '@/types/wishlist';
@@ -311,7 +310,7 @@ export const useUserStore = create<UserState>()(
           // Process the requests data
           const processedRequests: SquadRequest[] = [];
           if (requestsData) {
-            requestsData.forEach(request => {
+            for (const request of requestsData) {
               const requester = profilesById.get(request.requester_id);
               const recipient = profilesById.get(request.recipient_id);
               
@@ -324,7 +323,7 @@ export const useUserStore = create<UserState>()(
                 status: request.status,
                 createdAt: new Date(request.created_at)
               });
-            });
+            }
           }
           
           // Get accepted squad members
@@ -332,13 +331,15 @@ export const useUserStore = create<UserState>()(
           
           // Create a unique list of squad member IDs from both sent and received requests
           const squadMemberIds = new Set<string>();
-          acceptedRequests.forEach(req => {
-            if (req.requester_id === currentUser.id) {
-              squadMemberIds.add(req.recipient_id);
-            } else {
-              squadMemberIds.add(req.requester_id);
+          if (acceptedRequests) {
+            for (const req of acceptedRequests) {
+              if (req.requester_id === currentUser.id) {
+                squadMemberIds.add(req.recipient_id);
+              } else {
+                squadMemberIds.add(req.requester_id);
+              }
             }
-          });
+          }
           
           // Convert to array and fetch the full user profiles
           const memberProfiles: UserProfile[] = [];
@@ -389,9 +390,9 @@ export const useUserStore = create<UserState>()(
           
           const profilesById = new Map();
           if (profiles) {
-            profiles.forEach(profile => {
+            for (const profile of profiles) {
               profilesById.set(profile.id, profile);
-            });
+            }
           }
           
           // Get pending requests where current user is the recipient
@@ -406,7 +407,7 @@ export const useUserStore = create<UserState>()(
           
           const pendingRequests: SquadRequest[] = [];
           if (data) {
-            data.forEach(request => {
+            for (const request of data) {
               const requester = profilesById.get(request.requester_id);
               
               pendingRequests.push({
@@ -418,7 +419,7 @@ export const useUserStore = create<UserState>()(
                 status: 'pending',
                 createdAt: new Date(request.created_at)
               });
-            });
+            }
           }
           
           return pendingRequests;
