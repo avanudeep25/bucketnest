@@ -27,7 +27,7 @@ const queryClient = new QueryClient({
 });
 
 const RequireProfile = ({ children }: { children: React.ReactNode }) => {
-  const { currentUser, setCurrentUser, fetchSquadData, ensureUserHasProfile } = useUserStore();
+  const { currentUser, setCurrentUser, ensureUserHasProfile } = useUserStore();
   const { fetchItems } = useWishlistStore();
   const location = useLocation();
   const navigate = useNavigate();
@@ -50,7 +50,6 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
           
           // Then fetch other data
           await fetchItems();
-          await fetchSquadData();
           setIsLoading(false);
         } else {
           console.log("RequireProfile: No active session");
@@ -78,7 +77,6 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
           
           // Then fetch other data
           await fetchItems();
-          await fetchSquadData();
         } else {
           setCurrentUser(null);
         }
@@ -90,7 +88,7 @@ const RequireProfile = ({ children }: { children: React.ReactNode }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [setCurrentUser, navigate, fetchItems, fetchSquadData, ensureUserHasProfile]);
+  }, [setCurrentUser, navigate, fetchItems, ensureUserHasProfile]);
   
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;

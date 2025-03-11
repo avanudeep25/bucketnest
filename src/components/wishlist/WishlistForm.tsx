@@ -30,7 +30,6 @@ import { toast } from 'sonner';
 import { formSchema, FormValues } from "./schema";
 import { activityTypes, budgetRanges } from "@/constants/wishlistFormOptions";
 import TagsManager from "./TagsManager";
-import SquadMembersSelector from "./SquadMembersSelector";
 import TimeFrameSelector from "./TimeFrameSelector";
 import LocationAutocomplete from "./LocationAutocomplete";
 import UserProfileForm from "./UserProfileForm";
@@ -48,7 +47,6 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
   
   const [selectedTags, setSelectedTags] = useState<string[]>(editItem?.tags || []);
   const [timePickerType, setTimePickerType] = useState<string | null>(editItem?.timeframeType || null);
-  const [selectedSquadMembers, setSelectedSquadMembers] = useState<string[]>(editItem?.squadMembers || []);
   const [selectedWeekDate, setSelectedWeekDate] = useState<Date | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -75,13 +73,6 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
 
   const itemType = form.watch("itemType");
   const timeframeType = form.watch("timeframeType");
-  const travelType = form.watch("travelType");
-
-  useEffect(() => {
-    if (form.getValues("travelType") !== "Friends") {
-      setSelectedSquadMembers([]);
-    }
-  }, [form.watch("travelType")]);
 
   useEffect(() => {
     setTimePickerType(timeframeType);
@@ -129,7 +120,6 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
         imageUrl: data.imageUrl || undefined,
         link: data.link || undefined,
         tags: selectedTags.length > 0 ? selectedTags : undefined,
-        squadMembers: selectedSquadMembers.length > 0 ? selectedSquadMembers : undefined,
       };
       
       console.log("Processing submission for item:", formattedItem);
@@ -291,13 +281,6 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
                   </FormItem>
                 )}
               />
-              
-              {travelType === "Friends" && (
-                <SquadMembersSelector
-                  selectedSquadMembers={selectedSquadMembers}
-                  setSelectedSquadMembers={setSelectedSquadMembers}
-                />
-              )}
               
               <FormField
                 control={form.control}

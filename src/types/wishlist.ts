@@ -17,7 +17,6 @@ export type ActivityType =
 export type TravelType = 'Solo' | 'Couple' | 'Friends' | 'Family' | 'Work' | 'Other';
 export type TimeframeType = 'Specific Date' | 'Week' | 'Month' | 'Year' | 'Someday';
 export type BudgetRange = 'Below INR 5000' | 'INR 5000 - INR 10,000' | 'INR 10,000 - INR 50,000' | 'Above INR 50,000';
-export type RelationshipStatus = 'pending' | 'accepted' | 'rejected';
 
 export interface WishlistItem {
   id?: string;
@@ -37,7 +36,6 @@ export interface WishlistItem {
   link?: string;
   notes?: string;
   tags?: string[];
-  squadMembers?: string[];
   createdAt?: Date;
   updatedAt?: Date;
   completedAt?: Date;
@@ -50,15 +48,6 @@ export interface UserProfile {
   name: string;
   bio?: string;
   avatarUrl?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface SquadRelationship {
-  id: string;
-  requesterId: string;
-  requesteeId: string;
-  status: RelationshipStatus;
   createdAt: Date;
   updatedAt: Date;
 }

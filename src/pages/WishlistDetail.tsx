@@ -6,11 +6,9 @@ import {
   UsersIcon, TagIcon, ExternalLinkIcon 
 } from "lucide-react";
 import { useWishlistStore } from "@/store/wishlistStore";
-import { useUserStore } from "@/store/userStore";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Navigation from "@/components/layout/Navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { WishlistDetailHeader } from "@/components/wishlist/detail/WishlistDetailHeader";
 import { WishlistDetailImage } from "@/components/wishlist/detail/WishlistDetailImage";
 import { WishlistDetailActions } from "@/components/wishlist/detail/WishlistDetailActions";
@@ -23,7 +21,6 @@ const WishlistDetail = () => {
   const navigate = useNavigate();
   const deleteItem = useWishlistStore((state) => state.deleteItem);
   const toggleComplete = useWishlistStore((state) => state.toggleComplete);
-  const getSquadMemberById = useUserStore((state) => state.getSquadMemberById);
   
   const { item, isLoading, error, fetchAttempts, storeError } = useWishlistItem(id);
 
@@ -164,29 +161,6 @@ const WishlistDetail = () => {
               <div className="mt-6">
                 <h3 className="text-lg font-medium mb-2">Description</h3>
                 <p className="text-gray-700 whitespace-pre-line">{item.description}</p>
-              </div>
-            )}
-            
-            {item.squadMembers && item.squadMembers.length > 0 && (
-              <div className="mt-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <UsersIcon className="text-gray-400" size={18} />
-                  <h3 className="text-lg font-medium">Squad Members</h3>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {item.squadMembers.map((memberId) => {
-                    const member = getSquadMemberById(memberId);
-                    return (
-                      <div key={memberId} className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={member?.avatarUrl} />
-                          <AvatarFallback>{member?.name?.substring(0, 2).toUpperCase() || '??'}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm">{member?.name || 'Unknown Member'}</span>
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
             )}
             
