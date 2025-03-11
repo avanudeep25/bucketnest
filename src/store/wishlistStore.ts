@@ -15,7 +15,6 @@ interface WishlistState {
   deleteItem: (id: string) => Promise<void>;
   getItem: (id: string) => WishlistItem | undefined;
   toggleComplete: (id: string, isComplete: boolean) => Promise<void>;
-  updateSquadMembers: (id: string, squadMembers: string[]) => Promise<void>;
 }
 
 export const useWishlistStore = create<WishlistState>((set, get) => ({
@@ -266,37 +265,4 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       toast.error('Failed to update completion status');
     }
   },
-
-  updateSquadMembers: async (id, squadMembers) => {
-    try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) {
-        toast.error('You must be logged in to update squad members');
-        return;
-      }
-      
-      const { error } = await supabase
-        .from('wishlist_items')
-        .update({ squad_members: squadMembers })
-        .eq('id', id);
-      
-      if (error) {
-        console.error('Error updating squad members:', error);
-        toast.error('Failed to update squad members');
-        return;
-      }
-      
-      set((state) => ({
-        items: state.items.map((item) => 
-          item.id === id ? { ...item, squadMembers } : item
-        )
-      }));
-      
-      toast.success('Squad members updated successfully');
-      await get().fetchItems();
-    } catch (error) {
-      console.error('Error updating squad members:', error);
-      toast.error('Failed to update squad members');
-    }
-  }
 }));

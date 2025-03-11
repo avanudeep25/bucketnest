@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormItem, FormLabel } from "@/components/ui/form";
-import { X, UserPlus, CheckIcon, Search } from "lucide-react";
+import { X, UserPlus, CheckIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/userStore";
 import { toast } from "sonner";
@@ -15,7 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Avatar,
@@ -34,7 +33,6 @@ const SquadMembersSelector = ({
 }: SquadMembersSelectorProps) => {
   const getAcceptedSquadMembers = useUserStore((state) => state.getAcceptedSquadMembers);
   const searchUsers = useUserStore((state) => state.searchUsers);
-  const sendSquadRequest = useUserStore((state) => state.sendSquadRequest);
   
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [loadedSquadMembers, setLoadedSquadMembers] = useState([]);
@@ -48,7 +46,6 @@ const SquadMembersSelector = ({
       try {
         setIsLoading(true);
         const members = await getAcceptedSquadMembers();
-        console.log("Loaded squad members:", members);
         setLoadedSquadMembers(members || []);
       } catch (error) {
         console.error("Error loading squad members:", error);
@@ -70,7 +67,6 @@ const SquadMembersSelector = ({
     setIsSearching(true);
     try {
       const results = await searchUsers(searchQuery);
-      console.log("Search results:", results);
       setSearchResults(results);
     } catch (error) {
       console.error("Error searching for users:", error);
@@ -80,10 +76,9 @@ const SquadMembersSelector = ({
     }
   };
 
-  const handleSendSquadRequest = async (username: string) => {
+  const sendSquadRequest = async (username: string) => {
     try {
-      console.log("Sending squad request to:", username);
-      const success = await sendSquadRequest(username);
+      const success = await useUserStore.getState().sendSquadRequest(username);
       if (success) {
         toast.success(`Request sent to @${username}`);
         setSearchQuery("");
@@ -98,7 +93,6 @@ const SquadMembersSelector = ({
   };
 
   const toggleSquadMember = (memberId: string) => {
-    console.log("Toggling squad member:", memberId);
     if (selectedSquadMembers.includes(memberId)) {
       setSelectedSquadMembers(selectedSquadMembers.filter(id => id !== memberId));
     } else {
@@ -119,7 +113,7 @@ const SquadMembersSelector = ({
                   key={memberId} 
                   className="px-3 py-1 gap-1 bg-blue-100 text-blue-800"
                 >
-                  {member?.name || 'Unknown'} {member?.username ? `(@${member.username})` : ''}
+                  {member?.name || 'Unknown'}
                   <X 
                     className="h-3 w-3 cursor-pointer" 
                     onClick={() => toggleSquadMember(memberId)}
@@ -143,7 +137,7 @@ const SquadMembersSelector = ({
               Add Squad Members
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Select Squad Members</DialogTitle>
               <DialogDescription>
@@ -159,7 +153,7 @@ const SquadMembersSelector = ({
                 <div className="flex gap-2">
                   <Input
                     id="search-username"
-                    placeholder="Type at least 3 characters"
+                    placeholder="Search for users"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => {
@@ -173,16 +167,8 @@ const SquadMembersSelector = ({
                     type="button" 
                     onClick={handleUserSearch}
                     disabled={isSearching || searchQuery.length < 3}
-                    className="flex items-center gap-1"
                   >
-                    {isSearching ? (
-                      "Searching..."
-                    ) : (
-                      <>
-                        <Search className="h-4 w-4" />
-                        Search
-                      </>
-                    )}
+                    {isSearching ? "Searching..." : "Search"}
                   </Button>
                 </div>
               </div>
@@ -209,7 +195,7 @@ const SquadMembersSelector = ({
                         <Button 
                           type="button" 
                           size="sm" 
-                          onClick={() => handleSendSquadRequest(user.username)}
+                          onClick={() => sendSquadRequest(user.username)}
                         >
                           Send Request
                         </Button>
@@ -266,14 +252,14 @@ const SquadMembersSelector = ({
               </div>
             </div>
             
-            <DialogFooter>
+            <div className="flex justify-end pt-2">
               <Button 
                 type="button" 
                 onClick={() => setUserDialogOpen(false)}
               >
                 Done
               </Button>
-            </DialogFooter>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

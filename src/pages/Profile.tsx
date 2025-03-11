@@ -1,140 +1,266 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserStore } from "@/store/userStore";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import Navigation from "@/components/layout/Navigation";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import SquadRequests from "@/components/squad/SquadRequests";
-import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 const Profile = () => {
+  const { currentUser, setCurrentUser } = useUserStore();
   const navigate = useNavigate();
-  const { currentUser, createUser, logout } = useUserStore();
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [name, setName] = useState(currentUser?.name || "");
-  const [bio, setBio] = useState(currentUser?.bio || "");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [formValues, setFormValues] = useState({
+    name: "",
+    username: "",
+    bio: "",
+  });
+  
+  // Fetch the latest profile data when the component mounts
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      setIsLoading(true);
+      
+      try {
+        if (currentUser?.id) {
+          // Get the latest profile data from Supabase
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+            
+          if (error) {
+            console.error("Error fetching profile:", error);
+            throw error;
+          }
+          
+          if (data) {
+            console.log("Profile fetched successfully:", data);
+            
+            // Update the form with the fetched data
+            setFormValues({
+              name: data.name || currentUser?.user_metadata?.name || "",
+              username: data.username || "",
+              bio: data.bio || "",
+            });
+            
+            // Update the current user with the fetched data
+            setCurrentUser({
+              ...currentUser,
+              username: data.username,
+              bio: data.bio,
+              name: data.name
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error in fetchProfileData:", error);
+        toast.error("Failed to load profile data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchProfileData();
+  }, [currentUser?.id, setCurrentUser]);
 
-  const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormValues(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name.trim()) {
+    if (!formValues.name.trim()) {
       toast.error("Name is required");
       return;
     }
     
-    setIsUpdating(true);
+    setIsSaving(true);
     
     try {
-      await createUser(name, bio);
-      toast.success("Profile updated successfully");
+      // Log the values we're submitting
+      console.log("Submitting profile update with:", formValues);
+      
+      // Update profile in Supabase
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          name: formValues.name,
+          bio: formValues.bio || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentUser?.id);
+        
+      if (profileError) {
+        console.error("Error updating profile in Supabase:", profileError);
+        toast.error("Failed to update profile information");
+        setIsSaving(false);
+        return;
+      }
+      
+      // Update user metadata in Auth
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { name: formValues.name }
+      });
+      
+      if (authError) {
+        console.error("Error updating auth user data:", authError);
+        toast.error("Failed to update user data");
+        setIsSaving(false);
+        return;
+      }
+      
+      // Update the local state
+      if (currentUser) {
+        setCurrentUser({
+          ...currentUser,
+          name: formValues.name,
+          bio: formValues.bio || null,
+          user_metadata: {
+            ...currentUser.user_metadata,
+            name: formValues.name
+          }
+        });
+      }
+      
+      // Show success message
+      toast.success("Profile updated successfully!");
+      
+      // Reset saving state and navigate after a delay
+      setTimeout(() => {
+        setIsSaving(false);
+        navigate('/wishlist');
+      }, 1500);
+      
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error("Failed to update profile");
-    } finally {
-      setIsUpdating(false);
+      toast.error("Failed to update profile. Please try again.");
+      setIsSaving(false);
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate("/login");
-    } catch (error) {
-      console.error("Error logging out:", error);
-      toast.error("Failed to log out");
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          <span className="ml-2">Loading profile...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">My Profile</h1>
-        <Button variant="outline" onClick={handleLogout}>Logout</Button>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      <Navigation />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-lg shadow-sm border space-y-4">
-            <h2 className="text-xl font-semibold">Profile Information</h2>
-            
-            <form onSubmit={handleProfileUpdate} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  value={currentUser?.username || ""}
-                  disabled
-                  className="bg-gray-50"
-                />
-                <p className="text-sm text-muted-foreground">
-                  Your username cannot be changed
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="name">Display Name</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your name"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="Tell us about yourself"
-                  rows={4}
-                />
-              </div>
-              
-              <Button type="submit" disabled={isUpdating}>
-                {isUpdating ? "Saving..." : "Save Changes"}
-              </Button>
-            </form>
-          </div>
+      <div className="container px-4 py-8 md:px-6 flex-1">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-3xl font-bold mb-6">My Profile</h1>
           
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h2 className="text-xl font-semibold mb-4">Account Settings</h2>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  value={currentUser?.email || ""}
-                  disabled
-                  className="bg-gray-50"
-                />
-              </div>
-              
-              <Button variant="outline" className="w-full" onClick={() => navigate("/wishlist")}>
-                My Bucket List
-              </Button>
-            </div>
-          </div>
-        </div>
-        
-        <div className="space-y-6">
-          <SquadRequests />
-          
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h2 className="text-xl font-semibold mb-4">Your Squad</h2>
-            <div className="space-y-2">
-              <Button className="w-full" onClick={() => navigate("/squad")}>
-                Manage Your Squad
-              </Button>
-              <p className="text-sm text-muted-foreground text-center">
-                View and manage your squad members
-              </p>
-            </div>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Personal Information</CardTitle>
+              <CardDescription>
+                Update your profile information visible to other users
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input 
+                      id="email" 
+                      value={currentUser?.email || ""}
+                      disabled
+                      className="bg-gray-50"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Your email cannot be changed
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input 
+                      id="name" 
+                      name="name"
+                      value={formValues.name}
+                      onChange={handleChange}
+                      placeholder="Your full name"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input 
+                      id="username" 
+                      name="username"
+                      value={formValues.username}
+                      placeholder="Your username"
+                      disabled
+                      className="bg-gray-50"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {formValues.username ? 
+                        "Username is auto-generated and cannot be changed" : 
+                        "A username will be automatically generated for you"}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Textarea 
+                      id="bio" 
+                      name="bio"
+                      value={formValues.bio}
+                      onChange={handleChange}
+                      placeholder="Tell others about yourself"
+                      className="min-h-[100px]"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex justify-end gap-4">
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={() => navigate('/wishlist')}
+                    disabled={isSaving}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="bg-blue-500 hover:bg-blue-600"
+                    disabled={isSaving}
+                  >
+                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

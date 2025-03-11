@@ -39,33 +39,6 @@ export type Database = {
         }
         Relationships: []
       }
-      squad_requests: {
-        Row: {
-          created_at: string
-          id: string
-          recipient_id: string
-          requester_id: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          recipient_id: string
-          requester_id: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          recipient_id?: string
-          requester_id?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       wishlist_items: {
         Row: {
           activity_type: string | null
