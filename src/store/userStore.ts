@@ -53,7 +53,25 @@ interface UserState {
   ensureUserHasProfile: (user: ExtendedUser) => Promise<ExtendedUser>;
 }
 
-// Define the types for each RPC function
+// Define proper interfaces for RPC function parameters
+interface GetSquadRequestsParams {
+  user_id: string;
+}
+
+interface GetPendingReceivedRequestsParams {
+  user_id: string;
+}
+
+interface UpdateSquadRequestStatusParams {
+  request_id: string;
+  new_status: string;
+}
+
+interface SendSquadRequestParams {
+  recipient_id: string;
+}
+
+// Type for RPC responses
 type RPCResponse<T> = { data: T | null; error: any };
 
 export const useUserStore = create<UserState>()(
@@ -300,11 +318,11 @@ export const useUserStore = create<UserState>()(
             }
           }
           
-          // Fetch squad requests
+          // Fetch squad requests - properly typed
           const { data: requestsData, error: requestsError } = await supabase
-            .rpc('get_squad_requests', {
+            .rpc<any[], GetSquadRequestsParams>('get_squad_requests', {
               user_id: currentUser.id
-            }) as RPCResponse<any[]>;
+            });
             
           if (requestsError) {
             console.error('Error fetching squad requests:', requestsError);
@@ -401,11 +419,11 @@ export const useUserStore = create<UserState>()(
             }
           }
           
-          // Get pending requests where current user is the recipient
+          // Get pending requests where current user is the recipient - properly typed
           const { data, error } = await supabase
-            .rpc('get_pending_received_requests', {
+            .rpc<any[], GetPendingReceivedRequestsParams>('get_pending_received_requests', {
               user_id: currentUser.id
-            }) as RPCResponse<any[]>;
+            });
             
           if (error) {
             throw error;
@@ -475,12 +493,12 @@ export const useUserStore = create<UserState>()(
         try {
           const newStatus = accept ? 'accepted' : 'rejected';
           
-          // Update squad request status
+          // Update squad request status - properly typed
           const { error } = await supabase
-            .rpc('update_squad_request_status', { 
+            .rpc<void, UpdateSquadRequestStatusParams>('update_squad_request_status', { 
               request_id: requestId, 
               new_status: newStatus 
-            }) as RPCResponse<void>;
+            });
             
           if (error) throw error;
           
@@ -547,11 +565,11 @@ export const useUserStore = create<UserState>()(
             return false;
           }
           
-          // Send the squad request using RPC function
+          // Send the squad request using RPC function - properly typed
           const { error: insertError } = await supabase
-            .rpc('send_squad_request', {
+            .rpc<void, SendSquadRequestParams>('send_squad_request', {
               recipient_id: recipientUser.id
-            }) as RPCResponse<void>;
+            });
             
           if (insertError) {
             console.error('Error sending squad request:', insertError);
