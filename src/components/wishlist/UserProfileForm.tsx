@@ -36,6 +36,16 @@ const UserProfileForm = () => {
       await createUser(name, bio);
       toast.success("Profile created successfully!");
       
+      // Ensure the current user state is updated
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setCurrentUser({
+          ...session.user,
+          name,
+          bio
+        });
+      }
+      
       // Give the toast time to show
       setTimeout(() => {
         setIsSubmitting(false);

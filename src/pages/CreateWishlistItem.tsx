@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlusIcon, UsersIcon } from "lucide-react";
+import { PlusIcon, UsersIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -21,10 +21,12 @@ import { UserProfile } from "@/types/wishlist";
 
 const CreateWishlistItem = () => {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { id } = useParams(); // Get the ID from the URL if we're editing
-  
+
   // Get store values
   const currentUser = useUserStore((state) => state.currentUser);
+  const fetchSquadData = useUserStore((state) => state.fetchSquadData);
   const wishlistItem = id ? useWishlistStore(state => state.getItem(id)) : undefined;
   
   // Get the squad data functions
@@ -40,8 +42,11 @@ const CreateWishlistItem = () => {
   
   // Load the squad data when the component mounts
   useEffect(() => {
-    const loadData = () => {
+    const loadData = async () => {
       try {
+        // Ensure squad data is loaded
+        await fetchSquadData();
+        
         // Get squad requests and set state
         const requests = getSquadRequestsReceived();
         if (Array.isArray(requests)) {
@@ -54,15 +59,20 @@ const CreateWishlistItem = () => {
         if (Array.isArray(members)) {
           setSquadMembers(members);
         }
+        
+        // Set loading to false once data is loaded
+        setIsLoading(false);
       } catch (error) {
         console.error("Error loading squad data:", error);
         setSquadRequests([]);
         setSquadMembers([]);
+        setIsLoading(false); // Still set loading to false on error
+        toast.error("Error loading data. Please try refreshing the page.");
       }
     };
     
     loadData();
-  }, [getSquadRequestsReceived, getAcceptedSquadMembers]);
+  }, [fetchSquadData, getSquadRequestsReceived, getAcceptedSquadMembers]);
   
   // Component to display a squad request
   const SquadRequestItem = ({ request }: { request: SquadRequest }) => {
@@ -126,6 +136,21 @@ const CreateWishlistItem = () => {
       </div>
     );
   };
+  
+  // Show loading spinner while data is being loaded
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <div className="flex justify-center items-center flex-1">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <p className="text-gray-500">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col">
