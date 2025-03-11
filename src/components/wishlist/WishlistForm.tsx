@@ -323,47 +323,49 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
     setIsSubmitting(true);
     console.log("Form submission started with data:", data);
     
-    const formattedItem = {
-      title: data.title,
-      destination: data.destination,
-      itemType: data.itemType as WishItemType,
-      description: data.description || undefined,
-      activityType: data.activityType as ActivityType | undefined,
-      travelType: data.travelType as TravelType | undefined,
-      timeframeType: data.timeframeType as TimeframeType,
-      targetDate: data.targetDate,
-      targetWeek: data.targetWeek,
-      targetMonth: data.targetMonth,
-      targetYear: data.targetYear !== undefined ? data.targetYear.toString() : undefined,
-      budgetRange: data.budgetRange as BudgetRange | undefined,
-      imageUrl: data.imageUrl || undefined,
-      link: data.link || undefined,
-      tags: selectedTags.length > 0 ? selectedTags : undefined,
-      squadMembers: selectedSquadMembers.length > 0 ? selectedSquadMembers : undefined,
-    };
-    
     try {
+      const formattedItem = {
+        title: data.title,
+        destination: data.destination,
+        itemType: data.itemType as WishItemType,
+        description: data.description || undefined,
+        activityType: data.activityType as ActivityType | undefined,
+        travelType: data.travelType as TravelType | undefined,
+        timeframeType: data.timeframeType as TimeframeType,
+        targetDate: data.targetDate,
+        targetWeek: data.targetWeek,
+        targetMonth: data.targetMonth,
+        targetYear: data.targetYear !== undefined ? data.targetYear.toString() : undefined,
+        budgetRange: data.budgetRange as BudgetRange | undefined,
+        imageUrl: data.imageUrl || undefined,
+        link: data.link || undefined,
+        tags: selectedTags.length > 0 ? selectedTags : undefined,
+        squadMembers: selectedSquadMembers.length > 0 ? selectedSquadMembers : undefined,
+      };
+      
       console.log("Processing submission for item:", formattedItem);
+      
       if (editItem?.id) {
         console.log("Updating existing item with ID:", editItem.id);
         await updateItem(editItem.id, formattedItem);
         toast.success("Experience updated successfully!");
+        setIsSubmitting(false);
+        navigate('/wishlist');
       } else {
         console.log("Adding new item");
         const id = await addItem(formattedItem);
         
+        setIsSubmitting(false);
+        
         if (id) {
           console.log("Item added successfully with ID:", id);
           toast.success("Experience added successfully!");
+          navigate("/wishlist");
         } else {
           console.error("No ID returned after adding item");
           toast.error("Something went wrong. Please try again.");
-          setIsSubmitting(false);
-          return;
         }
       }
-      console.log("Navigating to wishlist page");
-      navigate("/wishlist");
     } catch (error) {
       console.error("Error with experience:", error);
       toast.error(`Failed to ${editItem ? 'update' : 'add'} experience. Please try again.`);

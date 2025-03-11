@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { WishlistItem, ActivityType, WishItemType, TimeframeType, TravelType, BudgetRange } from '@/types/wishlist';
@@ -96,7 +97,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       if (!session.session) {
         console.error("No active session found");
         toast.error('You must be logged in to add items');
-        return;
+        return undefined;
       }
       
       console.log("User is authenticated, preparing database item");
@@ -133,7 +134,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       if (error) {
         console.error('Error adding wishlist item:', error);
         toast.error('Failed to add your experience');
-        return;
+        return undefined;
       }
       
       console.log("Item added successfully with response:", data);
@@ -144,6 +145,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     } catch (error) {
       console.error('Exception in addItem:', error);
       toast.error('Failed to add your experience');
+      return undefined; // Explicitly return undefined on error
     }
   },
   
