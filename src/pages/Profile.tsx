@@ -95,7 +95,11 @@ const Profile = () => {
     
     try {
       // Log the values we're submitting
-      console.log("Submitting profile update with:", formValues);
+      console.log("Submitting profile update with:", formValues, "Current user ID:", currentUser?.id);
+      
+      if (!currentUser?.id) {
+        throw new Error("User ID is missing");
+      }
       
       // Update profile in Supabase
       const { error: profileError } = await supabase
@@ -105,7 +109,7 @@ const Profile = () => {
           bio: formValues.bio || null,
           updated_at: new Date().toISOString()
         })
-        .eq('id', currentUser?.id);
+        .eq('id', currentUser.id);
         
       if (profileError) {
         console.error("Error updating profile in Supabase:", profileError);
@@ -128,7 +132,7 @@ const Profile = () => {
       
       // Update the local state
       if (currentUser) {
-        setCurrentUser({
+        const updatedUser = {
           ...currentUser,
           name: formValues.name,
           bio: formValues.bio || null,
@@ -136,7 +140,10 @@ const Profile = () => {
             ...currentUser.user_metadata,
             name: formValues.name
           }
-        });
+        };
+        
+        console.log("Updating user state to:", updatedUser);
+        setCurrentUser(updatedUser);
       }
       
       // Show success message
