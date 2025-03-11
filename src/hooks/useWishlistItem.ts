@@ -103,16 +103,16 @@ export const useWishlistItem = (id: string | undefined) => {
             }
             
             if (isMounted) {
-              console.log(`Experience with ID ${id} not found after direct fetch`);
-              setError(`Experience with ID ${id} not found`);
-              toast.error("Experience not found");
+              console.log(`Bucket List Goal with ID ${id} not found after direct fetch`);
+              setError(`Bucket List Goal with ID ${id} not found`);
+              toast.error("Bucket List Goal not found");
               setIsLoading(false);
             }
             return;
           }
           
           if (isMounted) {
-            setError(`Experience with ID ${id} not found`);
+            setError(`Bucket List Goal with ID ${id} not found`);
             setIsLoading(false);
           }
           return;
@@ -136,8 +136,8 @@ export const useWishlistItem = (id: string | undefined) => {
             setError(null);
           } else if (isMounted) {
             console.log("Failed to fetch item after all attempts");
-            setError(`Experience with ID ${id} not found after multiple attempts`);
-            toast.error("Experience not found");
+            setError(`Bucket List Goal with ID ${id} not found after multiple attempts`);
+            toast.error("Bucket List Goal not found");
           }
           if (isMounted) {
             setIsLoading(false);
@@ -146,8 +146,8 @@ export const useWishlistItem = (id: string | undefined) => {
       } catch (err) {
         console.error("Error in loadData:", err);
         if (isMounted) {
-          setError("Failed to load experience");
-          toast.error("Failed to load experience");
+          setError("Failed to load Bucket List Goal");
+          toast.error("Failed to load Bucket List Goal");
           setIsLoading(false);
         }
       }

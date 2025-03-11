@@ -136,10 +136,10 @@ const CreateWishlistItem = () => {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
-                {id ? "Edit Experience" : "Let's go..."}
+                {id ? "Edit Bucket List Goal" : "Let's go..."}
               </h1>
               <p className="text-gray-500 mt-1">
-                {id ? "Update your experience" : "Add your next Bucket list item"}
+                {id ? "Update your Bucket List Goal" : "Add your next Bucket list item"}
               </p>
             </div>
             
