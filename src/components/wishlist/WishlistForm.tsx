@@ -32,7 +32,6 @@ import { activityTypes, budgetRanges } from "@/constants/wishlistFormOptions";
 import TagsManager from "./TagsManager";
 import TimeFrameSelector from "./TimeFrameSelector";
 import LocationAutocomplete from "./LocationAutocomplete";
-import UserProfileForm from "./UserProfileForm";
 import { getWeekStringFromDate } from "@/utils/dateUtils";
 
 export interface WishlistFormProps {
@@ -91,7 +90,7 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
 
   const onSubmit = async (data: FormValues) => {
     if (!currentUser) {
-      toast.error("Please create a profile first");
+      toast.error("Please login first");
       navigate("/login");
       return;
     }
@@ -151,10 +150,6 @@ const WishlistForm = ({ editItem }: WishlistFormProps) => {
       setIsSubmitting(false);
     }
   };
-
-  if (!currentUser) {
-    return <UserProfileForm />;
-  }
 
   return (
     <div className="card">
