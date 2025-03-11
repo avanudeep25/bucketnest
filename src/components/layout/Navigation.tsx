@@ -81,10 +81,6 @@ const Navigation = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate('/profile')}>
-                  <User className="h-4 w-4 mr-2" />
-                  My Profile
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
                   Logout
@@ -104,7 +100,7 @@ const Navigation = () => {
       
       {/* Mobile navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background z-50">
-        <div className="grid grid-cols-4 py-2">
+        <div className="grid grid-cols-3 py-2">
           <Link to="/" className="flex flex-col items-center justify-center text-xs font-medium">
             <Home className="h-5 w-5 mb-1" />
             Home
@@ -120,12 +116,6 @@ const Navigation = () => {
             <Plus className="h-5 w-5 mb-1 text-blue-500" />
             Add to Nest
           </button>
-          {currentUser && (
-            <Link to="/profile" className="flex flex-col items-center justify-center text-xs font-medium">
-              <Settings className="h-5 w-5 mb-1 text-blue-500" />
-              Settings
-            </Link>
-          )}
         </div>
       </div>
     </header>

@@ -1,24 +1,13 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import WishlistForm from "@/components/wishlist/WishlistForm";
 import Navigation from "@/components/layout/Navigation";
 import { useUserStore } from "@/store/userStore";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 import { useWishlistStore } from "@/store/wishlistStore";
 
 const CreateWishlistItem = () => {
-  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { id } = useParams(); // Get the ID from the URL if we're editing
 

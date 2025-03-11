@@ -10,7 +10,6 @@ import CreateWishlistItem from "./pages/CreateWishlistItem";
 import WishlistDetail from "./pages/WishlistDetail";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
-import Profile from "./pages/Profile";
 import { useUserStore } from "./store/userStore";
 import { useWishlistStore } from "./store/wishlistStore";
 import { useEffect, useState } from "react";
@@ -118,11 +117,6 @@ const App = () => (
           <Route path="/create" element={
             <RequireProfile>
               <CreateWishlistItem />
-            </RequireProfile>
-          } />
-          <Route path="/profile" element={
-            <RequireProfile>
-              <Profile />
             </RequireProfile>
           } />
           <Route path="/wishlist/:id" element={
