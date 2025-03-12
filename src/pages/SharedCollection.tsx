@@ -5,8 +5,28 @@ import { useSharingStore } from "@/store/sharingStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, Calendar, MapPin, Tag, ExternalLink, DollarSign, Users } from "lucide-react";
+import { 
+  Loader2, 
+  ArrowLeft, 
+  Calendar, 
+  MapPin, 
+  Tag, 
+  ExternalLink, 
+  DollarSign, 
+  Users,
+  Filter
+} from "lucide-react";
 import { format } from "date-fns";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { activityTypes, budgetRanges } from "@/constants/wishlistFormOptions";
+import { WishlistItem } from "@/types/wishlist";
 
 const SharedCollection = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -14,6 +34,16 @@ const SharedCollection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [collection, setCollection] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [filteredItems, setFilteredItems] = useState<WishlistItem[]>([]);
+  
+  // Filters
+  const [destinationFilter, setDestinationFilter] = useState<string>("");
+  const [activityTypeFilter, setActivityTypeFilter] = useState<string>("");
+  const [yearFilter, setYearFilter] = useState<string>("");
+  const [monthFilter, setMonthFilter] = useState<string>("");
+  const [budgetFilter, setBudgetFilter] = useState<string>("");
+  const [tagFilter, setTagFilter] = useState<string>("");
+  const [showFilters, setShowFilters] = useState<boolean>(false);
   
   useEffect(() => {
     const fetchCollection = async () => {
@@ -32,6 +62,9 @@ const SharedCollection = () => {
           console.log("Items count:", data.items ? data.items.length : 0);
           console.log("Items:", data.items);
           setCollection(data);
+          if (data.items) {
+            setFilteredItems(data.items);
+          }
         } else {
           setError("Collection not found or is no longer available");
         }
@@ -45,6 +78,74 @@ const SharedCollection = () => {
     
     fetchCollection();
   }, [slug, getCollectionBySlug]);
+  
+  useEffect(() => {
+    if (!collection || !collection.items) return;
+    
+    let filtered = [...collection.items];
+    
+    // Filter by destination
+    if (destinationFilter) {
+      filtered = filtered.filter(item => 
+        item.destination && item.destination.toLowerCase().includes(destinationFilter.toLowerCase())
+      );
+    }
+    
+    // Filter by activity type
+    if (activityTypeFilter) {
+      filtered = filtered.filter(item => 
+        item.activityType === activityTypeFilter
+      );
+    }
+    
+    // Filter by year
+    if (yearFilter) {
+      filtered = filtered.filter(item => 
+        (item.targetYear && item.targetYear === yearFilter) ||
+        (item.targetDate && new Date(item.targetDate).getFullYear().toString() === yearFilter) ||
+        (item.targetMonth && item.targetMonth.split('-')[0] === yearFilter)
+      );
+    }
+    
+    // Filter by month
+    if (monthFilter) {
+      filtered = filtered.filter(item => 
+        (item.targetMonth && item.targetMonth.split('-')[1] === monthFilter) ||
+        (item.targetDate && (new Date(item.targetDate).getMonth() + 1).toString().padStart(2, '0') === monthFilter)
+      );
+    }
+    
+    // Filter by budget
+    if (budgetFilter) {
+      filtered = filtered.filter(item => 
+        item.budgetRange === budgetFilter
+      );
+    }
+    
+    // Filter by tags
+    if (tagFilter) {
+      filtered = filtered.filter(item => 
+        item.tags && item.tags.some(tag => 
+          tag.toLowerCase().includes(tagFilter.toLowerCase())
+        )
+      );
+    }
+    
+    setFilteredItems(filtered);
+  }, [collection, destinationFilter, activityTypeFilter, yearFilter, monthFilter, budgetFilter, tagFilter]);
+  
+  const toggleFilters = () => {
+    setShowFilters(!showFilters);
+  };
+  
+  const clearFilters = () => {
+    setDestinationFilter("");
+    setActivityTypeFilter("");
+    setYearFilter("");
+    setMonthFilter("");
+    setBudgetFilter("");
+    setTagFilter("");
+  };
   
   // Show loading state while fetching
   if (isLoading || storeLoading) {
@@ -116,9 +217,118 @@ const SharedCollection = () => {
       </header>
       
       <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-6">
+          <Button 
+            variant="outline" 
+            onClick={toggleFilters} 
+            className="flex items-center gap-2"
+          >
+            <Filter className="h-4 w-4" />
+            {showFilters ? "Hide Filters" : "Show Filters"}
+          </Button>
+          
+          {showFilters && (
+            <div className="mt-4 p-4 border rounded-lg bg-white">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Destination</label>
+                  <Input
+                    placeholder="Filter by destination"
+                    value={destinationFilter}
+                    onChange={(e) => setDestinationFilter(e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Activity Type</label>
+                  <Select value={activityTypeFilter} onValueChange={setActivityTypeFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select activity type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Activities</SelectItem>
+                      {activityTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Budget Range</label>
+                  <Select value={budgetFilter} onValueChange={setBudgetFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select budget range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Budgets</SelectItem>
+                      {budgetRanges.map((range) => (
+                        <SelectItem key={range} value={range}>
+                          {range}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Year</label>
+                  <Select value={yearFilter} onValueChange={setYearFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Years</SelectItem>
+                      {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() + i).map(year => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Month</label>
+                  <Select value={monthFilter} onValueChange={setMonthFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Months</SelectItem>
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                        <SelectItem key={month} value={month.toString().padStart(2, '0')}>
+                          {new Date(2000, month - 1, 1).toLocaleString('default', { month: 'long' })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Tags</label>
+                  <Input
+                    placeholder="Filter by tags"
+                    value={tagFilter}
+                    onChange={(e) => setTagFilter(e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-4 flex justify-end">
+                <Button variant="outline" onClick={clearFilters}>
+                  Clear Filters
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {collection.items && collection.items.length > 0 ? (
-            collection.items.map((item) => (
+          {filteredItems && filteredItems.length > 0 ? (
+            filteredItems.map((item) => (
               <Card key={item.id} className="overflow-hidden">
                 {item.imageUrl && (
                   <div className="aspect-video overflow-hidden">
@@ -231,7 +441,12 @@ const SharedCollection = () => {
             ))
           ) : (
             <div className="col-span-2 text-center py-12 border border-dashed rounded-lg">
-              <p className="text-gray-500">No items in this collection</p>
+              <p className="text-gray-500">No items match your filter criteria</p>
+              {showFilters && (
+                <Button variant="outline" onClick={clearFilters} className="mt-4">
+                  Clear Filters
+                </Button>
+              )}
             </div>
           )}
         </div>

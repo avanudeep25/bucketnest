@@ -38,6 +38,16 @@ const Profile = () => {
     },
   });
 
+  // Update form values when currentUser changes
+  useEffect(() => {
+    if (currentUser) {
+      form.reset({
+        name: currentUser.name || "",
+        bio: currentUser.bio || "",
+      });
+    }
+  }, [currentUser, form]);
+
   const onSubmit = async (data: ProfileFormValues) => {
     try {
       await createUser(data.name, data.bio);

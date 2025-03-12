@@ -81,6 +81,11 @@ const ShareDialog = ({ items, selectedItems, onSelect }: ShareDialogProps) => {
             const shareUrl = `${window.location.origin}/share/${newCollection.slug}`;
             setCollectionUrl(shareUrl);
             setStep("preview");
+            
+            // Auto redirect to share page
+            setTimeout(() => {
+              navigate(`/share/${newCollection.slug}`);
+            }, 1500);
           }
         }
       } catch (error) {
