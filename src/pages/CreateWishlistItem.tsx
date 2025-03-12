@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import WishlistForm from "@/components/wishlist/WishlistForm";
-import Navigation from "@/components/layout/Navigation";
 import { useUserStore } from "@/store/userStore";
 import { Loader2 } from "lucide-react";
 import { useParams } from "react-router-dom";
@@ -19,7 +18,6 @@ const CreateWishlistItem = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navigation />
         <div className="flex justify-center items-center flex-1">
           <div className="flex flex-col items-center gap-2">
             <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
@@ -32,8 +30,6 @@ const CreateWishlistItem = () => {
   
   return (
     <div className="min-h-screen flex flex-col">
-      <Navigation />
-      
       <div className="container px-4 py-6 md:px-6 max-w-4xl">
         {currentUser && (
           <div className="flex justify-between items-center mb-6">

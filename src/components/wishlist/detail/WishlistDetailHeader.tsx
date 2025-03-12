@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { WishlistItem } from "@/types/wishlist";
 
@@ -29,9 +29,16 @@ export const WishlistDetailHeader = ({ item }: WishlistDetailHeaderProps) => {
       </div>
       
       {item.activityType && (
-        <Badge variant="outline" className="mb-4">
+        <Badge variant="outline" className="mb-2">
           {item.activityType}
         </Badge>
+      )}
+      
+      {item.destination && (
+        <div className="flex items-center text-gray-600 mb-2">
+          <MapPin className="h-4 w-4 mr-1" />
+          <span>{item.destination}</span>
+        </div>
       )}
       
       {item.description && (

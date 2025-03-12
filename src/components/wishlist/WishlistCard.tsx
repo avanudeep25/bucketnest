@@ -1,3 +1,4 @@
+
 import { Calendar, MapPin, Tag, Activity, ShoppingBag, Heart, CheckCircle } from "lucide-react";
 import { WishlistItem } from "@/types/wishlist";
 import { Badge } from "@/components/ui/badge";
@@ -87,6 +88,13 @@ const WishlistCard = ({ item, onDelete, onToggleComplete, isSelected, onSelect }
             <div className="flex items-center text-sm">
               <Tag className="h-3.5 w-3.5 mr-2 text-wishwise-500" />
               <span>{item.activityType}</span>
+            </div>
+          )}
+          
+          {item.destination && (
+            <div className="flex items-center text-sm">
+              <MapPin className="h-3.5 w-3.5 mr-2 text-wishwise-500" />
+              <span className="line-clamp-1">{item.destination}</span>
             </div>
           )}
           
