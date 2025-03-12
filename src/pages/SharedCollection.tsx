@@ -26,7 +26,8 @@ const SharedCollection = () => {
       try {
         const data = await getCollectionBySlug(slug);
         if (data) {
-          console.log("Collection data:", data); // Debug log to check data
+          console.log("Collection data received:", data);
+          console.log("Items count:", data.items ? data.items.length : 0);
           setCollection(data);
         } else {
           setError("Collection not found or is no longer available");
@@ -112,7 +113,7 @@ const SharedCollection = () => {
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {collection.items && collection.items.length > 0 ? (
-            collection.items.map((item: any) => (
+            collection.items.map((item) => (
               <Card key={item.id} className="overflow-hidden">
                 {item.imageUrl && (
                   <div className="aspect-video overflow-hidden">
@@ -197,7 +198,7 @@ const SharedCollection = () => {
                       <div className="flex items-center gap-2">
                         <Tag className="h-4 w-4 text-gray-500" />
                         <div className="flex flex-wrap gap-1">
-                          {item.tags.map((tag: string) => (
+                          {item.tags.map((tag) => (
                             <span key={tag} className="text-blue-600">
                               #{tag}
                             </span>

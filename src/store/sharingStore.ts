@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -198,6 +197,8 @@ export const useSharingStore = create<SharingState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       
+      console.log('Fetching collection with slug:', slug);
+      
       const { data, error } = await supabase
         .from('shared_collections')
         .select('*')
@@ -219,11 +220,36 @@ export const useSharingStore = create<SharingState>((set, get) => ({
       
       console.log('Found collection with slug:', slug, data);
       
-      // Fetch the actual wishlist items
+      // Fetch the actual wishlist items - IMPORTANT: Use maybeSingle() instead of single()
+      const itemIds = data.item_ids || [];
+      
+      if (itemIds.length === 0) {
+        console.log('No item IDs found in collection');
+        const emptyCollection: CollectionWithItems = {
+          id: data.id,
+          title: data.title,
+          description: data.description || undefined,
+          itemIds: [],
+          itemOrder: [],
+          creatorId: data.creator_id,
+          creatorName: data.creator_name || undefined,
+          isPublic: data.is_public,
+          slug: data.slug,
+          createdAt: new Date(data.created_at),
+          updatedAt: new Date(data.updated_at),
+          items: []
+        };
+        
+        set({ activeCollection: emptyCollection, isLoading: false });
+        return emptyCollection;
+      }
+      
+      console.log('Fetching items with IDs:', itemIds);
+      
       const { data: itemsData, error: itemsError } = await supabase
         .from('wishlist_items')
         .select('*')
-        .in('id', data.item_ids || []);
+        .in('id', itemIds);
       
       if (itemsError) {
         console.error('Error fetching collection items:', itemsError);
@@ -231,7 +257,7 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         return null;
       }
       
-      console.log('Retrieved items for collection:', itemsData ? itemsData.length : 0, itemsData);
+      console.log('Retrieved items for collection:', itemsData ? itemsData.length : 0);
       
       const collection: SharedCollection = {
         id: data.id,
@@ -252,7 +278,7 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         id: item.id,
         title: item.title,
         description: item.description || undefined,
-        itemType: item.item_type as WishlistItem['itemType'],
+        itemType: item.item_type,
         activityType: item.activity_type || undefined,
         timeframeType: item.timeframe_type || undefined,
         targetDate: item.target_date ? new Date(item.target_date) : undefined,
@@ -268,24 +294,29 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         createdAt: new Date(item.created_at),
         updatedAt: new Date(item.updated_at),
         completedAt: item.completed_at ? new Date(item.completed_at) : undefined
-      } as WishlistItem));
+      }));
       
-      // Sort items based on itemOrder
-      const orderedItems = collection.itemOrder
-        .map(id => items.find(item => item.id === id))
-        .filter(Boolean) as WishlistItem[];
+      console.log('Processed items:', items.length, items);
       
-      // Add any items that may not be in itemOrder but are in itemIds
-      const remainingItems = items.filter(item => !collection.itemOrder.includes(item.id));
+      // Sort items based on itemOrder if it exists
+      let finalItems = items;
+      if (collection.itemOrder && collection.itemOrder.length > 0) {
+        const orderedItems = collection.itemOrder
+          .map(id => items.find(item => item.id === id))
+          .filter(Boolean) as WishlistItem[];
+        
+        // Add any items that may not be in itemOrder but are in itemIds
+        const remainingItems = items.filter(item => !collection.itemOrder.includes(item.id as string));
+        
+        finalItems = [...orderedItems, ...remainingItems];
+      }
       
-      console.log('Processed ordered items:', orderedItems.length, 'remaining items:', remainingItems.length);
+      console.log('Final items count:', finalItems.length);
       
       const collectionWithItems: CollectionWithItems = {
         ...collection,
-        items: [...orderedItems, ...remainingItems]
+        items: finalItems
       };
-      
-      console.log('Final collection with items:', collectionWithItems);
       
       set({ activeCollection: collectionWithItems, isLoading: false });
       return collectionWithItems;
