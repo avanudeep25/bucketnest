@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -198,43 +199,47 @@ export const useSharingStore = create<SharingState>((set, get) => ({
       
       console.log('Fetching collection with slug:', slug);
       
-      const { data, error } = await supabase
+      // Get the collection data first
+      const { data: collectionData, error: collectionError } = await supabase
         .from('shared_collections')
         .select('*')
         .eq('slug', slug)
         .eq('is_public', true)
         .single();
       
-      if (error) {
-        console.error('Error fetching shared collection by slug:', error);
-        set({ isLoading: false, error: error.message });
+      if (collectionError) {
+        console.error('Error fetching shared collection by slug:', collectionError);
+        set({ isLoading: false, error: collectionError.message });
         return null;
       }
       
-      if (!data) {
+      if (!collectionData) {
         console.log('No collection found with slug:', slug);
         set({ isLoading: false });
         return null;
       }
       
-      console.log('Found collection with slug:', slug, data);
+      console.log('Found collection with slug:', slug, collectionData);
       
-      const itemIds = data.item_ids || [];
+      // Extract the item IDs from the collection data
+      const itemIds = collectionData.item_ids || [];
+      console.log('Item IDs from collection:', itemIds);
       
+      // Handle the case of empty collection
       if (itemIds.length === 0) {
         console.log('No item IDs found in collection');
         const emptyCollection: CollectionWithItems = {
-          id: data.id,
-          title: data.title,
-          description: data.description || undefined,
+          id: collectionData.id,
+          title: collectionData.title,
+          description: collectionData.description || undefined,
           itemIds: [],
-          itemOrder: [],
-          creatorId: data.creator_id,
-          creatorName: data.creator_name || undefined,
-          isPublic: data.is_public,
-          slug: data.slug,
-          createdAt: new Date(data.created_at),
-          updatedAt: new Date(data.updated_at),
+          itemOrder: collectionData.item_order || [],
+          creatorId: collectionData.creator_id,
+          creatorName: collectionData.creator_name || undefined,
+          isPublic: collectionData.is_public,
+          slug: collectionData.slug,
+          createdAt: new Date(collectionData.created_at),
+          updatedAt: new Date(collectionData.updated_at),
           items: []
         };
         
@@ -242,6 +247,7 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         return emptyCollection;
       }
       
+      // Fetch the items if there are any
       console.log('Fetching items with IDs:', itemIds);
       
       const { data: itemsData, error: itemsError } = await supabase
@@ -255,22 +261,24 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         return null;
       }
       
-      console.log('Retrieved items for collection:', itemsData ? itemsData.length : 0);
+      console.log('Retrieved items for collection:', itemsData ? itemsData.length : 0, itemsData);
       
+      // Map the collection data to our model
       const collection: SharedCollection = {
-        id: data.id,
-        title: data.title,
-        description: data.description || undefined,
-        itemIds: data.item_ids || [],
-        itemOrder: data.item_order || [],
-        creatorId: data.creator_id,
-        creatorName: data.creator_name || undefined,
-        isPublic: data.is_public,
-        slug: data.slug,
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at)
+        id: collectionData.id,
+        title: collectionData.title,
+        description: collectionData.description || undefined,
+        itemIds: collectionData.item_ids || [],
+        itemOrder: collectionData.item_order || [],
+        creatorId: collectionData.creator_id,
+        creatorName: collectionData.creator_name || undefined,
+        isPublic: collectionData.is_public,
+        slug: collectionData.slug,
+        createdAt: new Date(collectionData.created_at),
+        updatedAt: new Date(collectionData.updated_at)
       };
       
+      // Map the items data to our model - handle potential empty response
       const items: WishlistItem[] = (itemsData || []).map(item => ({
         id: item.id,
         userId: item.user_id,
@@ -295,6 +303,7 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         completedAt: item.completed_at ? new Date(item.completed_at) : undefined
       }));
       
+      // Sort items according to the item order if available
       let sortedItems = [...items];
       if (collection.itemOrder && collection.itemOrder.length > 0) {
         const orderedItems = collection.itemOrder
@@ -308,6 +317,9 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         sortedItems = [...orderedItems, ...remainingItems];
       }
       
+      console.log('Final sorted items:', sortedItems.length, sortedItems);
+      
+      // Create the collection with items model
       const collectionWithItems: CollectionWithItems = {
         ...collection,
         items: sortedItems

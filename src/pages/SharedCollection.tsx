@@ -10,7 +10,7 @@ import { format } from "date-fns";
 
 const SharedCollection = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { getCollectionBySlug } = useSharingStore();
+  const { getCollectionBySlug, isLoading: storeLoading } = useSharingStore();
   const [isLoading, setIsLoading] = useState(true);
   const [collection, setCollection] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -24,10 +24,13 @@ const SharedCollection = () => {
       }
       
       try {
+        console.log("Fetching collection with slug:", slug);
         const data = await getCollectionBySlug(slug);
+        console.log("Collection data received:", data);
+        
         if (data) {
-          console.log("Collection data received:", data);
           console.log("Items count:", data.items ? data.items.length : 0);
+          console.log("Items:", data.items);
           setCollection(data);
         } else {
           setError("Collection not found or is no longer available");
@@ -43,7 +46,8 @@ const SharedCollection = () => {
     fetchCollection();
   }, [slug, getCollectionBySlug]);
   
-  if (isLoading) {
+  // Show loading state while fetching
+  if (isLoading || storeLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -54,6 +58,7 @@ const SharedCollection = () => {
     );
   }
   
+  // Show error state if something went wrong
   if (error || !collection) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-4xl">
@@ -198,7 +203,7 @@ const SharedCollection = () => {
                       <div className="flex items-center gap-2">
                         <Tag className="h-4 w-4 text-gray-500" />
                         <div className="flex flex-wrap gap-1">
-                          {item.tags.map((tag) => (
+                          {item.tags.map((tag: string) => (
                             <span key={tag} className="text-blue-600">
                               #{tag}
                             </span>
@@ -225,7 +230,7 @@ const SharedCollection = () => {
               </Card>
             ))
           ) : (
-            <div className="col-span-2 text-center py-12">
+            <div className="col-span-2 text-center py-12 border border-dashed rounded-lg">
               <p className="text-gray-500">No items in this collection</p>
             </div>
           )}
