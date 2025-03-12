@@ -4,16 +4,16 @@ import { ActivityType, BudgetRange, TravelType, TimeframeType, WishItemType } fr
 export const itemTypes: WishItemType[] = ['places', 'activities', 'products', 'other'];
 
 export const activityTypes: ActivityType[] = [
-  'Sight Seeing',
-  'Food & Dining',
-  'Adventure Sports',
-  'Cultural Experience',
-  'Entertainment',
-  'Wellness & Relaxation',
-  'Shopping',
-  'Exploration',
-  'Education',
-  'Volunteering',
+  'Travel & Sight Seeing',
+  'Adventure & Sports',
+  'Food & Culinary Experiences',
+  'Cultural & Heritage Activities',
+  'Personal Growth & Learning',
+  'Career & Financial Goals',
+  'Health & Fitness Goals',
+  'Relationships & Social Goals',
+  'Entertainment & Hobbies',
+  'Philanthropy & Giving Back',
   'Other',
 ];
 

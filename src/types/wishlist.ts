@@ -2,16 +2,16 @@
 export type WishItemType = 'places' | 'activities' | 'products' | 'other';
 
 export type ActivityType = 
-  | 'Sight Seeing'
-  | 'Food & Dining'
-  | 'Adventure Sports'
-  | 'Cultural Experience'
-  | 'Entertainment'
-  | 'Wellness & Relaxation'
-  | 'Shopping'
-  | 'Exploration'
-  | 'Education'
-  | 'Volunteering'
+  | 'Travel & Sight Seeing'
+  | 'Adventure & Sports'
+  | 'Food & Culinary Experiences'
+  | 'Cultural & Heritage Activities'
+  | 'Personal Growth & Learning'
+  | 'Career & Financial Goals' 
+  | 'Health & Fitness Goals'
+  | 'Relationships & Social Goals'
+  | 'Entertainment & Hobbies'
+  | 'Philanthropy & Giving Back'
   | 'Other';
 
 export type TravelType = 'Solo' | 'Couple' | 'Friends' | 'Family' | 'Work' | 'Other';

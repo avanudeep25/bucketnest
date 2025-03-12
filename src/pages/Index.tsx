@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, MapPin, Users, ListChecks, Clock } from "lucide-react";
+import { Plus, MapPin, Share2, FolderHeart } from "lucide-react";
 
 const Index = () => {
   return (
@@ -75,26 +75,30 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8 mb-12">
             <div className="p-6 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-              <MapPin className="h-10 w-10 text-blue-500 mb-4" />
-              <h3 className="font-bold mb-2">Travel Plans</h3>
-              <p className="text-gray-600">Map your dream destinations and upcoming adventures.</p>
+              <FolderHeart className="h-10 w-10 text-blue-500 mb-4" />
+              <h3 className="font-bold mb-2">Collections</h3>
+              <p className="text-gray-600">
+                Organize your bucket list items into themed collections. Whether it's a "Summer 2024" collection or a "Dream Vacations" list, collections help you keep your goals structured.
+              </p>
+              <div className="mt-4">
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/collections">Explore Collections</Link>
+                </Button>
+              </div>
             </div>
             <div className="p-6 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-              <ListChecks className="h-10 w-10 text-blue-500 mb-4" />
-              <h3 className="font-bold mb-2">Taste Trails</h3>
-              <p className="text-gray-600">Track restaurants, whiskies, cuisines, and more.</p>
-            </div>
-            <div className="p-6 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-              <Users className="h-10 w-10 text-blue-500 mb-4" />
-              <h3 className="font-bold mb-2">Social Outings</h3>
-              <p className="text-gray-600">Coordinate group activities effortlessly.</p>
-            </div>
-            <div className="p-6 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-              <Clock className="h-10 w-10 text-blue-500 mb-4" />
-              <h3 className="font-bold mb-2">Personal Goals</h3>
-              <p className="text-gray-600">Skills to learn, books to read, milestones to reach.</p>
+              <Share2 className="h-10 w-10 text-blue-500 mb-4" />
+              <h3 className="font-bold mb-2">Sharing Features</h3>
+              <p className="text-gray-600">
+                Share your bucket list items with friends and family. Create public links to your collections that anyone can view, making it easy to coordinate group experiences and travel plans.
+              </p>
+              <div className="mt-4">
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/wishlist">Try Sharing</Link>
+                </Button>
+              </div>
             </div>
           </div>
 

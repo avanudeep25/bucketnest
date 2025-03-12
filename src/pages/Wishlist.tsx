@@ -5,8 +5,7 @@ import { useWishlistStore } from "@/store/wishlistStore";
 import { WishlistItem } from "@/types/wishlist";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import WishlistCard from "@/components/wishlist/WishlistCard";
+import WishlistListItem from "@/components/wishlist/WishlistListItem";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import {
   DropdownMenu,
@@ -362,12 +361,11 @@ const Wishlist = () => {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-3">
               {filteredItems.map((item) => (
-                <WishlistCard
+                <WishlistListItem
                   key={item.id}
                   item={item}
-                  onDelete={handleDelete}
                   onToggleComplete={handleToggleComplete}
                   isSelected={selectedItems.some(i => i.id === item.id)}
                   onSelect={() => handleSelectItem(item)}
