@@ -110,7 +110,7 @@ const SharedCollection = () => {
       
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {collection.items.map((item: any) => (
+          {collection.items && collection.items.map((item: any) => (
             <Card key={item.id} className="overflow-hidden">
               {item.imageUrl && (
                 <div className="aspect-video overflow-hidden">

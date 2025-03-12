@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -32,8 +33,10 @@ import {
   SearchX,
   ListFilter,
   CalendarRange,
+  FolderHeart,
 } from "lucide-react";
 import ShareDialog from "@/components/sharing/ShareDialog";
+import { Link } from "react-router-dom";
 
 type WishlistTab = "all" | "active" | "completed";
 type SortOption = "latest" | "oldest" | "title";
@@ -148,6 +151,17 @@ const Wishlist = () => {
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Item
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="w-full sm:w-auto"
+            asChild
+          >
+            <Link to="/collections">
+              <FolderHeart className="mr-2 h-4 w-4" />
+              Collections
+            </Link>
           </Button>
           
           <ShareDialog 
