@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, MapPin, Share2, FolderHeart } from "lucide-react";
+import { Plus, MapPin, Share2, FolderHeart, Calendar, CheckCircle, Tag } from "lucide-react";
 
 const Index = () => {
   return (
@@ -69,9 +69,9 @@ const Index = () => {
         
         <div className="container px-4 md:px-6 relative z-10">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold tracking-tighter mb-4">Plan Together, Experience Together</h2>
+            <h2 className="text-3xl font-bold tracking-tighter mb-4">Plan, Organize, and Share Your Dreams</h2>
             <p className="text-gray-600 md:text-lg max-w-2xl mx-auto">
-              Invite friends, create shared bucket lists, and collaborate seamlessly. No more scattered chats—just effortless planning for unforgettable adventures.
+              Keep track of all your wishes in one place and share your bucket list with friends and family. Create lasting memories and achieve your goals with BucketNest.
             </p>
           </div>
 
@@ -80,7 +80,7 @@ const Index = () => {
               <FolderHeart className="h-10 w-10 text-blue-500 mb-4" />
               <h3 className="font-bold mb-2">Collections</h3>
               <p className="text-gray-600">
-                Organize your bucket list items into themed collections. Whether it's a "Summer 2024" collection or a "Dream Vacations" list, collections help you keep your goals structured.
+                Organize your bucket list items into themed collections. Group your experiences by theme, location, or timeline. Create custom collections like "Summer 2024" or "Dream Destinations" to keep your dreams organized and focused.
               </p>
               <div className="mt-4">
                 <Button asChild variant="outline" size="sm">
@@ -92,7 +92,7 @@ const Index = () => {
               <Share2 className="h-10 w-10 text-blue-500 mb-4" />
               <h3 className="font-bold mb-2">Sharing Features</h3>
               <p className="text-gray-600">
-                Share your bucket list items with friends and family. Create public links to your collections that anyone can view, making it easy to coordinate group experiences and travel plans.
+                Create shareable links to showcase your bucket list collections with anyone. Perfect for sharing travel plans with friends, gift ideas with family, or your life goals with loved ones. Your memories deserve to be shared.
               </p>
               <div className="mt-4">
                 <Button asChild variant="outline" size="sm">
@@ -105,7 +105,7 @@ const Index = () => {
           <div className="text-center">
             <h2 className="text-3xl font-bold tracking-tighter mb-4">Track Your Memories</h2>
             <p className="text-gray-600 md:text-lg max-w-2xl mx-auto mb-8">
-              Check off completed experiences and build a visual timeline of your life's best moments.
+              Check off completed experiences and build a visual timeline of your life's best moments. Never forget the important milestones in your journey.
             </p>
             <Button asChild size="lg" className="bg-blue-500 hover:bg-blue-600">
               <Link to="/create">

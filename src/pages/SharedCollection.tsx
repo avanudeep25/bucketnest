@@ -5,7 +5,7 @@ import { useSharingStore } from "@/store/sharingStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, Calendar, MapPin, Tag, ExternalLink } from "lucide-react";
+import { Loader2, ArrowLeft, Calendar, MapPin, Tag, ExternalLink, DollarSign, Users } from "lucide-react";
 import { format } from "date-fns";
 
 const SharedCollection = () => {
@@ -26,6 +26,7 @@ const SharedCollection = () => {
       try {
         const data = await getCollectionBySlug(slug);
         if (data) {
+          console.log("Collection data:", data); // Debug log to check data
           setCollection(data);
         } else {
           setError("Collection not found or is no longer available");
@@ -110,103 +111,121 @@ const SharedCollection = () => {
       
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {collection.items && collection.items.map((item: any) => (
-            <Card key={item.id} className="overflow-hidden">
-              {item.imageUrl && (
-                <div className="aspect-video overflow-hidden">
-                  <img 
-                    src={item.imageUrl} 
-                    alt={item.title} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              <CardContent className={`${item.imageUrl ? 'pt-4' : 'pt-6'} pb-6`}>
-                <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                
-                {item.description && (
-                  <p className="text-gray-600 mb-4">{item.description}</p>
+          {collection.items && collection.items.length > 0 ? (
+            collection.items.map((item: any) => (
+              <Card key={item.id} className="overflow-hidden">
+                {item.imageUrl && (
+                  <div className="aspect-video overflow-hidden">
+                    <img 
+                      src={item.imageUrl} 
+                      alt={item.title} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 )}
-                
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {item.activityType && (
+                <CardContent className={`${item.imageUrl ? 'pt-4' : 'pt-6'} pb-6`}>
+                  <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+                  
+                  {item.description && (
+                    <p className="text-gray-600 mb-4">{item.description}</p>
+                  )}
+                  
+                  <div className="flex flex-wrap gap-2 mb-3">
                     <Badge variant="secondary">
-                      {item.activityType}
+                      {item.itemType}
                     </Badge>
-                  )}
+                    
+                    {item.budgetRange && (
+                      <Badge variant="outline">
+                        {item.budgetRange}
+                      </Badge>
+                    )}
+                    
+                    {item.travelType && (
+                      <Badge variant="outline" className="bg-blue-50">
+                        {item.travelType}
+                      </Badge>
+                    )}
+                  </div>
                   
-                  {item.budgetRange && (
-                    <Badge variant="outline">
-                      {item.budgetRange}
-                    </Badge>
-                  )}
-                  
-                  {item.travelType && (
-                    <Badge variant="outline" className="bg-blue-50">
-                      {item.travelType}
-                    </Badge>
-                  )}
-                </div>
-                
-                <div className="space-y-2 text-sm">
-                  {item.destination && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-gray-500" />
-                      <span>{item.destination}</span>
-                    </div>
-                  )}
-                  
-                  {item.targetDate && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-gray-500" />
-                      <span>{format(new Date(item.targetDate), 'MMMM d, yyyy')}</span>
-                    </div>
-                  )}
-                  
-                  {!item.targetDate && item.targetMonth && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-gray-500" />
-                      <span>{format(new Date(item.targetMonth + '-01'), 'MMMM yyyy')}</span>
-                    </div>
-                  )}
-                  
-                  {!item.targetDate && !item.targetMonth && item.targetYear && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-gray-500" />
-                      <span>{item.targetYear}</span>
-                    </div>
-                  )}
-                  
-                  {item.tags && item.tags.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <Tag className="h-4 w-4 text-gray-500" />
-                      <div className="flex flex-wrap gap-1">
-                        {item.tags.map((tag: string) => (
-                          <span key={tag} className="text-blue-600">
-                            #{tag}
-                          </span>
-                        ))}
+                  <div className="space-y-2 text-sm">
+                    {item.destination && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-gray-500" />
+                        <span>{item.destination}</span>
                       </div>
-                    </div>
-                  )}
-                  
-                  {item.link && (
-                    <div className="pt-2">
-                      <a 
-                        href={item.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:text-blue-700 flex items-center gap-1"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        Learn more
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    )}
+                    
+                    {item.budgetRange && (
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-gray-500" />
+                        <span>{item.budgetRange}</span>
+                      </div>
+                    )}
+                    
+                    {item.travelType && (
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-gray-500" />
+                        <span>{item.travelType}</span>
+                      </div>
+                    )}
+                    
+                    {item.targetDate && (
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-gray-500" />
+                        <span>{format(new Date(item.targetDate), 'MMMM d, yyyy')}</span>
+                      </div>
+                    )}
+                    
+                    {!item.targetDate && item.targetMonth && (
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-gray-500" />
+                        <span>{format(new Date(item.targetMonth + '-01'), 'MMMM yyyy')}</span>
+                      </div>
+                    )}
+                    
+                    {!item.targetDate && !item.targetMonth && item.targetYear && (
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-gray-500" />
+                        <span>{item.targetYear}</span>
+                      </div>
+                    )}
+                    
+                    {item.tags && item.tags.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <Tag className="h-4 w-4 text-gray-500" />
+                        <div className="flex flex-wrap gap-1">
+                          {item.tags.map((tag: string) => (
+                            <span key={tag} className="text-blue-600">
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {item.link && (
+                      <div className="pt-2">
+                        <a 
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:text-blue-700 flex items-center gap-1"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          Learn more
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <div className="col-span-2 text-center py-12">
+              <p className="text-gray-500">No items in this collection</p>
+            </div>
+          )}
         </div>
         
         <div className="mt-12 py-8 border-t text-center">

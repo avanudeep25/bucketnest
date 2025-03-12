@@ -1,5 +1,5 @@
 
-import { Calendar, MapPin, Tag, CheckCircle, ChevronRight } from "lucide-react";
+import { Calendar, MapPin, Tag, CheckCircle, ChevronRight, DollarSign, Users } from "lucide-react";
 import { WishlistItem } from "@/types/wishlist";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -37,10 +37,10 @@ const WishlistListItem = ({ item, onToggleComplete, isSelected, onSelect }: Wish
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 text-sm text-gray-600 mt-1">
-          {item.activityType && (
+          {item.travelType && (
             <div className="flex items-center">
-              <Tag className="h-3.5 w-3.5 mr-2 text-wishwise-500" />
-              <span>{item.activityType}</span>
+              <Users className="h-3.5 w-3.5 mr-2 text-wishwise-500" />
+              <span>{item.travelType}</span>
             </div>
           )}
           
@@ -48,6 +48,13 @@ const WishlistListItem = ({ item, onToggleComplete, isSelected, onSelect }: Wish
             <div className="flex items-center">
               <MapPin className="h-3.5 w-3.5 mr-2 text-wishwise-500" />
               <span className="line-clamp-1">{item.destination}</span>
+            </div>
+          )}
+          
+          {item.budgetRange && (
+            <div className="flex items-center">
+              <DollarSign className="h-3.5 w-3.5 mr-2 text-wishwise-500" />
+              <span>{item.budgetRange}</span>
             </div>
           )}
           

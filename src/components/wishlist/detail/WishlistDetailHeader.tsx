@@ -28,12 +28,6 @@ export const WishlistDetailHeader = ({ item }: WishlistDetailHeaderProps) => {
         <Badge className="capitalize bg-blue-500">{item.itemType}</Badge>
       </div>
       
-      {item.activityType && (
-        <Badge variant="outline" className="mb-2">
-          {item.activityType}
-        </Badge>
-      )}
-      
       {item.destination && (
         <div className="flex items-center text-gray-600 mb-2">
           <MapPin className="h-4 w-4 mr-1" />
