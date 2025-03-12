@@ -1,400 +1,148 @@
 
-import { create } from 'zustand';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { SharedCollection, CollectionWithItems } from '@/types/sharing';
-import { nanoid } from 'nanoid';
-import { WishlistItem, WishItemType, ActivityType, TimeframeType, TravelType, BudgetRange } from '@/types/wishlist';
+import { create } from "zustand";
+import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from "uuid";
+import { WishlistItem, ActivityType, TimeframeType, TravelType, BudgetRange } from "@/types/wishlist";
+import { useWishlistStore } from "./wishlistStore";
+import { toast } from "sonner";
+
+interface SharedCollection {
+  id: string;
+  title: string;
+  description?: string;
+  items?: WishlistItem[];
+  itemIds: string[];
+  itemOrder: string[];
+  slug: string;
+  isPublic: boolean;
+  creatorId: string;
+  creatorName?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 interface SharingState {
   collections: SharedCollection[];
-  activeCollection: CollectionWithItems | null;
   isLoading: boolean;
   error: string | null;
+  
   fetchCollections: () => Promise<void>;
-  createCollection: (collection: Omit<SharedCollection, 'id' | 'slug' | 'creatorId' | 'createdAt' | 'updatedAt'>) => Promise<string | undefined>;
-  updateCollection: (id: string, updates: Partial<SharedCollection>) => Promise<void>;
+  getCollection: (id: string) => Promise<SharedCollection | null>;
+  getCollectionBySlug: (slug: string) => Promise<SharedCollection | null>;
+  createCollection: (data: {
+    title: string;
+    description?: string;
+    itemIds: string[];
+    itemOrder: string[];
+    isPublic: boolean;
+  }) => Promise<string | null>;
+  updateCollection: (
+    id: string,
+    data: {
+      title?: string;
+      description?: string;
+      itemOrder?: string[];
+      isPublic?: boolean;
+    }
+  ) => Promise<void>;
   deleteCollection: (id: string) => Promise<void>;
-  getCollectionBySlug: (slug: string) => Promise<CollectionWithItems | null>;
-  getCollection: (id: string) => Promise<CollectionWithItems | null>;
 }
 
 export const useSharingStore = create<SharingState>((set, get) => ({
   collections: [],
-  activeCollection: null,
   isLoading: false,
   error: null,
   
   fetchCollections: async () => {
+    set({ isLoading: true, error: null });
+    
     try {
-      set({ isLoading: true, error: null });
-      
       const { data: session } = await supabase.auth.getSession();
+      
       if (!session.session) {
-        console.log('No active session found, clearing collections');
         set({ collections: [], isLoading: false });
         return;
       }
       
-      console.log('Fetching shared collections...');
       const { data, error } = await supabase
-        .from('shared_collections')
-        .select('*')
-        .eq('creator_id', session.session.user.id)
-        .order('created_at', { ascending: false });
+        .from("shared_collections")
+        .select("*")
+        .eq("creator_id", session.session.user.id)
+        .order("created_at", { ascending: false });
       
       if (error) {
-        console.error('Error fetching shared collections:', error);
-        toast.error('Failed to load your shared collections');
-        set({ isLoading: false, error: error.message });
+        console.error("Error fetching collections:", error);
+        set({ error: error.message, isLoading: false });
         return;
       }
       
-      if (!data) {
-        set({ collections: [], isLoading: false });
-        return;
-      }
-      
-      const collections: SharedCollection[] = data.map(item => ({
-        id: item.id,
-        title: item.title,
-        description: item.description || undefined,
-        itemIds: item.item_ids || [],
-        itemOrder: item.item_order || [],
-        creatorId: item.creator_id,
-        creatorName: item.creator_name || undefined,
-        isPublic: item.is_public,
-        slug: item.slug,
-        createdAt: new Date(item.created_at),
-        updatedAt: new Date(item.updated_at)
+      const collections = data.map((collection) => ({
+        id: collection.id,
+        title: collection.title,
+        description: collection.description || undefined,
+        itemIds: collection.item_ids || [],
+        itemOrder: collection.item_order || [],
+        slug: collection.slug,
+        isPublic: collection.is_public,
+        creatorId: collection.creator_id,
+        creatorName: collection.creator_name || undefined,
+        createdAt: new Date(collection.created_at),
+        updatedAt: new Date(collection.updated_at),
       }));
       
       set({ collections, isLoading: false });
-    } catch (error) {
-      console.error('Exception caught in fetchCollections:', error);
-      toast.error('Failed to load your shared collections');
-      set({ isLoading: false, collections: [], error: error instanceof Error ? error.message : 'Unknown error' });
-    }
-  },
-  
-  createCollection: async (newCollection) => {
-    try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) {
-        toast.error('You must be logged in to create shared collections');
-        return undefined;
-      }
-      
-      const slug = `${nanoid(10)}`;
-      
-      const { data: userData } = await supabase
-        .from('profiles')
-        .select('name')
-        .eq('id', session.session.user.id)
-        .single();
-      
-      const dbItem = {
-        title: newCollection.title,
-        description: newCollection.description,
-        item_ids: newCollection.itemIds,
-        item_order: newCollection.itemOrder,
-        creator_id: session.session.user.id,
-        creator_name: userData?.name || 'BucketNest User',
-        is_public: newCollection.isPublic,
-        slug
-      };
-      
-      const { data, error } = await supabase
-        .from('shared_collections')
-        .insert(dbItem)
-        .select('id')
-        .single();
-      
-      if (error) {
-        console.error('Error creating shared collection:', error);
-        toast.error('Failed to create your shared collection');
-        return undefined;
-      }
-      
-      await get().fetchCollections();
-      toast.success('Collection created successfully!');
-      return data.id;
-    } catch (error) {
-      console.error('Exception in createCollection:', error);
-      toast.error('Failed to create your shared collection');
-      return undefined;
-    }
-  },
-  
-  updateCollection: async (id, updates) => {
-    try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) {
-        toast.error('You must be logged in to update collections');
-        return;
-      }
-      
-      const dbUpdates: any = {};
-      
-      if (updates.title !== undefined) dbUpdates.title = updates.title;
-      if (updates.description !== undefined) dbUpdates.description = updates.description;
-      if (updates.itemIds !== undefined) dbUpdates.item_ids = updates.itemIds;
-      if (updates.itemOrder !== undefined) dbUpdates.item_order = updates.itemOrder;
-      if (updates.isPublic !== undefined) dbUpdates.is_public = updates.isPublic;
-      
-      const { error } = await supabase
-        .from('shared_collections')
-        .update(dbUpdates)
-        .eq('id', id)
-        .eq('creator_id', session.session.user.id);
-      
-      if (error) {
-        console.error('Error updating shared collection:', error);
-        toast.error('Failed to update your shared collection');
-        return;
-      }
-      
-      await get().fetchCollections();
-      toast.success('Collection updated successfully!');
-    } catch (error) {
-      console.error('Error updating shared collection:', error);
-      toast.error('Failed to update your shared collection');
-    }
-  },
-  
-  deleteCollection: async (id) => {
-    try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) {
-        toast.error('You must be logged in to delete collections');
-        return;
-      }
-      
-      const { error } = await supabase
-        .from('shared_collections')
-        .delete()
-        .eq('id', id)
-        .eq('creator_id', session.session.user.id);
-      
-      if (error) {
-        console.error('Error deleting shared collection:', error);
-        toast.error('Failed to delete your shared collection');
-        return;
-      }
-      
-      set((state) => ({
-        collections: state.collections.filter((collection) => collection.id !== id)
-      }));
-      
-      toast.success('Collection deleted successfully');
-    } catch (error) {
-      console.error('Error deleting shared collection:', error);
-      toast.error('Failed to delete your shared collection');
-    }
-  },
-  
-  getCollectionBySlug: async (slug) => {
-    try {
-      set({ isLoading: true, error: null });
-      
-      console.log('Fetching collection with slug:', slug);
-      
-      // Get the collection data first
-      const { data: collectionData, error: collectionError } = await supabase
-        .from('shared_collections')
-        .select('*')
-        .eq('slug', slug)
-        .eq('is_public', true)
-        .single();
-      
-      if (collectionError) {
-        console.error('Error fetching shared collection by slug:', collectionError);
-        set({ isLoading: false, error: collectionError.message });
-        return null;
-      }
-      
-      if (!collectionData) {
-        console.log('No collection found with slug:', slug);
-        set({ isLoading: false });
-        return null;
-      }
-      
-      console.log('Found collection with slug:', slug, collectionData);
-      
-      // Extract the item IDs from the collection data
-      const itemIds = collectionData.item_ids || [];
-      console.log('Item IDs from collection:', itemIds);
-      
-      // Handle the case of empty collection
-      if (itemIds.length === 0) {
-        console.log('No item IDs found in collection');
-        const emptyCollection: CollectionWithItems = {
-          id: collectionData.id,
-          title: collectionData.title,
-          description: collectionData.description || undefined,
-          itemIds: [],
-          itemOrder: collectionData.item_order || [],
-          creatorId: collectionData.creator_id,
-          creatorName: collectionData.creator_name || undefined,
-          isPublic: collectionData.is_public,
-          slug: collectionData.slug,
-          createdAt: new Date(collectionData.created_at),
-          updatedAt: new Date(collectionData.updated_at),
-          items: []
-        };
-        
-        set({ activeCollection: emptyCollection, isLoading: false });
-        return emptyCollection;
-      }
-      
-      // Fetch the items if there are any
-      console.log('Fetching items with IDs:', itemIds);
-      
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('wishlist_items')
-        .select('*')
-        .in('id', itemIds);
-      
-      if (itemsError) {
-        console.error('Error fetching collection items:', itemsError);
-        set({ isLoading: false, error: itemsError.message });
-        return null;
-      }
-      
-      console.log('Retrieved items for collection:', itemsData ? itemsData.length : 0, itemsData);
-      
-      // Map the collection data to our model
-      const collection: SharedCollection = {
-        id: collectionData.id,
-        title: collectionData.title,
-        description: collectionData.description || undefined,
-        itemIds: collectionData.item_ids || [],
-        itemOrder: collectionData.item_order || [],
-        creatorId: collectionData.creator_id,
-        creatorName: collectionData.creator_name || undefined,
-        isPublic: collectionData.is_public,
-        slug: collectionData.slug,
-        createdAt: new Date(collectionData.created_at),
-        updatedAt: new Date(collectionData.updated_at)
-      };
-      
-      // Map the items data to our model - handle potential empty response
-      const items: WishlistItem[] = (itemsData || []).map(item => ({
-        id: item.id,
-        userId: item.user_id,
-        title: item.title,
-        description: item.description || undefined,
-        itemType: item.item_type as WishItemType,
-        activityType: item.activity_type as ActivityType | undefined,
-        timeframeType: item.timeframe_type as TimeframeType | undefined,
-        targetDate: item.target_date ? new Date(item.target_date) : undefined,
-        targetWeek: item.target_week || undefined,
-        targetMonth: item.target_month || undefined,
-        targetYear: item.target_year || undefined,
-        travelType: item.travel_type as TravelType | undefined,
-        budgetRange: item.budget_range as BudgetRange | undefined,
-        destination: item.destination || undefined,
-        link: item.link || undefined,
-        imageUrl: item.image_url || undefined,
-        tags: item.tags || undefined,
-        notes: item.notes || undefined,
-        createdAt: new Date(item.created_at),
-        updatedAt: new Date(item.updated_at),
-        completedAt: item.completed_at ? new Date(item.completed_at) : undefined
-      }));
-      
-      // Sort items according to the item order if available
-      let sortedItems = [...items];
-      if (collection.itemOrder && collection.itemOrder.length > 0) {
-        const orderedItems = collection.itemOrder
-          .map(id => items.find(item => item.id === id))
-          .filter((item): item is WishlistItem => item !== undefined);
-        
-        const remainingItems = items.filter(item => 
-          !collection.itemOrder.includes(item.id as string)
-        );
-        
-        sortedItems = [...orderedItems, ...remainingItems];
-      }
-      
-      console.log('Final sorted items:', sortedItems.length, sortedItems);
-      
-      // Create the collection with items model
-      const collectionWithItems: CollectionWithItems = {
-        ...collection,
-        items: sortedItems
-      };
-      
-      set({ activeCollection: collectionWithItems, isLoading: false });
-      return collectionWithItems;
-    } catch (error) {
-      console.error('Exception in getCollectionBySlug:', error);
-      set({ isLoading: false, error: error instanceof Error ? error.message : 'Unknown error' });
-      return null;
+    } catch (error: any) {
+      console.error("Error in fetchCollections:", error);
+      set({ error: error.message, isLoading: false });
     }
   },
   
   getCollection: async (id) => {
+    set({ isLoading: true, error: null });
+    
     try {
-      set({ isLoading: true });
-      
       const { data: session } = await supabase.auth.getSession();
       
-      const { data, error } = await supabase
-        .from('shared_collections')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching shared collection:', error);
-        set({ isLoading: false, error: error.message });
-        return null;
-      }
-      
-      if (!data) {
+      if (!session.session) {
         set({ isLoading: false });
         return null;
       }
       
-      if (!data.is_public && (!session.session || session.session.user.id !== data.creator_id)) {
-        set({ isLoading: false, error: 'You are not authorized to view this collection' });
+      const { data: collection, error: collectionError } = await supabase
+        .from("shared_collections")
+        .select("*")
+        .eq("id", id)
+        .single();
+      
+      if (collectionError) {
+        console.error("Error fetching collection:", collectionError);
+        set({ error: collectionError.message, isLoading: false });
         return null;
       }
       
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('wishlist_items')
-        .select('*')
-        .in('id', data.item_ids || []);
+      if (!collection) {
+        set({ isLoading: false });
+        return null;
+      }
+      
+      const { data: items, error: itemsError } = await supabase
+        .from("wishlist_items")
+        .select("*")
+        .in("id", collection.item_ids || []);
       
       if (itemsError) {
-        console.error('Error fetching collection items:', itemsError);
-        set({ isLoading: false, error: itemsError.message });
-        return null;
+        console.error("Error fetching items:", itemsError);
+        set({ error: itemsError.message, isLoading: false });
       }
       
-      const collection: SharedCollection = {
-        id: data.id,
-        title: data.title,
-        description: data.description || undefined,
-        itemIds: data.item_ids || [],
-        itemOrder: data.item_order || [],
-        creatorId: data.creator_id,
-        creatorName: data.creator_name || undefined,
-        isPublic: data.is_public,
-        slug: data.slug,
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at)
-      };
-      
-      const items: WishlistItem[] = (itemsData || []).map(item => ({
+      // Map DB items to WishlistItem type with proper type casting
+      const mappedItems: WishlistItem[] = (items || []).map((item) => ({
         id: item.id,
-        userId: item.user_id,
         title: item.title,
         description: item.description || undefined,
-        itemType: item.item_type as WishItemType,
+        itemType: item.item_type,
         activityType: item.activity_type as ActivityType | undefined,
-        timeframeType: item.timeframe_type as TimeframeType | undefined,
+        timeframeType: item.timeframe_type as TimeframeType,
         targetDate: item.target_date ? new Date(item.target_date) : undefined,
         targetWeek: item.target_week || undefined,
         targetMonth: item.target_month || undefined,
@@ -402,32 +150,307 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         travelType: item.travel_type as TravelType | undefined,
         budgetRange: item.budget_range as BudgetRange | undefined,
         destination: item.destination || undefined,
-        link: item.link || undefined,
         imageUrl: item.image_url || undefined,
-        tags: item.tags || undefined,
-        notes: item.notes || undefined,
+        link: item.link || undefined,
+        tags: item.tags || [],
+        userId: item.user_id,
         createdAt: new Date(item.created_at),
         updatedAt: new Date(item.updated_at),
-        completedAt: item.completed_at ? new Date(item.completed_at) : undefined
+        completedAt: item.completed_at ? new Date(item.completed_at) : undefined,
       }));
       
-      const orderedItems = collection.itemOrder
-        .map(id => items.find(item => item.id === id))
+      // Order items according to itemOrder
+      const orderedItems = collection.item_order
+        .map((id: string) => mappedItems.find((item) => item.id === id))
         .filter(Boolean) as WishlistItem[];
       
-      const remainingItems = items.filter(item => !collection.itemOrder.includes(item.id as string));
-      
-      const collectionWithItems: CollectionWithItems = {
-        ...collection,
-        items: [...orderedItems, ...remainingItems]
+      const result: SharedCollection = {
+        id: collection.id,
+        title: collection.title,
+        description: collection.description || undefined,
+        items: orderedItems,
+        itemIds: collection.item_ids || [],
+        itemOrder: collection.item_order || [],
+        slug: collection.slug,
+        isPublic: collection.is_public,
+        creatorId: collection.creator_id,
+        creatorName: collection.creator_name || undefined,
+        createdAt: new Date(collection.created_at),
+        updatedAt: new Date(collection.updated_at),
       };
       
-      set({ activeCollection: collectionWithItems, isLoading: false });
-      return collectionWithItems;
-    } catch (error) {
-      console.error('Exception in getCollection:', error);
-      set({ isLoading: false, error: error instanceof Error ? error.message : 'Unknown error' });
+      set({ isLoading: false });
+      return result;
+    } catch (error: any) {
+      console.error("Error in getCollection:", error);
+      set({ error: error.message, isLoading: false });
       return null;
     }
-  }
+  },
+  
+  getCollectionBySlug: async (slug) => {
+    set({ isLoading: true, error: null });
+    console.log("Getting collection by slug:", slug);
+    
+    try {
+      // This endpoint must be public (no auth check) since shared links can be accessed by anyone
+      const { data: collection, error: collectionError } = await supabase
+        .from("shared_collections")
+        .select("*")
+        .eq("slug", slug)
+        .eq("is_public", true)
+        .single();
+      
+      if (collectionError) {
+        console.error("Error fetching collection by slug:", collectionError);
+        set({ error: collectionError.message, isLoading: false });
+        return null;
+      }
+      
+      if (!collection) {
+        console.error("No collection found with slug:", slug);
+        set({ isLoading: false });
+        return null;
+      }
+      
+      console.log("Found collection:", collection);
+      
+      // Fetch items without auth check - these should be publicly viewable
+      const { data: items, error: itemsError } = await supabase
+        .from("wishlist_items")
+        .select("*")
+        .in("id", collection.item_ids || []);
+      
+      if (itemsError) {
+        console.error("Error fetching items for shared collection:", itemsError);
+        set({ error: itemsError.message, isLoading: false });
+      }
+      
+      console.log("Collection items:", items);
+      
+      // Map DB items to WishlistItem type with proper type casting
+      const mappedItems: WishlistItem[] = (items || []).map((item) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description || undefined,
+        itemType: item.item_type,
+        activityType: item.activity_type as ActivityType | undefined,
+        timeframeType: item.timeframe_type as TimeframeType,
+        targetDate: item.target_date ? new Date(item.target_date) : undefined,
+        targetWeek: item.target_week || undefined,
+        targetMonth: item.target_month || undefined,
+        targetYear: item.target_year || undefined,
+        travelType: item.travel_type as TravelType | undefined,
+        budgetRange: item.budget_range as BudgetRange | undefined,
+        destination: item.destination || undefined,
+        imageUrl: item.image_url || undefined,
+        link: item.link || undefined,
+        tags: item.tags || [],
+        userId: item.user_id,
+        createdAt: new Date(item.created_at),
+        updatedAt: new Date(item.updated_at),
+        completedAt: item.completed_at ? new Date(item.completed_at) : undefined,
+      }));
+      
+      // Order items according to itemOrder
+      const orderedItems = collection.item_order
+        .map((id: string) => mappedItems.find((item) => item.id === id))
+        .filter(Boolean) as WishlistItem[];
+      
+      console.log("Processed ordered items:", orderedItems.length);
+      
+      const result: SharedCollection = {
+        id: collection.id,
+        title: collection.title,
+        description: collection.description || undefined,
+        items: orderedItems,
+        itemIds: collection.item_ids || [],
+        itemOrder: collection.item_order || [],
+        slug: collection.slug,
+        isPublic: collection.is_public,
+        creatorId: collection.creator_id,
+        creatorName: collection.creator_name || undefined,
+        createdAt: new Date(collection.created_at),
+        updatedAt: new Date(collection.updated_at),
+      };
+      
+      set({ isLoading: false });
+      return result;
+    } catch (error: any) {
+      console.error("Error in getCollectionBySlug:", error);
+      set({ error: error.message, isLoading: false });
+      return null;
+    }
+  },
+  
+  createCollection: async (data) => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session.session) {
+        toast.error("You must be logged in to create a collection");
+        set({ isLoading: false });
+        return null;
+      }
+      
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData?.user;
+      
+      if (!user) {
+        toast.error("User data not found");
+        set({ isLoading: false });
+        return null;
+      }
+      
+      // Generate a slug from the title
+      const baseSlug = data.title
+        .toLowerCase()
+        .replace(/[^\w\s]/gi, "")
+        .replace(/\s+/g, "-")
+        .substring(0, 30);
+        
+      const uniqueId = uuidv4().substring(0, 8);
+      const slug = `${baseSlug}-${uniqueId}`;
+      
+      // Get user metadata if available
+      const userName = user.user_metadata?.name || user.email?.split('@')[0] || 'Anonymous';
+      
+      const { data: collection, error } = await supabase
+        .from("shared_collections")
+        .insert({
+          title: data.title,
+          description: data.description || null,
+          item_ids: data.itemIds,
+          item_order: data.itemOrder,
+          is_public: data.isPublic,
+          creator_id: user.id,
+          creator_name: userName,
+          slug: slug,
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Error creating collection:", error);
+        toast.error("Failed to create collection");
+        set({ error: error.message, isLoading: false });
+        return null;
+      }
+      
+      // Add the new collection to the state
+      const collections = get().collections;
+      const newCollection: SharedCollection = {
+        id: collection.id,
+        title: collection.title,
+        description: collection.description || undefined,
+        itemIds: collection.item_ids || [],
+        itemOrder: collection.item_order || [],
+        slug: collection.slug,
+        isPublic: collection.is_public,
+        creatorId: collection.creator_id,
+        creatorName: collection.creator_name || undefined,
+        createdAt: new Date(collection.created_at),
+        updatedAt: new Date(collection.updated_at),
+      };
+      
+      set({ 
+        collections: [newCollection, ...collections], 
+        isLoading: false 
+      });
+      
+      return collection.id;
+    } catch (error: any) {
+      console.error("Error in createCollection:", error);
+      toast.error("An error occurred while creating the collection");
+      set({ error: error.message, isLoading: false });
+      return null;
+    }
+  },
+  
+  updateCollection: async (id, data) => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session.session) {
+        set({ isLoading: false });
+        return;
+      }
+      
+      const { error } = await supabase
+        .from("shared_collections")
+        .update({
+          title: data.title,
+          description: data.description || null,
+          item_order: data.itemOrder,
+          is_public: data.isPublic,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id)
+        .eq("creator_id", session.session.user.id);
+      
+      if (error) {
+        console.error("Error updating collection:", error);
+        set({ error: error.message, isLoading: false });
+        return;
+      }
+      
+      // Update the collection in state
+      const collections = get().collections.map((collection) =>
+        collection.id === id
+          ? {
+              ...collection,
+              title: data.title !== undefined ? data.title : collection.title,
+              description: data.description !== undefined ? data.description : collection.description,
+              itemOrder: data.itemOrder !== undefined ? data.itemOrder : collection.itemOrder,
+              isPublic: data.isPublic !== undefined ? data.isPublic : collection.isPublic,
+              updatedAt: new Date(),
+            }
+          : collection
+      );
+      
+      set({ collections, isLoading: false });
+    } catch (error: any) {
+      console.error("Error in updateCollection:", error);
+      set({ error: error.message, isLoading: false });
+    }
+  },
+  
+  deleteCollection: async (id) => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session.session) {
+        set({ isLoading: false });
+        return;
+      }
+      
+      const { error } = await supabase
+        .from("shared_collections")
+        .delete()
+        .eq("id", id)
+        .eq("creator_id", session.session.user.id);
+      
+      if (error) {
+        console.error("Error deleting collection:", error);
+        set({ error: error.message, isLoading: false });
+        return;
+      }
+      
+      // Remove the collection from state
+      const collections = get().collections.filter(
+        (collection) => collection.id !== id
+      );
+      
+      set({ collections, isLoading: false });
+    } catch (error: any) {
+      console.error("Error in deleteCollection:", error);
+      set({ error: error.message, isLoading: false });
+    }
+  },
 }));

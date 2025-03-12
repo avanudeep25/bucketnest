@@ -82,10 +82,8 @@ const ShareDialog = ({ items, selectedItems, onSelect }: ShareDialogProps) => {
             setCollectionUrl(shareUrl);
             setStep("preview");
             
-            // Auto redirect to share page
-            setTimeout(() => {
-              navigate(`/share/${newCollection.slug}`);
-            }, 1500);
+            // Navigate immediately to the share page
+            navigate(`/share/${newCollection.slug}`);
           }
         }
       } catch (error) {

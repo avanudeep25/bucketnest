@@ -27,6 +27,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { activityTypes, budgetRanges } from "@/constants/wishlistFormOptions";
 import { WishlistItem } from "@/types/wishlist";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 const SharedCollection = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -39,8 +42,9 @@ const SharedCollection = () => {
   // Filters
   const [destinationFilter, setDestinationFilter] = useState<string>("");
   const [activityTypeFilter, setActivityTypeFilter] = useState<string>("");
-  const [yearFilter, setYearFilter] = useState<string>("");
-  const [monthFilter, setMonthFilter] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [selectedYear, setSelectedYear] = useState<string>("");
   const [budgetFilter, setBudgetFilter] = useState<string>("");
   const [tagFilter, setTagFilter] = useState<string>("");
   const [showFilters, setShowFilters] = useState<boolean>(false);
@@ -98,20 +102,28 @@ const SharedCollection = () => {
       );
     }
     
-    // Filter by year
-    if (yearFilter) {
+    // Filter by specific date
+    if (selectedDate) {
+      const dateStr = selectedDate.toISOString().split('T')[0];
       filtered = filtered.filter(item => 
-        (item.targetYear && item.targetYear === yearFilter) ||
-        (item.targetDate && new Date(item.targetDate).getFullYear().toString() === yearFilter) ||
-        (item.targetMonth && item.targetMonth.split('-')[0] === yearFilter)
+        item.targetDate && item.targetDate.toISOString().split('T')[0] === dateStr
       );
     }
     
     // Filter by month
-    if (monthFilter) {
+    if (selectedMonth) {
       filtered = filtered.filter(item => 
-        (item.targetMonth && item.targetMonth.split('-')[1] === monthFilter) ||
-        (item.targetDate && (new Date(item.targetDate).getMonth() + 1).toString().padStart(2, '0') === monthFilter)
+        (item.targetMonth && item.targetMonth.split('-')[1] === selectedMonth) ||
+        (item.targetDate && (new Date(item.targetDate).getMonth() + 1).toString().padStart(2, '0') === selectedMonth)
+      );
+    }
+    
+    // Filter by year
+    if (selectedYear) {
+      filtered = filtered.filter(item => 
+        (item.targetYear && item.targetYear === selectedYear) ||
+        (item.targetDate && new Date(item.targetDate).getFullYear().toString() === selectedYear) ||
+        (item.targetMonth && item.targetMonth.split('-')[0] === selectedYear)
       );
     }
     
@@ -132,7 +144,7 @@ const SharedCollection = () => {
     }
     
     setFilteredItems(filtered);
-  }, [collection, destinationFilter, activityTypeFilter, yearFilter, monthFilter, budgetFilter, tagFilter]);
+  }, [collection, destinationFilter, activityTypeFilter, selectedDate, selectedMonth, selectedYear, budgetFilter, tagFilter]);
   
   const toggleFilters = () => {
     setShowFilters(!showFilters);
@@ -141,8 +153,9 @@ const SharedCollection = () => {
   const clearFilters = () => {
     setDestinationFilter("");
     setActivityTypeFilter("");
-    setYearFilter("");
-    setMonthFilter("");
+    setSelectedDate(undefined);
+    setSelectedMonth("");
+    setSelectedYear("");
     setBudgetFilter("");
     setTagFilter("");
   };
@@ -274,25 +287,35 @@ const SharedCollection = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Year</label>
-                  <Select value={yearFilter} onValueChange={setYearFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All Years</SelectItem>
-                      {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() + i).map(year => (
-                        <SelectItem key={year} value={year.toString()}>
-                          {year}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <label className="block text-sm font-medium mb-1">Specific Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !selectedDate && "text-muted-foreground"
+                        )}
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">Month</label>
-                  <Select value={monthFilter} onValueChange={setMonthFilter}>
+                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select month" />
                     </SelectTrigger>
@@ -301,6 +324,23 @@ const SharedCollection = () => {
                       {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
                         <SelectItem key={month} value={month.toString().padStart(2, '0')}>
                           {new Date(2000, month - 1, 1).toLocaleString('default', { month: 'long' })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Year</label>
+                  <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Years</SelectItem>
+                      {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() + i).map(year => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
                         </SelectItem>
                       ))}
                     </SelectContent>

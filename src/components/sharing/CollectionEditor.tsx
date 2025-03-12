@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { useSharingStore } from "@/store/sharingStore";
-import { useWishlistStore } from "@/store/wishlistStore";
 import { useNavigate, useParams } from "react-router-dom";
 import { WishlistItem } from "@/types/wishlist";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,6 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 const CollectionEditor = () => {
   const { id } = useParams<{ id: string }>();
   const { getCollection, updateCollection, deleteCollection } = useSharingStore();
-  const { items, fetchItems } = useWishlistStore();
   const navigate = useNavigate();
   
   const [collection, setCollection] = useState<any>(null);
@@ -30,16 +28,24 @@ const CollectionEditor = () => {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      await fetchItems();
       
       if (id) {
-        const collectionData = await getCollection(id);
-        if (collectionData) {
-          setCollection(collectionData);
-          setTitle(collectionData.title);
-          setDescription(collectionData.description || "");
-          setOrderedItems(collectionData.items || []);
-          setShareUrl(`${window.location.origin}/share/${collectionData.slug}`);
+        try {
+          const collectionData = await getCollection(id);
+          console.log("Collection data:", collectionData);
+          
+          if (collectionData) {
+            setCollection(collectionData);
+            setTitle(collectionData.title);
+            setDescription(collectionData.description || "");
+            setOrderedItems(collectionData.items || []);
+            setShareUrl(`${window.location.origin}/share/${collectionData.slug}`);
+          } else {
+            toast.error("Collection not found");
+          }
+        } catch (error) {
+          console.error("Error fetching collection:", error);
+          toast.error("Failed to load collection");
         }
       }
       
@@ -47,7 +53,7 @@ const CollectionEditor = () => {
     };
     
     fetchData();
-  }, [id, getCollection, fetchItems]);
+  }, [id, getCollection]);
   
   const handleSave = async () => {
     if (!collection || !title.trim()) {
