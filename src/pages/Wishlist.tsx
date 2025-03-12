@@ -1,8 +1,6 @@
-
 import { useState, useMemo, useEffect } from "react";
 import { useWishlistStore } from "@/store/wishlistStore";
 import WishlistCard from "@/components/wishlist/WishlistCard";
-import Navigation from "@/components/layout/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
@@ -40,6 +38,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import ShareDialog from "@/components/sharing/ShareDialog";
 
 const Wishlist = () => {
   const { items, isLoading, fetchItems, deleteItem, toggleComplete } = useWishlistStore();
@@ -58,9 +57,23 @@ const Wishlist = () => {
   const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   
+  const [selectedItems, setSelectedItems] = useState([]);
+  
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
+  
+  const handleSelectItem = (item) => {
+    setSelectedItems(prev => {
+      const isSelected = prev.some(i => i.id === item.id);
+      
+      if (isSelected) {
+        return prev.filter(i => i.id !== item.id);
+      } else {
+        return [...prev, item];
+      }
+    });
+  };
   
   const monthOptions = useMemo(() => {
     const months = [];
@@ -252,8 +265,6 @@ const Wishlist = () => {
   
   return (
     <div className="min-h-screen flex flex-col">
-      <Navigation />
-      
       <div className="container px-4 py-8 md:px-6 flex-1">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
@@ -274,6 +285,12 @@ const Wishlist = () => {
                 Add to Nest
               </Link>
             </Button>
+            
+            <ShareDialog 
+              items={sortedAndFilteredItems}
+              selectedItems={selectedItems}
+              onSelect={handleSelectItem}
+            />
           </div>
         </div>
         
@@ -325,6 +342,7 @@ const Wishlist = () => {
                   )}
                 </Button>
               </DialogTrigger>
+              
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                   <DialogTitle>Filter Experiences</DialogTitle>
@@ -560,6 +578,8 @@ const Wishlist = () => {
                     item={item}
                     onDelete={handleDelete}
                     onToggleComplete={handleToggleComplete}
+                    isSelected={selectedItems.some(i => i.id === item.id)}
+                    onSelect={() => handleSelectItem(item)}
                   />
                 ))}
               </div>
@@ -610,6 +630,8 @@ const Wishlist = () => {
                     item={item}
                     onDelete={handleDelete}
                     onToggleComplete={handleToggleComplete}
+                    isSelected={selectedItems.some(i => i.id === item.id)}
+                    onSelect={() => handleSelectItem(item)}
                   />
                 ))}
               </div>

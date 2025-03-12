@@ -9,6 +9,9 @@ import Profile from '@/pages/Profile';
 import CreateWishlistItem from '@/pages/CreateWishlistItem';
 import WishlistDetail from '@/pages/WishlistDetail';
 import NotFound from '@/pages/NotFound';
+import Collections from '@/pages/Collections';
+import CollectionEditor from '@/components/sharing/CollectionEditor';
+import SharedCollection from '@/pages/SharedCollection';
 
 function App() {
   return (
@@ -22,6 +25,9 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/create" element={<CreateWishlistItem />} />
           <Route path="/wishlist/:id" element={<WishlistDetail />} />
+          <Route path="/collections" element={<Collections />} />
+          <Route path="/collections/:id" element={<CollectionEditor />} />
+          <Route path="/share/:slug" element={<SharedCollection />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
