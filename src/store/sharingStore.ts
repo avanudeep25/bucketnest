@@ -2,7 +2,7 @@
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
-import { WishlistItem, ActivityType, TimeframeType, TravelType, BudgetRange } from "@/types/wishlist";
+import { WishlistItem, ActivityType, TimeframeType, TravelType, BudgetRange, WishItemType } from "@/types/wishlist";
 import { useWishlistStore } from "./wishlistStore";
 import { toast } from "sonner";
 
@@ -140,7 +140,7 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         id: item.id,
         title: item.title,
         description: item.description || undefined,
-        itemType: item.item_type,
+        itemType: item.item_type as WishItemType, // Properly cast to WishItemType
         activityType: item.activity_type as ActivityType | undefined,
         timeframeType: item.timeframe_type as TimeframeType,
         targetDate: item.target_date ? new Date(item.target_date) : undefined,
@@ -233,7 +233,7 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         id: item.id,
         title: item.title,
         description: item.description || undefined,
-        itemType: item.item_type,
+        itemType: item.item_type as WishItemType, // Properly cast to WishItemType
         activityType: item.activity_type as ActivityType | undefined,
         timeframeType: item.timeframe_type as TimeframeType,
         targetDate: item.target_date ? new Date(item.target_date) : undefined,
