@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SharedCollection, CollectionWithItems } from '@/types/sharing';
 import { nanoid } from 'nanoid';
-import { WishlistItem, WishItemType } from '@/types/wishlist';
+import { WishlistItem, WishItemType, ActivityType, TimeframeType, TravelType, BudgetRange } from '@/types/wishlist';
 
 interface SharingState {
   collections: SharedCollection[];
@@ -277,14 +277,14 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         title: item.title,
         description: item.description || undefined,
         itemType: item.item_type as WishItemType,
-        activityType: item.activity_type || undefined,
-        timeframeType: item.timeframe_type || undefined,
+        activityType: item.activity_type as ActivityType | undefined,
+        timeframeType: item.timeframe_type as TimeframeType | undefined,
         targetDate: item.target_date ? new Date(item.target_date) : undefined,
         targetWeek: item.target_week || undefined,
         targetMonth: item.target_month || undefined,
         targetYear: item.target_year || undefined,
-        travelType: item.travel_type || undefined,
-        budgetRange: item.budget_range || undefined,
+        travelType: item.travel_type as TravelType | undefined,
+        budgetRange: item.budget_range as BudgetRange | undefined,
         destination: item.destination || undefined,
         link: item.link || undefined,
         imageUrl: item.image_url || undefined,
@@ -381,14 +381,14 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         title: item.title,
         description: item.description || undefined,
         itemType: item.item_type as WishItemType,
-        activityType: item.activity_type || undefined,
-        timeframeType: item.timeframe_type || undefined,
+        activityType: item.activity_type as ActivityType | undefined,
+        timeframeType: item.timeframe_type as TimeframeType | undefined,
         targetDate: item.target_date ? new Date(item.target_date) : undefined,
         targetWeek: item.target_week || undefined,
         targetMonth: item.target_month || undefined,
         targetYear: item.target_year || undefined,
-        travelType: item.travel_type || undefined,
-        budgetRange: item.budget_range || undefined,
+        travelType: item.travel_type as TravelType | undefined,
+        budgetRange: item.budget_range as BudgetRange | undefined,
         destination: item.destination || undefined,
         link: item.link || undefined,
         imageUrl: item.image_url || undefined,
@@ -403,7 +403,7 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         .map(id => items.find(item => item.id === id))
         .filter(Boolean) as WishlistItem[];
       
-      const remainingItems = items.filter(item => !collection.itemOrder.includes(item.id));
+      const remainingItems = items.filter(item => !collection.itemOrder.includes(item.id as string));
       
       const collectionWithItems: CollectionWithItems = {
         ...collection,
