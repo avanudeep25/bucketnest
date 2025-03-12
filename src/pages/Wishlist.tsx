@@ -26,8 +26,8 @@ import {
   Filter,
   SortAsc,
   Clock,
-  ClockRewind,
-  AlphabeticalSort,
+  ArrowDown,
+  ArrowUp,
   RotateCcw,
   SearchX,
   ListFilter,
@@ -312,11 +312,11 @@ const Wishlist = () => {
                       Latest First
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="oldest">
-                      <ClockRewind className="mr-2 h-4 w-4" />
+                      <ArrowDown className="mr-2 h-4 w-4" />
                       Oldest First
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="title">
-                      <AlphabeticalSort className="mr-2 h-4 w-4" />
+                      <ArrowUp className="mr-2 h-4 w-4" />
                       Title (A-Z)
                     </DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
