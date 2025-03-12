@@ -131,9 +131,11 @@ const SharedCollection = () => {
                   )}
                   
                   <div className="flex flex-wrap gap-2 mb-3">
-                    <Badge variant="secondary">
-                      {item.itemType}
-                    </Badge>
+                    {item.activityType && (
+                      <Badge className="capitalize bg-blue-500">
+                        {item.activityType}
+                      </Badge>
+                    )}
                     
                     {item.budgetRange && (
                       <Badge variant="outline">

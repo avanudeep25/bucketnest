@@ -196,7 +196,7 @@ export const useSharingStore = create<SharingState>((set, get) => ({
   
   getCollectionBySlug: async (slug) => {
     try {
-      set({ isLoading: true });
+      set({ isLoading: true, error: null });
       
       const { data, error } = await supabase
         .from('shared_collections')
@@ -212,9 +212,12 @@ export const useSharingStore = create<SharingState>((set, get) => ({
       }
       
       if (!data) {
+        console.log('No collection found with slug:', slug);
         set({ isLoading: false });
         return null;
       }
+      
+      console.log('Found collection with slug:', slug, data);
       
       // Fetch the actual wishlist items
       const { data: itemsData, error: itemsError } = await supabase
@@ -227,6 +230,8 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         set({ isLoading: false, error: itemsError.message });
         return null;
       }
+      
+      console.log('Retrieved items for collection:', itemsData ? itemsData.length : 0, itemsData);
       
       const collection: SharedCollection = {
         id: data.id,
@@ -273,10 +278,14 @@ export const useSharingStore = create<SharingState>((set, get) => ({
       // Add any items that may not be in itemOrder but are in itemIds
       const remainingItems = items.filter(item => !collection.itemOrder.includes(item.id));
       
+      console.log('Processed ordered items:', orderedItems.length, 'remaining items:', remainingItems.length);
+      
       const collectionWithItems: CollectionWithItems = {
         ...collection,
         items: [...orderedItems, ...remainingItems]
       };
+      
+      console.log('Final collection with items:', collectionWithItems);
       
       set({ activeCollection: collectionWithItems, isLoading: false });
       return collectionWithItems;

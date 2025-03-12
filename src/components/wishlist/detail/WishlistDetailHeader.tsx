@@ -25,7 +25,9 @@ export const WishlistDetailHeader = ({ item }: WishlistDetailHeaderProps) => {
       
       <div className="flex items-start justify-between mb-1">
         <h1 className="text-3xl font-bold">{item.title}</h1>
-        <Badge className="capitalize bg-blue-500">{item.itemType}</Badge>
+        {item.activityType && (
+          <Badge className="capitalize bg-blue-500">{item.activityType}</Badge>
+        )}
       </div>
       
       {item.destination && (
