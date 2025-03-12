@@ -1,4 +1,3 @@
-
 import { Calendar, MapPin, Tag, Activity, ShoppingBag, Heart, CheckCircle } from "lucide-react";
 import { WishlistItem } from "@/types/wishlist";
 import { Badge } from "@/components/ui/badge";
@@ -9,11 +8,13 @@ import { format } from "date-fns";
 
 interface WishlistCardProps {
   item: WishlistItem;
-  onDelete: (id: string) => void;
-  onToggleComplete?: (id: string, isComplete: boolean) => void;
+  onDelete: (id: string) => Promise<void>;
+  onToggleComplete: (id: string, isComplete: boolean) => Promise<void>;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
-const WishlistCard = ({ item, onDelete, onToggleComplete }: WishlistCardProps) => {
+const WishlistCard = ({ item, onDelete, onToggleComplete, isSelected, onSelect }: WishlistCardProps) => {
   const getItemTypeIcon = () => {
     switch (item.itemType) {
       case 'places':
@@ -31,7 +32,10 @@ const WishlistCard = ({ item, onDelete, onToggleComplete }: WishlistCardProps) =
   const isCompleted = !!item.completedAt;
   
   return (
-    <Card className={`h-full flex flex-col overflow-hidden group hover:shadow-lg transition-all duration-300 ${isCompleted ? 'border-green-200' : ''}`}>
+    <Card 
+      onClick={onSelect} 
+      className={`relative overflow-hidden ${isSelected ? 'border-blue-500 border-2' : ''} ${onSelect ? 'cursor-pointer' : ''}`}
+    >
       <div className="relative aspect-video overflow-hidden bg-gray-100 flex items-center justify-center">
         {getItemTypeIcon()}
         

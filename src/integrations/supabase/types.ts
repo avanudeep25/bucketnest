@@ -39,6 +39,48 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_collections: {
+        Row: {
+          created_at: string
+          creator_id: string
+          creator_name: string | null
+          description: string | null
+          id: string
+          is_public: boolean
+          item_ids: string[]
+          item_order: string[]
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          creator_name?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          item_ids: string[]
+          item_order: string[]
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          creator_name?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          item_ids?: string[]
+          item_order?: string[]
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       squad_requests: {
         Row: {
           created_at: string

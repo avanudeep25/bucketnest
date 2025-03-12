@@ -61,7 +61,7 @@ const ShareDialog = ({ items, selectedItems, onSelect }: ShareDialogProps) => {
         return;
       }
       
-      const itemIds = selectedItems.map(item => item.id);
+      const itemIds = selectedItems.map(item => item.id as string);
       
       try {
         const collectionId = await createCollection({
@@ -73,12 +73,12 @@ const ShareDialog = ({ items, selectedItems, onSelect }: ShareDialogProps) => {
         });
         
         if (collectionId) {
-          // Get the URL for sharing
-          const { data } = await fetch('/api/collections/' + collectionId)
-            .then(res => res.json());
+          // Get the collection data
+          const collections = useSharingStore.getState().collections;
+          const newCollection = collections.find(col => col.id === collectionId);
           
-          if (data?.slug) {
-            const shareUrl = `${window.location.origin}/share/${data.slug}`;
+          if (newCollection?.slug) {
+            const shareUrl = `${window.location.origin}/share/${newCollection.slug}`;
             setCollectionUrl(shareUrl);
             setStep("preview");
           }

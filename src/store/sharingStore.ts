@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SharedCollection, CollectionWithItems } from '@/types/sharing';
 import { nanoid } from 'nanoid';
+import { WishlistItem } from '@/types/wishlist';
 
 interface SharingState {
   collections: SharedCollection[];
@@ -246,7 +247,7 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         id: item.id,
         title: item.title,
         description: item.description || undefined,
-        itemType: item.item_type,
+        itemType: item.item_type as WishlistItem['itemType'],
         activityType: item.activity_type || undefined,
         timeframeType: item.timeframe_type || undefined,
         targetDate: item.target_date ? new Date(item.target_date) : undefined,
@@ -262,12 +263,12 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         createdAt: new Date(item.created_at),
         updatedAt: new Date(item.updated_at),
         completedAt: item.completed_at ? new Date(item.completed_at) : undefined
-      }));
+      } as WishlistItem));
       
       // Sort items based on itemOrder
       const orderedItems = collection.itemOrder
         .map(id => items.find(item => item.id === id))
-        .filter(Boolean);
+        .filter(Boolean) as WishlistItem[];
       
       // Add any items that may not be in itemOrder but are in itemIds
       const remainingItems = items.filter(item => !collection.itemOrder.includes(item.id));
@@ -346,7 +347,7 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         id: item.id,
         title: item.title,
         description: item.description || undefined,
-        itemType: item.item_type,
+        itemType: item.item_type as WishlistItem['itemType'],
         activityType: item.activity_type || undefined,
         timeframeType: item.timeframe_type || undefined,
         targetDate: item.target_date ? new Date(item.target_date) : undefined,
@@ -362,12 +363,12 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         createdAt: new Date(item.created_at),
         updatedAt: new Date(item.updated_at),
         completedAt: item.completed_at ? new Date(item.completed_at) : undefined
-      }));
+      } as WishlistItem));
       
       // Sort items based on itemOrder
       const orderedItems = collection.itemOrder
         .map(id => items.find(item => item.id === id))
-        .filter(Boolean);
+        .filter(Boolean) as WishlistItem[];
       
       // Add any items that may not be in itemOrder but are in itemIds
       const remainingItems = items.filter(item => !collection.itemOrder.includes(item.id));

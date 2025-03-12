@@ -1,72 +1,77 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useWishlistStore } from "@/store/wishlistStore";
-import WishlistCard from "@/components/wishlist/WishlistCard";
+import { WishlistItem } from "@/types/wishlist";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
-import { 
-  Search, Plus, BookmarkPlus, Loader2, 
-  CalendarIcon, User, Tag, Activity, FilterIcon,
-  CheckCircle2, ClipboardList
+import { Plus } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import WishlistCard from "@/components/wishlist/WishlistCard";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
+  DropdownMenuCheckboxItem,
+} from "@/components/ui/dropdown-menu"
+import {
+  Filter,
+  SortAsc,
+  Clock,
+  ClockRewind,
+  AlphabeticalSort,
+  RotateCcw,
+  SearchX,
+  ListFilter,
+  CalendarRange,
 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { BudgetRange, TimeframeType, ActivityType } from "@/types/wishlist";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import ShareDialog from "@/components/sharing/ShareDialog";
 
+type WishlistTab = "all" | "active" | "completed";
+type SortOption = "latest" | "oldest" | "title";
+
 const Wishlist = () => {
-  const { items, isLoading, fetchItems, deleteItem, toggleComplete } = useWishlistStore();
+  const { items, fetchItems, deleteItem, toggleComplete } = useWishlistStore();
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<WishlistTab>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("latest");
+  const [typeFilter, setTypeFilter] = useState<string[]>([]);
+  const [timeframeFilter, setTimeframeFilter] = useState<string[]>([]);
+  const navigate = useNavigate();
   
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("newest");
-  const [activeTab, setActiveTab] = useState("upcoming");
-  
-  const [budgetFilter, setBudgetFilter] = useState<string>("all");
-  const [tagFilter, setTagFilter] = useState<string>("all");
-  const [activityTypeFilter, setActivityTypeFilter] = useState<string>("all");
-  const [personalFilter, setPersonalFilter] = useState<boolean>(false);
-  
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedMonth, setSelectedMonth] = useState<string | undefined>(undefined);
-  const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
-  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  
-  const [selectedItems, setSelectedItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState<WishlistItem[]>([]);
   
   useEffect(() => {
-    fetchItems();
+    const loadItems = async () => {
+      setIsLoading(true);
+      await fetchItems();
+      setIsLoading(false);
+    };
+    
+    loadItems();
   }, [fetchItems]);
   
-  const handleSelectItem = (item) => {
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this item?")) {
+      await deleteItem(id);
+    }
+  };
+  
+  const handleToggleComplete = async (id: string, isComplete: boolean) => {
+    await toggleComplete(id, isComplete);
+  };
+  
+  const handleSelectItem = (item: WishlistItem) => {
     setSelectedItems(prev => {
       const isSelected = prev.some(i => i.id === item.id);
-      
       if (isSelected) {
         return prev.filter(i => i.id !== item.id);
       } else {
@@ -75,603 +80,289 @@ const Wishlist = () => {
     });
   };
   
-  const monthOptions = useMemo(() => {
-    const months = [];
-    for (let i = 0; i < 12; i++) {
-      const date = new Date(2024, i, 1);
-      months.push({
-        value: `${i + 1}`,
-        label: format(date, 'MMMM')
-      });
+  const filterItemsByTab = (item: WishlistItem) => {
+    if (activeTab === "active") {
+      return !item.completedAt;
     }
-    return months;
-  }, []);
-  
-  const yearOptions = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    const years = [];
-    for (let i = currentYear; i <= currentYear + 10; i++) {
-      years.push({
-        value: `${i}`,
-        label: `${i}`
-      });
+    if (activeTab === "completed") {
+      return item.completedAt;
     }
-    return years;
-  }, []);
-  
-  const allTags = useMemo(() => {
-    const tags = new Set<string>();
-    items.forEach(item => {
-      if (item.tags) {
-        item.tags.forEach(tag => tags.add(tag));
-      }
-    });
-    return Array.from(tags);
-  }, [items]);
-  
-  const allActivityTypes = useMemo(() => {
-    const types = new Set<string>();
-    items.forEach(item => {
-      if (item.activityType) {
-        types.add(item.activityType);
-      }
-    });
-    return Array.from(types);
-  }, [items]);
-  
-  const handleDelete = async (id: string) => {
-    await deleteItem(id);
+    return true;
   };
   
-  const handleToggleComplete = async (id: string, isComplete: boolean) => {
-    await toggleComplete(id, isComplete);
+  const filterItems = (item: WishlistItem) => {
+    const typeMatch = typeFilter.length === 0 || typeFilter.includes(item.itemType);
+    const timeframeMatch =
+      timeframeFilter.length === 0 || timeframeFilter.includes(item.timeframeType);
+    return typeMatch && timeframeMatch;
   };
   
-  const clearAllFilters = () => {
-    setBudgetFilter("all");
-    setTagFilter("all");
-    setActivityTypeFilter("all");
-    setPersonalFilter(false);
-    setSelectedDate(undefined);
-    setSelectedMonth(undefined);
-    setSelectedYear(undefined);
-    setFilterDialogOpen(false);
+  const toggleTypeFilter = (type: string) => {
+    setTypeFilter((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
   };
   
-  const upcomingItems = useMemo(() => {
-    return items.filter(item => !item.completedAt);
-  }, [items]);
+  const toggleTimeframeFilter = (timeframe: string) => {
+    setTimeframeFilter((prev) =>
+      prev.includes(timeframe) ? prev.filter((t) => t !== timeframe) : [...prev, timeframe]
+    );
+  };
   
-  const completedItems = useMemo(() => {
-    return items.filter(item => item.completedAt);
-  }, [items]);
+  const resetFilters = () => {
+    setTypeFilter([]);
+    setTimeframeFilter([]);
+  };
   
-  const filteredItems = useMemo(() => {
-    const itemsToFilter = activeTab === "upcoming" ? upcomingItems : completedItems;
-    
-    return itemsToFilter.filter(item => {
-      const matchesSearch = 
-        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        item.destination?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        false;
-      
-      let matchesDate = true;
-      if (selectedDate && item.targetDate) {
-        const itemDate = new Date(item.targetDate);
-        matchesDate = 
-          itemDate.getDate() === selectedDate.getDate() &&
-          itemDate.getMonth() === selectedDate.getMonth() &&
-          itemDate.getFullYear() === selectedDate.getFullYear();
-      } else if (selectedDate) {
-        matchesDate = false;
-      }
-      
-      let matchesMonth = true;
-      if (selectedMonth) {
-        if (item.targetMonth) {
-          const [_, month] = item.targetMonth.split('-');
-          matchesMonth = month === selectedMonth;
-        } else if (item.targetDate) {
-          const itemMonth = new Date(item.targetDate).getMonth() + 1;
-          matchesMonth = itemMonth.toString() === selectedMonth;
-        } else {
-          matchesMonth = false;
-        }
-      }
-      
-      let matchesYear = true;
-      if (selectedYear) {
-        if (item.targetYear) {
-          matchesYear = item.targetYear === selectedYear;
-        } else if (item.targetDate) {
-          const itemYear = new Date(item.targetDate).getFullYear().toString();
-          matchesYear = itemYear === selectedYear;
-        } else if (item.targetMonth) {
-          const [year, _] = item.targetMonth.split('-');
-          matchesYear = year === selectedYear;
-        } else if (item.targetWeek) {
-          const [year, _] = item.targetWeek.split('-');
-          matchesYear = year === selectedYear;
-        } else {
-          matchesYear = false;
-        }
-      }
-      
-      const matchesBudget = budgetFilter === "all" || 
-        (item.budgetRange === budgetFilter);
-      
-      const matchesTag = tagFilter === "all" || 
-        (item.tags && item.tags.includes(tagFilter));
-      
-      const matchesActivityType = activityTypeFilter === "all" || 
-        item.activityType === activityTypeFilter;
-      
-      const matchesPersonal = !personalFilter || 
-        item.travelType === "Solo";
-      
-      return matchesSearch && matchesBudget && matchesTag && 
-             matchesActivityType && matchesPersonal && 
-             matchesDate && matchesMonth && matchesYear;
-    });
-  }, [
-    activeTab, upcomingItems, completedItems, searchTerm, budgetFilter, tagFilter, 
-    activityTypeFilter, personalFilter, selectedDate, 
-    selectedMonth, selectedYear
-  ]);
+  const sortItems = (items: WishlistItem[]) => {
+    if (sortBy === "latest") {
+      return [...items].sort(
+        (a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+      );
+    }
+    if (sortBy === "oldest") {
+      return [...items].sort(
+        (a, b) => new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
+      );
+    }
+    if (sortBy === "title") {
+      return [...items].sort((a, b) => a.title.localeCompare(b.title));
+    }
+    return items;
+  };
   
-  const sortedAndFilteredItems = useMemo(() => {
-    return [...filteredItems].sort((a, b) => {
-      switch (sortBy) {
-        case "newest":
-          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-        case "oldest":
-          return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
-        case "alphabetical":
-          return a.title.localeCompare(b.title);
-        case "target-date":
-          if (a.targetDate && b.targetDate) {
-            return new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime();
-          } else if (a.targetDate) {
-            return -1;
-          } else if (b.targetDate) {
-            return 1;
-          }
-          return 0;
-        default:
-          return 0;
-      }
-    });
-  }, [filteredItems, sortBy]);
-  
-  const hasActiveFilters = budgetFilter !== "all" || 
-                           tagFilter !== "all" || 
-                           activityTypeFilter !== "all" ||
-                           personalFilter ||
-                           selectedDate !== undefined ||
-                           selectedMonth !== undefined ||
-                           selectedYear !== undefined;
-  
-  const activityTypes: ActivityType[] = [
-    'Sight Seeing', 'Food & Dining', 'Adventure Sports', 'Cultural Experience', 
-    'Entertainment', 'Wellness & Relaxation', 'Shopping', 
-    'Exploration', 'Education', 'Volunteering', 'Other'
-  ];
-  
-  const budgetRanges: BudgetRange[] = [
-    'Below INR 5000', 'INR 5000 - INR 10,000', 'INR 10,000 - INR 50,000', 'Above INR 50,000'
-  ];
+  const filteredItems = sortItems(items.filter(filterItemsByTab).filter(filterItems));
   
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="container px-4 py-8 md:px-6 flex-1">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">My BucketNest</h1>
-            <p className="text-gray-500 mt-1">
-              Curation of your activities and dream escapes
-            </p>
-          </div>
-          
-          <div className="flex gap-3">
-            <Button 
-              asChild 
-              size="lg" 
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              <Link to="/create">
-                <Plus className="mr-2 h-5 w-5" />
-                Add to Nest
-              </Link>
-            </Button>
-            
-            <ShareDialog 
-              items={sortedAndFilteredItems}
-              selectedItems={selectedItems}
-              onSelect={handleSelectItem}
-            />
-          </div>
+    <div className="container px-4 py-8 max-w-7xl">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">My Bucket Nest</h1>
+          <p className="text-gray-500 mt-1">
+            Manage and track all your bucket list items
+          </p>
         </div>
         
-        <Tabs 
-          defaultValue="upcoming" 
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="w-full mb-6"
-        >
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="upcoming" className="flex items-center gap-2">
-              <ClipboardList className="h-4 w-4" />
-              <span>Upcoming ({upcomingItems.length})</span>
-            </TabsTrigger>
-            <TabsTrigger value="completed" className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4" />
-              <span>My Experiences ({completedItems.length})</span>
-            </TabsTrigger>
-          </TabsList>
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <Button 
+            className="w-full sm:w-auto"
+            onClick={() => navigate("/create")}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Item
+          </Button>
           
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder={`Search your ${activeTab === "upcoming" ? "upcoming goals" : "completed experiences"}...`}
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            
-            <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <FilterIcon className="h-4 w-4" />
-                  Filters
-                  {hasActiveFilters && (
-                    <Badge variant="secondary" className="ml-1 px-1.5 py-0.5 h-5">
-                      {Object.values([
-                        budgetFilter !== "all",
-                        tagFilter !== "all",
-                        activityTypeFilter !== "all",
-                        personalFilter,
-                        selectedDate !== undefined,
-                        selectedMonth !== undefined,
-                        selectedYear !== undefined
-                      ]).filter(Boolean).length}
-                    </Badge>
-                  )}
-                </Button>
-              </DialogTrigger>
-              
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>Filter Experiences</DialogTitle>
-                </DialogHeader>
-                
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <h3 className="mb-2 text-sm font-medium">Date Filters</h3>
-                      <div className="space-y-2">
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" className="w-full justify-start text-left">
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {selectedDate ? format(selectedDate, 'PPP') : "Select date"}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={selectedDate}
-                              onSelect={setSelectedDate}
-                              initialFocus
-                              className="p-3 pointer-events-auto"
-                            />
-                            {selectedDate && (
-                              <div className="p-3 border-t border-gray-100">
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  onClick={() => setSelectedDate(undefined)}
-                                  className="w-full"
-                                >
-                                  Clear date
-                                </Button>
-                              </div>
-                            )}
-                          </PopoverContent>
-                        </Popover>
-                        
-                        <Select
-                          value={selectedMonth}
-                          onValueChange={setSelectedMonth}
-                        >
-                          <SelectTrigger>
-                            <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
-                            <SelectValue placeholder="Select month" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="undefined">All months</SelectItem>
-                            {monthOptions.map((month) => (
-                              <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        
-                        <Select
-                          value={selectedYear}
-                          onValueChange={setSelectedYear}
-                        >
-                          <SelectTrigger>
-                            <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
-                            <SelectValue placeholder="Select year" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="undefined">All years</SelectItem>
-                            {yearOptions.map((year) => (
-                              <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 gap-2">
-                      <Select
-                        value={activityTypeFilter}
-                        onValueChange={setActivityTypeFilter}
-                      >
-                        <SelectTrigger>
-                          <Activity className="mr-2 h-4 w-4 text-gray-500" />
-                          <SelectValue placeholder="Activity type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All activities</SelectItem>
-                          {activityTypes.map((type) => (
-                            <SelectItem key={type} value={type}>{type}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          variant={personalFilter ? "default" : "outline"} 
-                          className={`w-full ${personalFilter ? 'bg-wishwise-500' : ''}`}
-                          onClick={() => setPersonalFilter(!personalFilter)}
-                        >
-                          <User className="mr-2 h-4 w-4" />
-                          Personal
-                        </Button>
-                      </div>
-                      
-                      <Select
-                        value={budgetFilter}
-                        onValueChange={setBudgetFilter}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Budget" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Budget</SelectItem>
-                          {budgetRanges.map((range) => (
-                            <SelectItem key={range} value={range}>{range}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      
-                      {allTags.length > 0 && (
-                        <Select
-                          value={tagFilter}
-                          onValueChange={setTagFilter}
-                        >
-                          <SelectTrigger>
-                            <Tag className="mr-2 h-4 w-4 text-gray-500" />
-                            <SelectValue placeholder="Tag" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Tags</SelectItem>
-                            {allTags.map((tag) => (
-                              <SelectItem key={tag} value={tag}>{tag}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between">
-                  <Button variant="outline" onClick={clearAllFilters}>
-                    Clear all filters
-                  </Button>
-                  <Button onClick={() => setFilterDialogOpen(false)}>
-                    Apply Filters
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-            
-            <Select
-              defaultValue="newest"
-              value={sortBy}
-              onValueChange={setSortBy}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="alphabetical">Alphabetical</SelectItem>
-                <SelectItem value="target-date">Target Date</SelectItem>
-              </SelectContent>
-            </Select>
+          <ShareDialog 
+            items={items} 
+            selectedItems={selectedItems}
+            onSelect={handleSelectItem}
+          />
+        </div>
+      </div>
+      
+      {isLoading ? (
+        <div className="flex justify-center items-center py-16">
+          <div className="w-16 h-16 rounded-full border-t-4 border-blue-500 animate-spin"></div>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="bg-gray-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
+            <Plus className="w-6 h-6 text-gray-500" />
           </div>
-          
-          {hasActiveFilters && (
-            <div className="flex flex-wrap gap-2 mb-6">
-              {selectedDate && (
-                <Badge variant="secondary">
-                  Date: {format(selectedDate, 'MMM d, yyyy')}
-                </Badge>
+          <h3 className="text-lg font-semibold mb-1">No items in your bucket list yet</h3>
+          <p className="text-gray-500 mb-4">
+            Add your first item to start tracking your dreams and adventures
+          </p>
+          <Button onClick={() => navigate("/create")}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Your First Item
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <Tabs 
+              value={activeTab} 
+              className="w-full" 
+              onValueChange={(value) => setActiveTab(value as WishlistTab)}
+            >
+              <TabsList className="grid grid-cols-3 w-full max-w-md">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="active">Active</TabsTrigger>
+                <TabsTrigger value="completed">Completed</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            
+            <div className="flex items-center gap-2">
+              {selectedItems.length > 0 && (
+                <span className="text-sm text-gray-500">
+                  {selectedItems.length} selected
+                </span>
               )}
               
-              {selectedMonth && (
-                <Badge variant="secondary">
-                  Month: {monthOptions.find(m => m.value === selectedMonth)?.label}
-                </Badge>
-              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                  >
+                    <Filter className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>Filter By</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <ListFilter className="mr-2 h-4 w-4" />
+                      <span>Type</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuCheckboxItem
+                          checked={typeFilter.includes('places')}
+                          onCheckedChange={() => toggleTypeFilter('places')}
+                        >
+                          Places
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={typeFilter.includes('activities')}
+                          onCheckedChange={() => toggleTypeFilter('activities')}
+                        >
+                          Activities
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={typeFilter.includes('products')}
+                          onCheckedChange={() => toggleTypeFilter('products')}
+                        >
+                          Products
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={typeFilter.includes('other')}
+                          onCheckedChange={() => toggleTypeFilter('other')}
+                        >
+                          Other
+                        </DropdownMenuCheckboxItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <CalendarRange className="mr-2 h-4 w-4" />
+                      <span>Timeframe</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuCheckboxItem
+                          checked={timeframeFilter.includes('Specific Date')}
+                          onCheckedChange={() => toggleTimeframeFilter('Specific Date')}
+                        >
+                          Specific Date
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={timeframeFilter.includes('Week')}
+                          onCheckedChange={() => toggleTimeframeFilter('Week')}
+                        >
+                          Week
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={timeframeFilter.includes('Month')}
+                          onCheckedChange={() => toggleTimeframeFilter('Month')}
+                        >
+                          Month
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={timeframeFilter.includes('Year')}
+                          onCheckedChange={() => toggleTimeframeFilter('Year')}
+                        >
+                          Year
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={timeframeFilter.includes('Someday')}
+                          onCheckedChange={() => toggleTimeframeFilter('Someday')}
+                        >
+                          Someday
+                        </DropdownMenuCheckboxItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => resetFilters()}>
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Reset Filters
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               
-              {selectedYear && (
-                <Badge variant="secondary">
-                  Year: {selectedYear}
-                </Badge>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                  >
+                    <SortAsc className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuRadioGroup value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+                    <DropdownMenuRadioItem value="latest">
+                      <Clock className="mr-2 h-4 w-4" />
+                      Latest First
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="oldest">
+                      <ClockRewind className="mr-2 h-4 w-4" />
+                      Oldest First
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="title">
+                      <AlphabeticalSort className="mr-2 h-4 w-4" />
+                      Title (A-Z)
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
+          {filteredItems.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="bg-gray-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
+                <SearchX className="w-6 h-6 text-gray-500" />
+              </div>
+              <h3 className="text-lg font-semibold mb-1">No items found</h3>
+              <p className="text-gray-500 mb-4">
+                {typeFilter.length || timeframeFilter.length
+                  ? "Try adjusting your filters"
+                  : activeTab === "all"
+                  ? "Add your first bucket list item to get started"
+                  : activeTab === "completed"
+                  ? "You haven't completed any bucket list items yet"
+                  : "You don't have any active bucket list items"}
+              </p>
+              {(typeFilter.length || timeframeFilter.length) && (
+                <Button variant="outline" onClick={resetFilters}>
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Reset Filters
+                </Button>
               )}
-              
-              {activityTypeFilter !== "all" && (
-                <Badge variant="secondary">
-                  Activity: {activityTypeFilter}
-                </Badge>
-              )}
-              
-              {personalFilter && (
-                <Badge variant="secondary">
-                  Personal
-                </Badge>
-              )}
-              
-              {budgetFilter !== "all" && (
-                <Badge variant="secondary">
-                  {budgetFilter}
-                </Badge>
-              )}
-              
-              {tagFilter !== "all" && (
-                <Badge variant="secondary">
-                  Tag: {tagFilter}
-                </Badge>
-              )}
-              
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-6 text-xs" 
-                onClick={clearAllFilters}
-              >
-                Clear all
-              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredItems.map((item) => (
+                <WishlistCard
+                  key={item.id}
+                  item={item}
+                  onDelete={handleDelete}
+                  onToggleComplete={handleToggleComplete}
+                  isSelected={selectedItems.some(i => i.id === item.id)}
+                  onSelect={() => handleSelectItem(item)}
+                />
+              ))}
             </div>
           )}
-          
-          <TabsContent value="upcoming">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-16">
-                <Loader2 className="h-12 w-12 text-gray-400 animate-spin mb-4" />
-                <p className="text-lg text-gray-600">Loading your Bucket List Goals...</p>
-              </div>
-            ) : sortedAndFilteredItems.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sortedAndFilteredItems.map((item) => (
-                  <WishlistCard
-                    key={item.id}
-                    item={item}
-                    onDelete={handleDelete}
-                    onToggleComplete={handleToggleComplete}
-                    isSelected={selectedItems.some(i => i.id === item.id)}
-                    onSelect={() => handleSelectItem(item)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-wishwise-100 rounded-full mb-4">
-                  <BookmarkPlus className="h-8 w-8 text-wishwise-600" />
-                </div>
-                <h2 className="text-2xl font-semibold mb-2">No Bucket List Goals found</h2>
-                <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                  {searchTerm || hasActiveFilters
-                    ? "No items match your current search or filters. Try different criteria or clear the filters."
-                    : "Start by adding your first dream destination or activity to your BucketNest."}
-                </p>
-                {!searchTerm && !hasActiveFilters ? (
-                  <Button asChild size="lg" className="bg-wishwise-500 hover:bg-wishwise-600">
-                    <Link to="/create">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add to Nest
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setSearchTerm("");
-                      clearAllFilters();
-                    }}
-                  >
-                    Clear All Filters
-                  </Button>
-                )}
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="completed">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-16">
-                <Loader2 className="h-12 w-12 text-gray-400 animate-spin mb-4" />
-                <p className="text-lg text-gray-600">Loading your Completed Experiences...</p>
-              </div>
-            ) : sortedAndFilteredItems.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sortedAndFilteredItems.map((item) => (
-                  <WishlistCard
-                    key={item.id}
-                    item={item}
-                    onDelete={handleDelete}
-                    onToggleComplete={handleToggleComplete}
-                    isSelected={selectedItems.some(i => i.id === item.id)}
-                    onSelect={() => handleSelectItem(item)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                  <CheckCircle2 className="h-8 w-8 text-green-600" />
-                </div>
-                <h2 className="text-2xl font-semibold mb-2">No Completed Experiences found</h2>
-                <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                  {searchTerm || hasActiveFilters
-                    ? "No completed items match your current search or filters. Try different criteria or clear the filters."
-                    : "Mark some of your bucket list items as complete to see them here."}
-                </p>
-                {!searchTerm && !hasActiveFilters ? (
-                  <Button 
-                    asChild 
-                    variant="outline" 
-                    className="border-green-500 text-green-600 hover:bg-green-50"
-                  >
-                    <Link to="/wishlist">
-                      View Upcoming Goals
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setSearchTerm("");
-                      clearAllFilters();
-                    }}
-                  >
-                    Clear All Filters
-                  </Button>
-                )}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
+        </div>
+      )}
     </div>
   );
 };
