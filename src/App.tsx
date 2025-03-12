@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +9,7 @@ import CreateWishlistItem from "./pages/CreateWishlistItem";
 import WishlistDetail from "./pages/WishlistDetail";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import Profile from "./pages/Profile";
 import { useUserStore } from "./store/userStore";
 import { useWishlistStore } from "./store/wishlistStore";
 import { useEffect, useState } from "react";
@@ -109,6 +109,11 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/profile" element={
+            <RequireProfile>
+              <Profile />
+            </RequireProfile>
+          } />
           <Route path="/wishlist" element={
             <RequireProfile>
               <Wishlist />
