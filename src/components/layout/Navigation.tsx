@@ -1,4 +1,3 @@
-
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PenLine, LogOut, User, Home, List, Plus, Settings } from "lucide-react";

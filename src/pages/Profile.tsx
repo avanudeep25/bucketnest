@@ -42,6 +42,7 @@ const Profile = () => {
     try {
       await createUser(data.name, data.bio);
       toast.success("Profile updated successfully");
+      console.log("Profile updated successfully with:", data);
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile");
