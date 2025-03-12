@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SharedCollection, CollectionWithItems } from '@/types/sharing';
 import { nanoid } from 'nanoid';
-import { WishlistItem } from '@/types/wishlist';
+import { WishlistItem, WishItemType } from '@/types/wishlist';
 
 interface SharingState {
   collections: SharedCollection[];
@@ -84,7 +84,6 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         return undefined;
       }
       
-      // Generate a unique slug for the collection
       const slug = `${nanoid(10)}`;
       
       const { data: userData } = await supabase
@@ -220,7 +219,6 @@ export const useSharingStore = create<SharingState>((set, get) => ({
       
       console.log('Found collection with slug:', slug, data);
       
-      // Fetch the actual wishlist items - IMPORTANT: Use maybeSingle() instead of single()
       const itemIds = data.item_ids || [];
       
       if (itemIds.length === 0) {
@@ -273,12 +271,12 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         updatedAt: new Date(data.updated_at)
       };
       
-      // Process and map the items to our WishlistItem type
-      const items = (itemsData || []).map(item => ({
+      const items: WishlistItem[] = (itemsData || []).map(item => ({
         id: item.id,
+        userId: item.user_id,
         title: item.title,
         description: item.description || undefined,
-        itemType: item.item_type,
+        itemType: item.item_type as WishItemType,
         activityType: item.activity_type || undefined,
         timeframeType: item.timeframe_type || undefined,
         targetDate: item.target_date ? new Date(item.target_date) : undefined,
@@ -291,31 +289,28 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         link: item.link || undefined,
         imageUrl: item.image_url || undefined,
         tags: item.tags || undefined,
+        notes: item.notes || undefined,
         createdAt: new Date(item.created_at),
         updatedAt: new Date(item.updated_at),
         completedAt: item.completed_at ? new Date(item.completed_at) : undefined
       }));
       
-      console.log('Processed items:', items.length, items);
-      
-      // Sort items based on itemOrder if it exists
-      let finalItems = items;
+      let sortedItems = [...items];
       if (collection.itemOrder && collection.itemOrder.length > 0) {
         const orderedItems = collection.itemOrder
           .map(id => items.find(item => item.id === id))
-          .filter(Boolean) as WishlistItem[];
+          .filter((item): item is WishlistItem => item !== undefined);
         
-        // Add any items that may not be in itemOrder but are in itemIds
-        const remainingItems = items.filter(item => !collection.itemOrder.includes(item.id as string));
+        const remainingItems = items.filter(item => 
+          !collection.itemOrder.includes(item.id as string)
+        );
         
-        finalItems = [...orderedItems, ...remainingItems];
+        sortedItems = [...orderedItems, ...remainingItems];
       }
-      
-      console.log('Final items count:', finalItems.length);
       
       const collectionWithItems: CollectionWithItems = {
         ...collection,
-        items: finalItems
+        items: sortedItems
       };
       
       set({ activeCollection: collectionWithItems, isLoading: false });
@@ -350,13 +345,11 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         return null;
       }
       
-      // Check if user is authorized to view this collection
       if (!data.is_public && (!session.session || session.session.user.id !== data.creator_id)) {
         set({ isLoading: false, error: 'You are not authorized to view this collection' });
         return null;
       }
       
-      // Fetch the actual wishlist items
       const { data: itemsData, error: itemsError } = await supabase
         .from('wishlist_items')
         .select('*')
@@ -382,12 +375,12 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         updatedAt: new Date(data.updated_at)
       };
       
-      // Process and map the items to our WishlistItem type
-      const items = (itemsData || []).map(item => ({
+      const items: WishlistItem[] = (itemsData || []).map(item => ({
         id: item.id,
+        userId: item.user_id,
         title: item.title,
         description: item.description || undefined,
-        itemType: item.item_type as WishlistItem['itemType'],
+        itemType: item.item_type as WishItemType,
         activityType: item.activity_type || undefined,
         timeframeType: item.timeframe_type || undefined,
         targetDate: item.target_date ? new Date(item.target_date) : undefined,
@@ -400,17 +393,16 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         link: item.link || undefined,
         imageUrl: item.image_url || undefined,
         tags: item.tags || undefined,
+        notes: item.notes || undefined,
         createdAt: new Date(item.created_at),
         updatedAt: new Date(item.updated_at),
         completedAt: item.completed_at ? new Date(item.completed_at) : undefined
-      } as WishlistItem));
+      }));
       
-      // Sort items based on itemOrder
       const orderedItems = collection.itemOrder
         .map(id => items.find(item => item.id === id))
         .filter(Boolean) as WishlistItem[];
       
-      // Add any items that may not be in itemOrder but are in itemIds
       const remainingItems = items.filter(item => !collection.itemOrder.includes(item.id));
       
       const collectionWithItems: CollectionWithItems = {
