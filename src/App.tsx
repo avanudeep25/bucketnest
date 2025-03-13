@@ -18,7 +18,12 @@ function App() {
     <div className="min-h-screen flex flex-col">
       <main className="flex-1">
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={
+            <>
+              <Navigation />
+              <Index />
+            </>
+          } />
           <Route path="/login" element={<Login />} />
           <Route path="/wishlist" element={
             <>
