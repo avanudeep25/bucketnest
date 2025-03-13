@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useSharingStore } from "@/store/sharingStore";
@@ -39,7 +38,6 @@ const SharedCollection = () => {
   const [error, setError] = useState<string | null>(null);
   const [filteredItems, setFilteredItems] = useState<WishlistItem[]>([]);
   
-  // Filters
   const [destinationFilter, setDestinationFilter] = useState<string>("");
   const [activityTypeFilter, setActivityTypeFilter] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -88,21 +86,18 @@ const SharedCollection = () => {
     
     let filtered = [...collection.items];
     
-    // Filter by destination
     if (destinationFilter) {
       filtered = filtered.filter(item => 
         item.destination && item.destination.toLowerCase().includes(destinationFilter.toLowerCase())
       );
     }
     
-    // Filter by activity type
     if (activityTypeFilter) {
       filtered = filtered.filter(item => 
         item.activityType === activityTypeFilter
       );
     }
     
-    // Filter by specific date
     if (selectedDate) {
       filtered = filtered.filter(item => {
         if (!item.targetDate) return false;
@@ -115,7 +110,6 @@ const SharedCollection = () => {
       });
     }
     
-    // Filter by month
     if (selectedMonth) {
       filtered = filtered.filter(item => {
         if (item.targetDate) {
@@ -129,7 +123,6 @@ const SharedCollection = () => {
       });
     }
     
-    // Filter by year
     if (selectedYear) {
       filtered = filtered.filter(item => {
         if (item.targetDate) {
@@ -145,14 +138,12 @@ const SharedCollection = () => {
       });
     }
     
-    // Filter by budget
     if (budgetFilter) {
       filtered = filtered.filter(item => 
         item.budgetRange === budgetFilter
       );
     }
     
-    // Filter by tags
     if (tagFilter) {
       filtered = filtered.filter(item => 
         item.tags && item.tags.some(tag => 
@@ -178,7 +169,6 @@ const SharedCollection = () => {
     setTagFilter("");
   };
   
-  // Show loading state while fetching
   if (isLoading || storeLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -190,7 +180,6 @@ const SharedCollection = () => {
     );
   }
   
-  // Show error state if something went wrong
   if (error || !collection) {
     return (
       <div className="container mx-auto px-4 py-16 max-w-4xl">
@@ -456,7 +445,7 @@ const SharedCollection = () => {
                     {!item.targetDate && item.targetMonth && (
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-gray-500" />
-                        <span>{format(new Date(item.targetMonth.split('-')[0], parseInt(item.targetMonth.split('-')[1]) - 1, 1), 'MMMM yyyy')}</span>
+                        <span>{format(new Date(parseInt(item.targetMonth.split('-')[0]), parseInt(item.targetMonth.split('-')[1]) - 1, 1), 'MMMM yyyy')}</span>
                       </div>
                     )}
                     
