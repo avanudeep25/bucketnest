@@ -4,61 +4,36 @@ import { useNavigate } from "react-router-dom";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { WishlistItem } from "@/types/wishlist";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, FolderHeart, Search, CalendarRange, Tag, Users, DollarSign, Activity } from "lucide-react";
 import WishlistListItem from "@/components/wishlist/WishlistListItem";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuPortal,
-  DropdownMenuCheckboxItem,
-} from "@/components/ui/dropdown-menu"
-import {
-  Filter,
-  SortAsc,
-  Clock,
-  ArrowDown,
-  ArrowUp,
-  RotateCcw,
-  SearchX,
-  CalendarRange,
-  FolderHeart,
-  Users,
-  Tag,
-  DollarSign,
-} from "lucide-react";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import ShareDialog from "@/components/sharing/ShareDialog";
 import { Link } from "react-router-dom";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { activityTypes, budgetRanges } from "@/constants/wishlistFormOptions";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { activityTypes, budgetRanges, travelTypes } from "@/constants/wishlistFormOptions";
 import { Input } from "@/components/ui/input";
 
 type WishlistTab = "all" | "active" | "completed";
-type SortOption = "latest" | "oldest" | "title";
 
 const Wishlist = () => {
   const { items, fetchItems, deleteItem, toggleComplete } = useWishlistStore();
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<WishlistTab>("all");
-  const [sortBy, setSortBy] = useState<SortOption>("latest");
   const navigate = useNavigate();
   
   const [selectedItems, setSelectedItems] = useState<WishlistItem[]>([]);
   
-  // New filter states
+  // Simple filter states
   const [activityTypeFilter, setActivityTypeFilter] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
@@ -66,7 +41,6 @@ const Wishlist = () => {
   const [budgetFilter, setBudgetFilter] = useState<string>("");
   const [travelTypeFilter, setTravelTypeFilter] = useState<string>("");
   const [tagFilter, setTagFilter] = useState<string>("");
-  const [showFilters, setShowFilters] = useState<boolean>(false);
   
   useEffect(() => {
     const loadItems = async () => {
@@ -194,24 +168,7 @@ const Wishlist = () => {
     setTagFilter("");
   };
   
-  const sortItems = (items: WishlistItem[]) => {
-    if (sortBy === "latest") {
-      return [...items].sort(
-        (a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
-      );
-    }
-    if (sortBy === "oldest") {
-      return [...items].sort(
-        (a, b) => new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
-      );
-    }
-    if (sortBy === "title") {
-      return [...items].sort((a, b) => a.title.localeCompare(b.title));
-    }
-    return items;
-  };
-  
-  const filteredItems = sortItems(items.filter(filterItemsByTab).filter(filterItems));
+  const filteredItems = items.filter(filterItemsByTab).filter(filterItems);
   
   return (
     <div className="container px-4 py-8 max-w-7xl">
@@ -283,195 +240,142 @@ const Wishlist = () => {
                 <TabsTrigger value="completed">Completed</TabsTrigger>
               </TabsList>
             </Tabs>
+          </div>
+          
+          {/* Simple Filter Dropdowns */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2 bg-gray-50 p-3 rounded-lg">
+            <div>
+              <Select value={activityTypeFilter} onValueChange={setActivityTypeFilter}>
+                <SelectTrigger className="h-9 text-sm">
+                  <Activity className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Activity Type" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="">All Activities</SelectItem>
+                  {activityTypes.map((type) => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             
-            <div className="flex items-center gap-2">
-              {selectedItems.length > 0 && (
-                <span className="text-sm text-gray-500">
-                  {selectedItems.length} selected
-                </span>
-              )}
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+            <div>
+              <Popover>
+                <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    size="icon"
-                    className="h-8 w-8"
+                    size="sm"
+                    className={cn(
+                      "h-9 text-sm justify-start w-full",
+                      !selectedDate && "text-muted-foreground"
+                    )}
                   >
-                    <Filter className="h-4 w-4" />
+                    <CalendarRange className="mr-2 h-4 w-4" />
+                    {selectedDate ? format(selectedDate, "PPP") : <span>Select Date</span>}
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 bg-white">
-                  <DropdownMenuLabel>Filter By</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  
-                  <div className="px-2 py-1.5">
-                    <label className="text-xs font-medium mb-1 block">Activity Type</label>
-                    <Select value={activityTypeFilter} onValueChange={setActivityTypeFilter}>
-                      <SelectTrigger className="h-8">
-                        <SelectValue placeholder="All Activities" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">All Activities</SelectItem>
-                        {activityTypes.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="px-2 py-1.5">
-                    <label className="text-xs font-medium mb-1 block">Budget Range</label>
-                    <Select value={budgetFilter} onValueChange={setBudgetFilter}>
-                      <SelectTrigger className="h-8">
-                        <SelectValue placeholder="All Budgets" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">All Budgets</SelectItem>
-                        {budgetRanges.map((range) => (
-                          <SelectItem key={range} value={range}>
-                            {range}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="px-2 py-1.5">
-                    <label className="text-xs font-medium mb-1 block">Travel Type</label>
-                    <Select value={travelTypeFilter} onValueChange={setTravelTypeFilter}>
-                      <SelectTrigger className="h-8">
-                        <SelectValue placeholder="All Travel Types" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">All Travel Types</SelectItem>
-                        <SelectItem value="Solo">Solo</SelectItem>
-                        <SelectItem value="Couple">Couple</SelectItem>
-                        <SelectItem value="Friends">Friends</SelectItem>
-                        <SelectItem value="Family">Family</SelectItem>
-                        <SelectItem value="Work">Work</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="px-2 py-1.5">
-                    <label className="text-xs font-medium mb-1 block">Specific Date</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full h-8 justify-start text-left font-normal",
-                            !selectedDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarRange className="mr-2 h-4 w-4" />
-                          {selectedDate ? format(selectedDate, "PPP") : <span>Any date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={setSelectedDate}
-                          initialFocus
-                          className={cn("p-3 pointer-events-auto")}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  
-                  <div className="px-2 py-1.5">
-                    <label className="text-xs font-medium mb-1 block">Month</label>
-                    <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                      <SelectTrigger className="h-8">
-                        <SelectValue placeholder="Any month" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Any month</SelectItem>
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
-                          <SelectItem key={month} value={month.toString().padStart(2, '0')}>
-                            {new Date(2000, month - 1, 1).toLocaleString('default', { month: 'long' })}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="px-2 py-1.5">
-                    <label className="text-xs font-medium mb-1 block">Year</label>
-                    <Select value={selectedYear} onValueChange={setSelectedYear}>
-                      <SelectTrigger className="h-8">
-                        <SelectValue placeholder="Any year" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Any year</SelectItem>
-                        {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() + i).map(year => (
-                          <SelectItem key={year} value={year.toString()}>
-                            {year}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="px-2 py-1.5">
-                    <label className="text-xs font-medium mb-1 block">Tags</label>
-                    <Input
-                      placeholder="Filter by tags"
-                      value={tagFilter}
-                      onChange={(e) => setTagFilter(e.target.value)}
-                      className="h-8"
-                    />
-                  </div>
-                  
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={resetFilters}>
-                    <RotateCcw className="mr-2 h-4 w-4" />
-                    Reset Filters
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8"
-                  >
-                    <SortAsc className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Sort By</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuRadioGroup value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-                    <DropdownMenuRadioItem value="latest">
-                      <Clock className="mr-2 h-4 w-4" />
-                      Latest First
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="oldest">
-                      <ArrowDown className="mr-2 h-4 w-4" />
-                      Oldest First
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="title">
-                      <ArrowUp className="mr-2 h-4 w-4" />
-                      Title (A-Z)
-                    </DropdownMenuRadioItem>
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    initialFocus
+                    className="p-3 pointer-events-auto bg-white"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="h-9 text-sm">
+                  <CalendarRange className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Select Month" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="">All Months</SelectItem>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                    <SelectItem key={month} value={month.toString().padStart(2, '0')}>
+                      {new Date(2000, month - 1, 1).toLocaleString('default', { month: 'long' })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="h-9 text-sm">
+                  <CalendarRange className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Select Year" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="">All Years</SelectItem>
+                  {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() + i).map(year => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Select value={budgetFilter} onValueChange={setBudgetFilter}>
+                <SelectTrigger className="h-9 text-sm">
+                  <DollarSign className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Budget Range" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="">All Budgets</SelectItem>
+                  {budgetRanges.map((range) => (
+                    <SelectItem key={range} value={range}>{range}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Select value={travelTypeFilter} onValueChange={setTravelTypeFilter}>
+                <SelectTrigger className="h-9 text-sm">
+                  <Users className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Any Company?" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="">All Types</SelectItem>
+                  {travelTypes.map(type => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <div className="relative">
+                <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                <Input
+                  className="pl-9 h-9 text-sm"
+                  placeholder="Filter by tags"
+                  value={tagFilter}
+                  onChange={(e) => setTagFilter(e.target.value)}
+                />
+              </div>
             </div>
           </div>
+          
+          {/* Reset Filters Button */}
+          {(activityTypeFilter || selectedDate || selectedMonth || selectedYear || budgetFilter || travelTypeFilter || tagFilter) && (
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={resetFilters}>
+                Reset Filters
+              </Button>
+            </div>
+          )}
 
           {filteredItems.length === 0 ? (
             <div className="text-center py-8">
               <div className="bg-gray-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
-                <SearchX className="w-6 h-6 text-gray-500" />
+                <Search className="w-6 h-6 text-gray-500" />
               </div>
               <h3 className="text-lg font-semibold mb-1">No items found</h3>
               <p className="text-gray-500 mb-4">
@@ -485,7 +389,6 @@ const Wishlist = () => {
               </p>
               {(activityTypeFilter || selectedDate || selectedMonth || selectedYear || budgetFilter || travelTypeFilter || tagFilter) && (
                 <Button variant="outline" onClick={resetFilters}>
-                  <RotateCcw className="mr-2 h-4 w-4" />
                   Reset Filters
                 </Button>
               )}
