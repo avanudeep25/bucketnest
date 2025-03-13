@@ -104,27 +104,45 @@ const SharedCollection = () => {
     
     // Filter by specific date
     if (selectedDate) {
-      const dateStr = selectedDate.toISOString().split('T')[0];
-      filtered = filtered.filter(item => 
-        item.targetDate && item.targetDate.toISOString().split('T')[0] === dateStr
-      );
+      filtered = filtered.filter(item => {
+        if (!item.targetDate) return false;
+        const itemDate = new Date(item.targetDate);
+        return (
+          itemDate.getDate() === selectedDate.getDate() &&
+          itemDate.getMonth() === selectedDate.getMonth() &&
+          itemDate.getFullYear() === selectedDate.getFullYear()
+        );
+      });
     }
     
     // Filter by month
     if (selectedMonth) {
-      filtered = filtered.filter(item => 
-        (item.targetMonth && item.targetMonth.split('-')[1] === selectedMonth) ||
-        (item.targetDate && (new Date(item.targetDate).getMonth() + 1).toString().padStart(2, '0') === selectedMonth)
-      );
+      filtered = filtered.filter(item => {
+        if (item.targetDate) {
+          const date = new Date(item.targetDate);
+          return (date.getMonth() + 1).toString().padStart(2, '0') === selectedMonth;
+        }
+        if (item.targetMonth) {
+          return item.targetMonth.split('-')[1] === selectedMonth;
+        }
+        return false;
+      });
     }
     
     // Filter by year
     if (selectedYear) {
-      filtered = filtered.filter(item => 
-        (item.targetYear && item.targetYear === selectedYear) ||
-        (item.targetDate && new Date(item.targetDate).getFullYear().toString() === selectedYear) ||
-        (item.targetMonth && item.targetMonth.split('-')[0] === selectedYear)
-      );
+      filtered = filtered.filter(item => {
+        if (item.targetDate) {
+          return new Date(item.targetDate).getFullYear().toString() === selectedYear;
+        }
+        if (item.targetMonth) {
+          return item.targetMonth.split('-')[0] === selectedYear;
+        }
+        if (item.targetYear) {
+          return item.targetYear === selectedYear;
+        }
+        return false;
+      });
     }
     
     // Filter by budget
@@ -438,7 +456,7 @@ const SharedCollection = () => {
                     {!item.targetDate && item.targetMonth && (
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-gray-500" />
-                        <span>{format(new Date(item.targetMonth + '-01'), 'MMMM yyyy')}</span>
+                        <span>{format(new Date(item.targetMonth.split('-')[0], parseInt(item.targetMonth.split('-')[1]) - 1, 1), 'MMMM yyyy')}</span>
                       </div>
                     )}
                     

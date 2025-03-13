@@ -16,17 +16,46 @@ import SharedCollection from '@/pages/SharedCollection';
 function App() {
   return (
     <div className="min-h-screen flex flex-col">
-      <Navigation />
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/create" element={<CreateWishlistItem />} />
-          <Route path="/wishlist/:id" element={<WishlistDetail />} />
-          <Route path="/collections" element={<Collections />} />
-          <Route path="/collections/:id" element={<CollectionEditor />} />
+          <Route path="/wishlist" element={
+            <>
+              <Navigation />
+              <Wishlist />
+            </>
+          } />
+          <Route path="/profile" element={
+            <>
+              <Navigation />
+              <Profile />
+            </>
+          } />
+          <Route path="/create" element={
+            <>
+              <Navigation />
+              <CreateWishlistItem />
+            </>
+          } />
+          <Route path="/wishlist/:id" element={
+            <>
+              <Navigation />
+              <WishlistDetail />
+            </>
+          } />
+          <Route path="/collections" element={
+            <>
+              <Navigation />
+              <Collections />
+            </>
+          } />
+          <Route path="/collections/:id" element={
+            <>
+              <Navigation />
+              <CollectionEditor />
+            </>
+          } />
           <Route path="/share/:slug" element={<SharedCollection />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
