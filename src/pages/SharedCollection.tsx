@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useSharingStore } from "@/store/sharingStore";
@@ -24,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { activityTypes, budgetRanges } from "@/constants/wishlistFormOptions";
+import { activityTypes, budgetRanges, travelTypes } from "@/constants/wishlistFormOptions";
 import { WishlistItem } from "@/types/wishlist";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -44,6 +45,7 @@ const SharedCollection = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [budgetFilter, setBudgetFilter] = useState<string>("");
+  const [travelTypeFilter, setTravelTypeFilter] = useState<string>("");
   const [tagFilter, setTagFilter] = useState<string>("");
   const [showFilters, setShowFilters] = useState<boolean>(false);
   
@@ -86,18 +88,28 @@ const SharedCollection = () => {
     
     let filtered = [...collection.items];
     
+    // Filter by destination
     if (destinationFilter) {
       filtered = filtered.filter(item => 
         item.destination && item.destination.toLowerCase().includes(destinationFilter.toLowerCase())
       );
     }
     
+    // Filter by activity type
     if (activityTypeFilter) {
       filtered = filtered.filter(item => 
         item.activityType === activityTypeFilter
       );
     }
     
+    // Filter by travel type
+    if (travelTypeFilter) {
+      filtered = filtered.filter(item => 
+        item.travelType === travelTypeFilter
+      );
+    }
+    
+    // Filter by specific date
     if (selectedDate) {
       filtered = filtered.filter(item => {
         if (!item.targetDate) return false;
@@ -110,6 +122,7 @@ const SharedCollection = () => {
       });
     }
     
+    // Filter by month
     if (selectedMonth) {
       filtered = filtered.filter(item => {
         if (item.targetDate) {
@@ -123,6 +136,7 @@ const SharedCollection = () => {
       });
     }
     
+    // Filter by year
     if (selectedYear) {
       filtered = filtered.filter(item => {
         if (item.targetDate) {
@@ -138,12 +152,14 @@ const SharedCollection = () => {
       });
     }
     
+    // Filter by budget range
     if (budgetFilter) {
       filtered = filtered.filter(item => 
         item.budgetRange === budgetFilter
       );
     }
     
+    // Filter by tags
     if (tagFilter) {
       filtered = filtered.filter(item => 
         item.tags && item.tags.some(tag => 
@@ -153,7 +169,7 @@ const SharedCollection = () => {
     }
     
     setFilteredItems(filtered);
-  }, [collection, destinationFilter, activityTypeFilter, selectedDate, selectedMonth, selectedYear, budgetFilter, tagFilter]);
+  }, [collection, destinationFilter, activityTypeFilter, travelTypeFilter, selectedDate, selectedMonth, selectedYear, budgetFilter, tagFilter]);
   
   const toggleFilters = () => {
     setShowFilters(!showFilters);
@@ -162,6 +178,7 @@ const SharedCollection = () => {
   const clearFilters = () => {
     setDestinationFilter("");
     setActivityTypeFilter("");
+    setTravelTypeFilter("");
     setSelectedDate(undefined);
     setSelectedMonth("");
     setSelectedYear("");
@@ -277,6 +294,23 @@ const SharedCollection = () => {
                 </div>
                 
                 <div>
+                  <label className="block text-sm font-medium mb-1">Travel Type</label>
+                  <Select value={travelTypeFilter} onValueChange={setTravelTypeFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select travel type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Travel Types</SelectItem>
+                      {travelTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
                   <label className="block text-sm font-medium mb-1">Budget Range</label>
                   <Select value={budgetFilter} onValueChange={setBudgetFilter}>
                     <SelectTrigger>
@@ -314,7 +348,7 @@ const SharedCollection = () => {
                         selected={selectedDate}
                         onSelect={setSelectedDate}
                         initialFocus
-                        className="p-3 pointer-events-auto"
+                        className={cn("p-3 pointer-events-auto")}
                       />
                     </PopoverContent>
                   </Popover>
