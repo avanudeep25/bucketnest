@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   DropdownMenu,
   DropdownMenuTrigger,
@@ -16,11 +16,62 @@ import {
   ArrowDown, 
   ArrowUp 
 } from "lucide-react";
+import { useWishlistStore } from "@/store/wishlistStore";
+import WishlistCard from "@/components/wishlist/WishlistCard";
+import { WishlistItem } from "@/types/wishlist";
+import { toast } from "sonner";
 
 type SortOption = 'latest' | 'oldest' | 'title';
 
 const Wishlist = () => {
   const [sortBy, setSortBy] = useState<SortOption>('latest');
+  const { items, fetchItems, deleteItem, toggleComplete, isLoading, error } = useWishlistStore();
+  
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+  
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteItem(id);
+      toast.success('Item deleted successfully');
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      toast.error('Failed to delete item');
+    }
+  };
+  
+  const handleToggleComplete = async (id: string, isComplete: boolean) => {
+    try {
+      await toggleComplete(id, isComplete);
+    } catch (error) {
+      console.error('Error toggling completion status:', error);
+      toast.error('Failed to update completion status');
+    }
+  };
+  
+  const getSortedItems = (): WishlistItem[] => {
+    if (!items || items.length === 0) return [];
+    
+    const sortedItems = [...items];
+    
+    switch (sortBy) {
+      case 'latest':
+        return sortedItems.sort((a, b) => 
+          (new Date(b.createdAt || 0)).getTime() - (new Date(a.createdAt || 0)).getTime()
+        );
+      case 'oldest':
+        return sortedItems.sort((a, b) => 
+          (new Date(a.createdAt || 0)).getTime() - (new Date(b.createdAt || 0)).getTime()
+        );
+      case 'title':
+        return sortedItems.sort((a, b) => a.title.localeCompare(b.title));
+      default:
+        return sortedItems;
+    }
+  };
+  
+  const sortedItems = getSortedItems();
 
   return (
     <div className="container px-4 py-8 mx-auto">
@@ -60,10 +111,33 @@ const Wishlist = () => {
         </div>
       </div>
 
-      {/* Wishlist content goes here */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <p>Wishlist items will be displayed here</p>
-      </div>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <p className="text-gray-500">Loading your wishlist items...</p>
+        </div>
+      ) : error ? (
+        <div className="flex justify-center items-center h-64">
+          <p className="text-red-500">Error loading wishlist: {error}</p>
+        </div>
+      ) : sortedItems.length === 0 ? (
+        <div className="flex flex-col justify-center items-center h-64">
+          <p className="text-gray-500 mb-4">Your wishlist is empty</p>
+          <Button asChild>
+            <a href="/create">Add Your First Bucket List Goal</a>
+          </Button>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {sortedItems.map((item) => (
+            <WishlistCard
+              key={item.id}
+              item={item}
+              onDelete={handleDelete}
+              onToggleComplete={handleToggleComplete}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
