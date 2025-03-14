@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useSharingStore } from "@/store/sharingStore";
@@ -12,7 +13,8 @@ import {
   Tag, 
   ExternalLink, 
   DollarSign, 
-  Users
+  Users,
+  Share
 } from "lucide-react";
 import { format } from "date-fns";
 import { WishlistItem } from "@/types/wishlist";
@@ -25,6 +27,7 @@ const SharedCollection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [collection, setCollection] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
   
   useEffect(() => {
     const fetchCollection = async () => {
@@ -85,6 +88,21 @@ const SharedCollection = () => {
     fetchCollection();
   }, [slug, getCollectionBySlug]);
   
+  const handleCopyLink = () => {
+    const currentUrl = window.location.href;
+    navigator.clipboard.writeText(currentUrl);
+    setIsCopied(true);
+    toast({
+      title: "Link copied!",
+      description: "Collection link copied to clipboard",
+    });
+    
+    // Reset the copied state after 3 seconds
+    setTimeout(() => {
+      setIsCopied(false);
+    }, 3000);
+  };
+  
   if (isLoading || storeLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -133,6 +151,14 @@ const SharedCollection = () => {
             </div>
             
             <div className="flex gap-3">
+              <Button 
+                onClick={handleCopyLink} 
+                variant="outline" 
+                className={isCopied ? "bg-green-50 text-green-600 border-green-200" : ""}
+              >
+                <Share className="h-4 w-4 mr-2" />
+                {isCopied ? "Copied!" : "Share"}
+              </Button>
               <Button asChild variant="outline">
                 <Link to="/">
                   Explore BucketNest
