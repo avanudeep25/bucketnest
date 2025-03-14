@@ -53,15 +53,10 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Get current URL to use for redirects
-      const redirectUrl = `${window.location.origin}/create`;
-
+      // FIXED: Removed emailRedirectTo option as it's not valid for signInWithPassword
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-        }
+        password
       });
 
       if (error) throw error;
