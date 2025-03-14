@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
@@ -135,12 +134,11 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         set({ error: itemsError.message, isLoading: false });
       }
       
-      // Map DB items to WishlistItem type with proper type casting
       const mappedItems: WishlistItem[] = (items || []).map((item) => ({
         id: item.id,
         title: item.title,
         description: item.description || undefined,
-        itemType: item.item_type as WishItemType, // Properly cast to WishItemType
+        itemType: item.item_type as WishItemType,
         activityType: item.activity_type as ActivityType | undefined,
         timeframeType: item.timeframe_type as TimeframeType,
         targetDate: item.target_date ? new Date(item.target_date) : undefined,
@@ -159,7 +157,6 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         completedAt: item.completed_at ? new Date(item.completed_at) : undefined,
       }));
       
-      // Order items according to itemOrder
       const orderedItems = collection.item_order
         .map((id: string) => mappedItems.find((item) => item.id === id))
         .filter(Boolean) as WishlistItem[];
@@ -215,25 +212,43 @@ export const useSharingStore = create<SharingState>((set, get) => ({
       
       console.log("Found collection:", collection);
       
-      // Fetch items without auth check - these should be publicly viewable
+      if (!collection.item_ids || collection.item_ids.length === 0) {
+        console.error("Collection has no items");
+        set({ isLoading: false });
+        return {
+          id: collection.id,
+          title: collection.title,
+          description: collection.description || undefined,
+          items: [],
+          itemIds: [],
+          itemOrder: collection.item_order || [],
+          slug: collection.slug,
+          isPublic: collection.is_public,
+          creatorId: collection.creator_id,
+          creatorName: collection.creator_name || undefined,
+          createdAt: new Date(collection.created_at),
+          updatedAt: new Date(collection.updated_at),
+        };
+      }
+      
       const { data: items, error: itemsError } = await supabase
         .from("wishlist_items")
         .select("*")
-        .in("id", collection.item_ids || []);
+        .in("id", collection.item_ids);
       
       if (itemsError) {
         console.error("Error fetching items for shared collection:", itemsError);
         set({ error: itemsError.message, isLoading: false });
+        return null;
       }
       
       console.log("Collection items:", items);
       
-      // Map DB items to WishlistItem type with proper type casting
       const mappedItems: WishlistItem[] = (items || []).map((item) => ({
         id: item.id,
         title: item.title,
         description: item.description || undefined,
-        itemType: item.item_type as WishItemType, // Properly cast to WishItemType
+        itemType: item.item_type as WishItemType,
         activityType: item.activity_type as ActivityType | undefined,
         timeframeType: item.timeframe_type as TimeframeType,
         targetDate: item.target_date ? new Date(item.target_date) : undefined,
@@ -252,10 +267,17 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         completedAt: item.completed_at ? new Date(item.completed_at) : undefined,
       }));
       
-      // Order items according to itemOrder
-      const orderedItems = collection.item_order
-        .map((id: string) => mappedItems.find((item) => item.id === id))
-        .filter(Boolean) as WishlistItem[];
+      console.log("Mapped items count:", mappedItems.length);
+      
+      let orderedItems: WishlistItem[] = [];
+      
+      if (collection.item_order && collection.item_order.length > 0) {
+        orderedItems = collection.item_order
+          .map((id: string) => mappedItems.find((item) => item.id === id))
+          .filter((item): item is WishlistItem => item !== undefined);
+      } else {
+        orderedItems = mappedItems;
+      }
       
       console.log("Processed ordered items:", orderedItems.length);
       
@@ -304,7 +326,6 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         return null;
       }
       
-      // Generate a slug from the title
       const baseSlug = data.title
         .toLowerCase()
         .replace(/[^\w\s]/gi, "")
@@ -314,7 +335,6 @@ export const useSharingStore = create<SharingState>((set, get) => ({
       const uniqueId = uuidv4().substring(0, 8);
       const slug = `${baseSlug}-${uniqueId}`;
       
-      // Get user metadata if available
       const userName = user.user_metadata?.name || user.email?.split('@')[0] || 'Anonymous';
       
       const { data: collection, error } = await supabase
@@ -339,7 +359,6 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         return null;
       }
       
-      // Add the new collection to the state
       const collections = get().collections;
       const newCollection: SharedCollection = {
         id: collection.id,
@@ -398,7 +417,6 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         return;
       }
       
-      // Update the collection in state
       const collections = get().collections.map((collection) =>
         collection.id === id
           ? {
@@ -442,7 +460,6 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         return;
       }
       
-      // Remove the collection from state
       const collections = get().collections.filter(
         (collection) => collection.id !== id
       );
