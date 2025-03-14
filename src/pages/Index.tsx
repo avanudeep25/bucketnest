@@ -81,8 +81,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Hero section - Center aligned */}
-      <section className="relative py-24 md:py-32 bg-gradient-to-b from-blue-50 to-purple-100 overflow-hidden">
+      {/* Hero section - Center aligned with conditional spacing */}
+      <section className={`relative ${userName ? "py-16 md:py-24" : "py-24 md:py-32"} bg-gradient-to-b from-blue-50 to-purple-100 overflow-hidden`}>
         {/* Subtle animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-0 left-1/4 w-72 h-72 rounded-full bg-yellow-300/10 mix-blend-multiply blur-3xl animate-float"></div>
@@ -91,23 +91,34 @@ const Index = () => {
         
         <div className="container px-4 md:px-6 relative z-10">
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
-            <div className="inline-block rounded-full bg-blue-100 px-4 py-1.5 text-sm text-blue-800 mb-6">
+            <div className="inline-block rounded-full bg-blue-100 px-4 py-1.5 text-sm text-blue-800 mb-4">
               Your Personal Bucket List Planner
             </div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 mb-6">
-              {userName ? (
-                <span>Hello <span className="text-blue-600">{userName}</span>,<br />Your Next Adventure Awaits</span>
-              ) : (
+            {userName ? (
+              // User-specific greeting with reduced spacing
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 mb-3">
+                <span>Hello <span className="text-blue-600">{userName}</span>,</span>
+              </h1>
+            ) : (
+              // Default heading with normal spacing
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 mb-6">
                 <span>Discover, Plan, and Share<br />Your Life Adventures</span>
-              )}
-            </h1>
+              </h1>
+            )}
             
-            <p className="text-xl text-gray-700 mb-8 max-w-2xl">
+            {/* Secondary heading when username exists */}
+            {userName && (
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">
+                Your Next Adventure Awaits
+              </h2>
+            )}
+            
+            <p className={`text-xl text-gray-700 ${userName ? "mb-4" : "mb-8"} max-w-2xl`}>
               From dream vacations to weekend getaways, from culinary explorations to life goals — BucketNest keeps all your bucket-list items organized in one beautiful place.
             </p>
             
-            <div className="mt-2">
+            <div className={userName ? "mb-6" : "mt-2"}>
               <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all">
                 <Link to="/create">
                   <Plus className="mr-2 h-5 w-5" />
@@ -117,8 +128,8 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Memories Carousel */}
-          <div className="mt-16 max-w-4xl mx-auto">
+          {/* Memories Carousel - positioned higher when username is present */}
+          <div className={`${userName ? "mt-8" : "mt-16"} max-w-4xl mx-auto`}>
             <div className="relative">
               {/* Carousel container with Polaroid-style */}
               <div className="relative h-[450px] w-full max-w-3xl mx-auto overflow-hidden" ref={carouselRef}>
