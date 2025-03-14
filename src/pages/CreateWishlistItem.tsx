@@ -18,7 +18,7 @@ const CreateWishlistItem = () => {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-900 via-purple-800 to-indigo-700">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-500">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-0 left-[10%] w-72 h-72 rounded-full bg-pink-400/20 mix-blend-overlay blur-3xl"></div>
           <div className="absolute bottom-0 right-[10%] w-96 h-96 rounded-full bg-blue-400/20 mix-blend-overlay blur-3xl"></div>
@@ -38,7 +38,7 @@ const CreateWishlistItem = () => {
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-900 via-purple-800 to-indigo-700 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-500 relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-10 left-[10%] w-72 h-72 rounded-full bg-pink-400/20 mix-blend-overlay blur-3xl animate-float"></div>
@@ -94,11 +94,6 @@ const CreateWishlistItem = () => {
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl border border-white/20 opacity-0 translate-y-[20px] animate-fade-in-up">
           {/* Custom styling will need to be added to the WishlistForm component */}
           <WishlistForm editItem={wishlistItem} />
-        </div>
-        
-        {/* Decorative element */}
-        <div className="absolute bottom-10 right-10 text-white/10 text-8xl font-black select-none">
-          DREAMS
         </div>
       </div>
     </div>
