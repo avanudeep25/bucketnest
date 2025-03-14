@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -55,13 +54,13 @@ const Login = () => {
 
     try {
       // Get current URL to use for redirects
-      const redirectTo = `${window.location.origin}/create`;
+      const redirectUrl = `${window.location.origin}/create`;
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
         options: {
-          redirectTo,
+          emailRedirectTo: redirectUrl,
         }
       });
 
@@ -93,13 +92,13 @@ const Login = () => {
 
     try {
       // Get current URL to use for redirects
-      const redirectTo = `${window.location.origin}/profile`;
+      const redirectUrl = `${window.location.origin}/profile`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectTo,
+          emailRedirectTo: redirectUrl,
         }
       });
 
