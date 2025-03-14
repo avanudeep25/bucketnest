@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useSharingStore } from "@/store/sharingStore";
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { WishlistItem } from "@/types/wishlist";
+import { toast } from "@/hooks/use-toast";
 
 const SharedCollection = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -48,6 +48,11 @@ const SharedCollection = () => {
       } catch (err) {
         console.error("Error fetching collection:", err);
         setError("Failed to load the collection");
+        toast({
+          title: "Error",
+          description: "Failed to load the collection",
+          variant: "destructive"
+        });
       } finally {
         setIsLoading(false);
       }

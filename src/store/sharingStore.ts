@@ -1,9 +1,10 @@
+
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
 import { WishlistItem, ActivityType, TimeframeType, TravelType, BudgetRange, WishItemType } from "@/types/wishlist";
 import { useWishlistStore } from "./wishlistStore";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 interface SharedCollection {
   id: string;
@@ -213,7 +214,7 @@ export const useSharingStore = create<SharingState>((set, get) => ({
       console.log("Found collection:", collection);
       
       if (!collection.item_ids || collection.item_ids.length === 0) {
-        console.error("Collection has no items");
+        console.log("Collection has no items");
         set({ isLoading: false });
         return {
           id: collection.id,
@@ -231,6 +232,7 @@ export const useSharingStore = create<SharingState>((set, get) => ({
         };
       }
       
+      // Important: We need to fetch items WITHOUT applying RLS for public collections
       const { data: items, error: itemsError } = await supabase
         .from("wishlist_items")
         .select("*")
