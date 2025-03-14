@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { WishlistItem } from "@/types/wishlist";
 import { Button } from "@/components/ui/button";
-import { Plus, FolderHeart, Search, CalendarRange, Tag, Users, DollarSign, Activity, ChevronDown, ChevronUp, Trophy, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import { Plus, FolderHeart, Search, CalendarRange, Tag, Users, IndianRupee, Activity, ChevronDown, ChevronUp, Trophy, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import WishlistListItem from "@/components/wishlist/WishlistListItem";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -25,7 +25,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-type WishlistTab = "all" | "active" | "completed";
+type WishlistTab = "all" | "upcoming" | "completed";
 
 const Wishlist = () => {
   const { items, fetchItems, deleteItem, toggleComplete } = useWishlistStore();
@@ -89,7 +89,7 @@ const Wishlist = () => {
   };
   
   const filterItemsByTab = (item: WishlistItem) => {
-    if (activeTab === "active") {
+    if (activeTab === "upcoming") {
       return !item.completedAt;
     }
     if (activeTab === "completed") {
@@ -195,7 +195,7 @@ const Wishlist = () => {
       .map(item => item.destination as string);
     return Array.from(new Set(destinations)).sort();
   };
-
+  
   const uniqueDestinations = getUniqueDestinations();
   
   const filteredItems = items.filter(filterItemsByTab).filter(filterItems);
@@ -227,7 +227,7 @@ const Wishlist = () => {
   // Calculate stats for the progress widget
   const totalItems = items.length;
   const completedItems = items.filter(item => item.completedAt).length;
-  const activeItems = totalItems - completedItems;
+  const upcomingItems = totalItems - completedItems;
   const completionPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
   
   return (
@@ -289,8 +289,8 @@ const Wishlist = () => {
                 <span className="text-xs text-gray-500">Completed</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-2xl font-bold text-blue-500">{activeItems}</span>
-                <span className="text-xs text-gray-500">Active</span>
+                <span className="text-2xl font-bold text-blue-500">{upcomingItems}</span>
+                <span className="text-xs text-gray-500">Upcoming</span>
               </div>
             </div>
             <p className="text-sm text-center mt-2 text-gray-600">
@@ -328,7 +328,7 @@ const Wishlist = () => {
             >
               <TabsList className="grid grid-cols-3 w-full max-w-md">
                 <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="active">Active</TabsTrigger>
+                <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
                 <TabsTrigger value="completed">Completed</TabsTrigger>
               </TabsList>
             </Tabs>
@@ -444,7 +444,7 @@ const Wishlist = () => {
                 <div>
                   <Select value={budgetFilter} onValueChange={setBudgetFilter}>
                     <SelectTrigger className="h-9 text-sm">
-                      <DollarSign className="mr-2 h-4 w-4" />
+                      <IndianRupee className="mr-2 h-4 w-4" />
                       <SelectValue placeholder="Budget Range" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
@@ -508,7 +508,7 @@ const Wishlist = () => {
                   ? "Add your first bucket list item to get started"
                   : activeTab === "completed"
                   ? "You haven't completed any bucket list items yet"
-                  : "You don't have any active bucket list items"}
+                  : "You don't have any upcoming bucket list items"}
               </p>
               {(activityTypeFilter || selectedDate || selectedMonth || selectedYear || budgetFilter || travelTypeFilter || tagFilter || destinationFilter) && (
                 <Button variant="outline" onClick={resetFilters}>
@@ -600,3 +600,4 @@ const Wishlist = () => {
 };
 
 export default Wishlist;
+
