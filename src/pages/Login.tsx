@@ -13,18 +13,27 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // Track if the user just signed up
+  const [isNewSignup, setIsNewSignup] = useState(false); 
   const { currentUser, setCurrentUser, ensureUserHasProfile } = useUserStore();
 
   // Get the intended destination from location state, or default to "/create"
   const from = location.state?.from || "/create";
 
-  // Redirect if user is already logged in
+  // Handle redirections based on auth state and signup status
   useEffect(() => {
     if (currentUser) {
-      console.log("Login: User is logged in, redirecting to:", from);
-      navigate(from, { replace: true });
+      if (isNewSignup) {
+        // New signup - redirect to profile page
+        console.log("New signup detected, redirecting to profile page");
+        navigate("/profile", { replace: true });
+      } else {
+        // Regular login - redirect to from (default is /create)
+        console.log("Login detected, redirecting to:", from);
+        navigate(from, { replace: true });
+      }
     }
-  }, [currentUser, navigate, from]);
+  }, [currentUser, isNewSignup, navigate, from]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,10 +54,10 @@ const Login = () => {
         // Ensure user has a profile with username
         await ensureUserHasProfile(data.user);
         
+        // Make sure we're NOT in signup mode
+        setIsNewSignup(false);
+        
         toast.success('Logged in successfully');
-        // Immediate navigation in addition to the useEffect
-        console.log("Login successful, redirecting to:", from);
-        navigate(from, { replace: true });
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to log in');
@@ -81,10 +90,9 @@ const Login = () => {
         if (data.session === null) {
           toast.success('Please check your email to confirm your account');
         } else {
+          // Set the flag to indicate this is a new signup
+          setIsNewSignup(true);
           toast.success('Signed up successfully');
-          // CHANGED: Redirect to profile page instead of "from"
-          console.log("Signup successful, redirecting to profile page");
-          navigate("/profile", { replace: true });
         }
       }
     } catch (error: any) {
