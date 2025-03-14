@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, MapPin, Share2, FolderHeart, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
@@ -16,43 +16,68 @@ const Index = () => {
     }
   }, [currentUser]);
 
-  // Adventure image gallery
-  const adventureImages = [
+  // Memory carousel images
+  const memories = [
     {
       src: "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
       alt: "Mountain landscape at sunset",
-      location: "Mountain Range"
+      caption: "Mountain Sunset Adventure"
     },
     {
       src: "https://images.unsplash.com/photo-1527004013197-933c4bb611b3",
       alt: "Camping under starry night sky",
-      location: "Night Camp"
+      caption: "Stargazing Camp Night"
     },
     {
       src: "https://images.unsplash.com/photo-1503220317375-aaad61436b1b",
       alt: "Hiking through misty forest",
-      location: "Wilderness Trail"
+      caption: "Misty Forest Exploration"
     },
     {
       src: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4",
       alt: "Person kayaking in crystal clear water",
-      location: "Clear Lake"
+      caption: "Kayaking in Crystal Waters"
+    },
+    {
+      src: "https://images.unsplash.com/photo-1533240332313-0db49b459ad6",
+      alt: "Hiking on mountain trail",
+      caption: "Mountain Trail Hike"
     }
   ];
   
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const carouselRef = useRef(null);
+  const autoPlayRef = useRef(null);
   
-  const nextImage = () => {
-    setCurrentImageIndex((prevIndex) => 
-      prevIndex === adventureImages.length - 1 ? 0 : prevIndex + 1
+  const nextSlide = () => {
+    setCurrentIndex(prevIndex => 
+      prevIndex === memories.length - 1 ? 0 : prevIndex + 1
     );
   };
   
-  const prevImage = () => {
-    setCurrentImageIndex((prevIndex) => 
-      prevIndex === 0 ? adventureImages.length - 1 : prevIndex - 1
+  const prevSlide = () => {
+    setCurrentIndex(prevIndex => 
+      prevIndex === 0 ? memories.length - 1 : prevIndex - 1
     );
   };
+  
+  const goToSlide = (index) => {
+    setCurrentIndex(index);
+  };
+  
+  // Auto-play functionality
+  useEffect(() => {
+    autoPlayRef.current = nextSlide;
+  });
+  
+  useEffect(() => {
+    const play = () => {
+      autoPlayRef.current();
+    };
+    
+    const interval = setInterval(play, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -92,93 +117,105 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Adventure image showcase */}
-          <div className="mt-16 max-w-5xl mx-auto">
+          {/* Memories Carousel */}
+          <div className="mt-16 max-w-4xl mx-auto">
             <div className="relative">
-              <div className="absolute -top-4 -left-4 w-32 h-32 bg-blue-300 rounded-full blur-xl opacity-20"></div>
-              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-pink-300 rounded-full blur-xl opacity-20"></div>
-              
-              {/* Main featured image */}
-              <div className="p-3 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl">
-                <div className="aspect-[16/9] rounded-xl overflow-hidden relative">
-                  <img
-                    src={adventureImages[currentImageIndex].src}
-                    alt={adventureImages[currentImageIndex].alt}
-                    className="w-full h-full object-cover transition-transform hover:scale-105 duration-700"
-                  />
-                  <div className="absolute bottom-6 left-6 bg-white/80 backdrop-blur-md rounded-lg px-4 py-2 shadow-lg">
-                    <div className="flex items-center text-sm font-medium text-gray-800">
-                      <MapPin className="h-4 w-4 text-blue-600 mr-1" />
-                      {adventureImages[currentImageIndex].location}
+              {/* Carousel container with Polaroid-style */}
+              <div className="relative h-[450px] w-full max-w-3xl mx-auto overflow-hidden" ref={carouselRef}>
+                <div className="absolute top-0 left-0 w-full h-full bg-gray-100/50 backdrop-blur-sm rounded-lg z-0"></div>
+                
+                {/* Main carousel wrapper */}
+                <div className="carousel-wrapper relative h-full w-full flex items-center justify-center py-8 px-4">
+                  {/* Previous memories - shown dimmed */}
+                  {currentIndex > 0 && (
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 -rotate-6 w-48 h-64 z-10 opacity-60 transition-all duration-300">
+                      <div className="w-full h-full p-2 bg-white shadow-md rounded">
+                        <img 
+                          src={memories[(currentIndex - 1) % memories.length].src} 
+                          alt="Previous memory"
+                          className="w-full h-48 object-cover rounded"
+                        />
+                        <div className="p-2 text-center">
+                          <p className="text-xs text-gray-600 truncate">Previous memory</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Current memory - center and larger */}
+                  <div className="memory-card relative z-20 transform transition-all duration-500 rotate-2">
+                    <div className="w-64 h-80 p-3 bg-white shadow-lg rounded">
+                      <img 
+                        src={memories[currentIndex].src} 
+                        alt={memories[currentIndex].alt}
+                        className="w-full h-56 object-cover rounded"
+                      />
+                      <div className="p-2 text-center">
+                        <p className="font-medium text-sm">{memories[currentIndex].caption}</p>
+                        <p className="text-xs text-gray-500 mt-1">Add this to your memories</p>
+                      </div>
+                      
+                      {/* Decorative elements */}
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full"></div>
+                      <div className="absolute top-[30%] left-0 transform -translate-x-1/2 w-6 h-2 bg-yellow-300 rounded"></div>
                     </div>
                   </div>
                   
-                  {/* Navigation arrows */}
-                  <button 
-                    onClick={prevImage}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white/90 rounded-full p-2 shadow-lg transition-all duration-200"
-                    aria-label="Previous image"
-                  >
-                    <ChevronLeft className="h-6 w-6 text-gray-700" />
-                  </button>
-                  <button 
-                    onClick={nextImage}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white/90 rounded-full p-2 shadow-lg transition-all duration-200"
-                    aria-label="Next image"
-                  >
-                    <ChevronRight className="h-6 w-6 text-gray-700" />
-                  </button>
+                  {/* Next memories - shown dimmed */}
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 rotate-6 w-48 h-64 z-10 opacity-60 transition-all duration-300">
+                    <div className="w-full h-full p-2 bg-white shadow-md rounded">
+                      <img 
+                        src={memories[(currentIndex + 1) % memories.length].src} 
+                        alt="Next memory"
+                        className="w-full h-48 object-cover rounded"
+                      />
+                      <div className="p-2 text-center">
+                        <p className="text-xs text-gray-600 truncate">Next memory</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
-                {/* Thumbnail navigation */}
-                <div className="flex justify-center mt-4 gap-2">
-                  {adventureImages.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentImageIndex(index)}
-                      className={`w-16 h-12 rounded-md overflow-hidden border-2 transition-all ${
-                        index === currentImageIndex 
-                          ? "border-blue-500 scale-110" 
-                          : "border-transparent opacity-70 hover:opacity-100"
-                      }`}
-                    >
-                      <img 
-                        src={image.src} 
-                        alt={`Thumbnail ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
+                {/* Memory pile decoration */}
+                <div className="absolute bottom-4 right-4 w-32 h-40 bg-white rounded shadow-sm transform rotate-12 z-0"></div>
+                <div className="absolute bottom-6 right-8 w-32 h-40 bg-white rounded shadow-sm transform -rotate-6 z-0"></div>
+                
+                {/* Navigation arrows */}
+                <button 
+                  onClick={prevSlide}
+                  className="absolute left-8 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white/90 rounded-full p-3 shadow-lg transition-all duration-200 z-30"
+                  aria-label="Previous memory"
+                >
+                  <ChevronLeft className="h-6 w-6 text-gray-700" />
+                </button>
+                <button 
+                  onClick={nextSlide}
+                  className="absolute right-8 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white/90 rounded-full p-3 shadow-lg transition-all duration-200 z-30"
+                  aria-label="Next memory"
+                >
+                  <ChevronRight className="h-6 w-6 text-gray-700" />
+                </button>
               </div>
-            </div>
-            
-            {/* Additional adventure images */}
-            <div className="grid grid-cols-3 gap-4 mt-6">
-              <div className="bg-white/90 p-2 rounded-xl shadow-lg overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1533240332313-0db49b459ad6" 
-                  alt="Hiking on mountain trail"
-                  className="w-full h-32 object-cover rounded-lg hover:scale-105 transition-transform duration-300"
-                />
-                <p className="text-xs text-center mt-1 font-medium">Mountain Trails</p>
+              
+              {/* Indicators */}
+              <div className="flex justify-center mt-6">
+                {memories.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToSlide(index)}
+                    className={`w-3 h-3 mx-1 rounded-full transition-all duration-300 ${
+                      index === currentIndex 
+                        ? "bg-blue-600 w-6" 
+                        : "bg-gray-300 hover:bg-gray-400"
+                    }`}
+                    aria-label={`Go to slide ${index + 1}`}
+                  />
+                ))}
               </div>
-              <div className="bg-white/90 p-2 rounded-xl shadow-lg overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1516939884455-1445c8652f83" 
-                  alt="Beach sunset adventure"
-                  className="w-full h-32 object-cover rounded-lg hover:scale-105 transition-transform duration-300"
-                />
-                <p className="text-xs text-center mt-1 font-medium">Ocean Getaways</p>
-              </div>
-              <div className="bg-white/90 p-2 rounded-xl shadow-lg overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1517411032315-54ef2cb783bb" 
-                  alt="Campsite by the lake"
-                  className="w-full h-32 object-cover rounded-lg hover:scale-105 transition-transform duration-300"
-                />
-                <p className="text-xs text-center mt-1 font-medium">Wilderness Camping</p>
-              </div>
+              
+              {/* Decorative tape */}
+              <div className="absolute -top-3 left-1/4 w-16 h-6 bg-yellow-300/60 rounded-sm transform rotate-6"></div>
+              <div className="absolute -top-2 right-1/3 w-12 h-4 bg-blue-300/60 rounded-sm transform -rotate-3"></div>
             </div>
           </div>
         </div>
