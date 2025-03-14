@@ -11,8 +11,15 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [activeTab, setActiveTab] = useState('login'); // Track active tab
+  
+  // Separate state for login and signup forms
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
+  
   const { currentUser, setCurrentUser, ensureUserHasProfile } = useUserStore();
 
   // Get the intended destination from location state, or default to "/create"
@@ -48,15 +55,14 @@ const Login = () => {
     checkAuth();
   }, [currentUser, navigate, from, setCurrentUser]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // FIXED: Removed emailRedirectTo option as it's not valid for signInWithPassword
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
+        email: loginEmail,
+        password: loginPassword
       });
 
       if (error) throw error;
@@ -74,24 +80,31 @@ const Login = () => {
         console.log("Login successful, redirecting to:", from);
         navigate(from, { replace: true });
       }
-    } catch (error: any) {
+    } catch (error) {
       toast.error(error.message || 'Failed to log in');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+
+    // Validate passwords match
+    if (signupPassword !== signupConfirmPassword) {
+      toast.error('Passwords do not match');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       // Get current URL to use for redirects
       const redirectUrl = `${window.location.origin}/profile`;
       
       const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: signupEmail,
+        password: signupPassword,
         options: {
           emailRedirectTo: redirectUrl,
         }
@@ -119,7 +132,7 @@ const Login = () => {
           toast.success('Please check your email to confirm your account');
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       toast.error(error.message || 'Failed to sign up');
     } finally {
       setIsLoading(false);
@@ -128,48 +141,134 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="p-8 bg-white rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-6">Welcome to BucketNest</h2>
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Loading...' : 'Log In'}
-            </Button>
-            <Button 
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleSignup}
-              disabled={isLoading}
-            >
-              Sign Up
-            </Button>
-          </div>
-        </form>
+      <div className="bg-white rounded-lg shadow-md w-full max-w-md overflow-hidden">
+        {/* Tab Navigation */}
+        <div className="flex border-b">
+          <button
+            className={`flex-1 py-4 font-medium text-sm transition-colors ${
+              activeTab === 'login' 
+                ? 'text-blue-600 border-b-2 border-blue-600' 
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('login')}
+          >
+            Login
+          </button>
+          <button
+            className={`flex-1 py-4 font-medium text-sm transition-colors ${
+              activeTab === 'signup' 
+                ? 'text-blue-600 border-b-2 border-blue-600' 
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('signup')}
+          >
+            Sign Up
+          </button>
+        </div>
+
+        <div className="p-8">
+          <h2 className="text-2xl font-bold text-center mb-6">Welcome to BucketNest</h2>
+          
+          {/* Login Form */}
+          {activeTab === 'login' && (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Label htmlFor="login-email">Email</Label>
+                <Input
+                  id="login-email"
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="login-password">Password</Label>
+                <Input
+                  id="login-password"
+                  type="password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Loading...' : 'Log In'}
+              </Button>
+              <div className="text-center mt-4">
+                <p className="text-sm text-gray-600">
+                  Don't have an account?{" "}
+                  <button
+                    type="button"
+                    className="text-blue-600 hover:underline"
+                    onClick={() => setActiveTab('signup')}
+                  >
+                    Sign up here
+                  </button>
+                </p>
+              </div>
+            </form>
+          )}
+          
+          {/* Signup Form */}
+          {activeTab === 'signup' && (
+            <form onSubmit={handleSignup} className="space-y-4">
+              <div>
+                <Label htmlFor="signup-email">Email</Label>
+                <Input
+                  id="signup-email"
+                  type="email"
+                  value={signupEmail}
+                  onChange={(e) => setSignupEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="signup-password">Password</Label>
+                <Input
+                  id="signup-password"
+                  type="password"
+                  value={signupPassword}
+                  onChange={(e) => setSignupPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="signup-confirm-password">Confirm Password</Label>
+                <Input
+                  id="signup-confirm-password"
+                  type="password"
+                  value={signupConfirmPassword}
+                  onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Loading...' : 'Create Account'}
+              </Button>
+              <div className="text-center mt-4">
+                <p className="text-sm text-gray-600">
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    className="text-blue-600 hover:underline"
+                    onClick={() => setActiveTab('login')}
+                  >
+                    Log in here
+                  </button>
+                </p>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
