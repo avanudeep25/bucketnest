@@ -372,7 +372,7 @@ const Wishlist = () => {
                       <SelectValue placeholder="Destination" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
-                      <SelectItem value="">All Destinations</SelectItem>
+                      <SelectItem value="all">All Destinations</SelectItem>
                       {uniqueDestinations.map((destination) => (
                         <SelectItem key={destination} value={destination}>{destination}</SelectItem>
                       ))}
@@ -414,7 +414,7 @@ const Wishlist = () => {
                       <SelectValue placeholder="Select Month" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
-                      <SelectItem value="all">All Months</SelectItem>
+                      <SelectItem value="month-all">All Months</SelectItem>
                       {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
                         <SelectItem key={month} value={month.toString().padStart(2, '0')}>
                           {new Date(2000, month - 1, 1).toLocaleString('default', { month: 'long' })}
@@ -431,7 +431,7 @@ const Wishlist = () => {
                       <SelectValue placeholder="Select Year" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
-                      <SelectItem value="all">All Years</SelectItem>
+                      <SelectItem value="year-all">All Years</SelectItem>
                       {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() + i).map(year => (
                         <SelectItem key={year} value={year.toString()}>
                           {year}
@@ -448,7 +448,7 @@ const Wishlist = () => {
                       <SelectValue placeholder="Budget Range" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
-                      <SelectItem value="all">All Budgets</SelectItem>
+                      <SelectItem value="budget-all">All Budgets</SelectItem>
                       {budgetRanges.map((range) => (
                         <SelectItem key={range} value={range}>{range}</SelectItem>
                       ))}
@@ -463,7 +463,7 @@ const Wishlist = () => {
                       <SelectValue placeholder="Any Company?" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
-                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="travel-all">All Types</SelectItem>
                       {travelTypes.map(type => (
                         <SelectItem key={type} value={type}>{type}</SelectItem>
                       ))}
@@ -600,4 +600,3 @@ const Wishlist = () => {
 };
 
 export default Wishlist;
-
