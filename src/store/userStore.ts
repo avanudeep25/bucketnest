@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +8,7 @@ export interface ExtendedUser extends User {
   username?: string;
   name?: string;
   bio?: string;
+  avatar_url?: string;
 }
 
 // Array of fun adjectives and nouns to generate usernames
@@ -29,6 +29,7 @@ interface UserState {
   createUser: (name: string, bio?: string) => Promise<void>;
   generateUsername: (name?: string) => string;
   ensureUserHasProfile: (user: ExtendedUser) => Promise<ExtendedUser>;
+  refreshUserProfile: () => Promise<void>;
 }
 
 export const useUserStore = create<UserState>()(
@@ -63,6 +64,45 @@ export const useUserStore = create<UserState>()(
         return `${randomAdjective}${randomNoun}${randomNumber}`;
       },
       
+      // New method to refresh user profile data
+      refreshUserProfile: async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          
+          if (!user) {
+            console.log("No authenticated user found during refresh");
+            return;
+          }
+          
+          // Get user profile from profiles table
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+            
+          if (profileError) {
+            console.error("Error fetching profile during refresh:", profileError);
+            return;
+          }
+          
+          if (profile) {
+            console.log("Refreshed user profile:", profile);
+            const updatedUser: ExtendedUser = {
+              ...user,
+              name: profile.name,
+              username: profile.username,
+              bio: profile.bio,
+              avatar_url: profile.avatar_url
+            };
+            
+            set({ currentUser: updatedUser });
+          }
+        } catch (error) {
+          console.error("Error refreshing user profile:", error);
+        }
+      },
+      
       // Ensure the user has a profile in the database
       ensureUserHasProfile: async (user) => {
         if (!user) throw new Error("No user provided");
@@ -92,6 +132,7 @@ export const useUserStore = create<UserState>()(
               name: existingProfile.name || user.user_metadata?.name,
               username: existingProfile.username,
               bio: existingProfile.bio,
+              avatar_url: existingProfile.avatar_url
             };
             
             console.log("Updated user with profile data:", updatedUser);
@@ -235,7 +276,7 @@ export const useUserStore = create<UserState>()(
           
           // Update the current user with the new data
           if (userData.user) {
-            const updatedUser = {
+            const updatedUser: ExtendedUser = {
               ...userData.user,
               name,
               username,
@@ -245,6 +286,10 @@ export const useUserStore = create<UserState>()(
             console.log("Setting updated user to state:", updatedUser);
             set({ currentUser: updatedUser });
           }
+          
+          // Refresh user profile from the database to ensure all data is up to date
+          await get().refreshUserProfile();
+          
         } catch (error) {
           console.error('Error creating/updating user profile:', error);
           throw error;

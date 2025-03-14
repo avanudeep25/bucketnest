@@ -12,6 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -24,6 +25,7 @@ const Profile = () => {
   const { currentUser, createUser } = useUserStore();
   const navigate = useNavigate();
 
+  // Redirect if not logged in
   useEffect(() => {
     if (!currentUser) {
       navigate("/login");
@@ -33,8 +35,8 @@ const Profile = () => {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: currentUser?.name || "",
-      bio: currentUser?.bio || "",
+      name: "",
+      bio: "",
     },
   });
 
@@ -42,6 +44,8 @@ const Profile = () => {
   useEffect(() => {
     if (currentUser) {
       console.log("Current user in Profile:", currentUser);
+      
+      // Make sure we're setting form values with data that exists
       form.reset({
         name: currentUser.name || "",
         bio: currentUser.bio || "",
@@ -62,11 +66,33 @@ const Profile = () => {
 
   if (!currentUser) return null;
 
+  // Get initials for avatar fallback
+  const getInitials = () => {
+    if (currentUser.name) {
+      return currentUser.name
+        .split(" ")
+        .map(n => n[0])
+        .join("")
+        .toUpperCase()
+        .substring(0, 2);
+    }
+    return currentUser.email?.substring(0, 2).toUpperCase() || "?";
+  };
+
   return (
     <div className="container max-w-2xl py-10">
       <Card>
-        <CardHeader>
-          <CardTitle>Profile Settings</CardTitle>
+        <CardHeader className="flex flex-row items-center gap-4">
+          <Avatar className="h-16 w-16">
+            <AvatarImage src={currentUser.avatar_url || ""} alt={currentUser.name || "User"} />
+            <AvatarFallback>{getInitials()}</AvatarFallback>
+          </Avatar>
+          <div>
+            <CardTitle>Profile Settings</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Update your personal information
+            </p>
+          </div>
         </CardHeader>
         <CardContent>
           <Form {...form}>
