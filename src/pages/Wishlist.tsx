@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { WishlistItem } from "@/types/wishlist";
 import { Button } from "@/components/ui/button";
-import { Plus, FolderHeart, Search, CalendarRange, Tag, Users, DollarSign, Activity, ChevronDown, ChevronUp, Trophy, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, FolderHeart, Search, CalendarRange, Tag, Users, DollarSign, Activity, ChevronDown, ChevronUp, Trophy, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import WishlistListItem from "@/components/wishlist/WishlistListItem";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -43,6 +43,7 @@ const Wishlist = () => {
   const [budgetFilter, setBudgetFilter] = useState<string>("");
   const [travelTypeFilter, setTravelTypeFilter] = useState<string>("");
   const [tagFilter, setTagFilter] = useState<string>("");
+  const [destinationFilter, setDestinationFilter] = useState<string>("");
   
   // Add state for collapsible filters - default to collapsed
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -64,7 +65,7 @@ const Wishlist = () => {
   // Reset pagination when filters or tab changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [activityTypeFilter, selectedDate, selectedMonth, selectedYear, budgetFilter, travelTypeFilter, tagFilter, activeTab]);
+  }, [activityTypeFilter, selectedDate, selectedMonth, selectedYear, budgetFilter, travelTypeFilter, tagFilter, destinationFilter, activeTab]);
   
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
@@ -162,6 +163,11 @@ const Wishlist = () => {
       return false;
     }
     
+    // Filter by destination
+    if (destinationFilter && (!item.destination || !item.destination.toLowerCase().includes(destinationFilter.toLowerCase()))) {
+      return false;
+    }
+    
     // Filter by tags
     if (tagFilter && (!item.tags || !item.tags.some(tag => 
       tag.toLowerCase().includes(tagFilter.toLowerCase())
@@ -180,7 +186,17 @@ const Wishlist = () => {
     setBudgetFilter("");
     setTravelTypeFilter("");
     setTagFilter("");
+    setDestinationFilter("");
   };
+  
+  const getUniqueDestinations = () => {
+    const destinations = items
+      .filter(item => item.destination)
+      .map(item => item.destination as string);
+    return Array.from(new Set(destinations)).sort();
+  };
+
+  const uniqueDestinations = getUniqueDestinations();
   
   const filteredItems = items.filter(filterItemsByTab).filter(filterItems);
   
@@ -350,6 +366,21 @@ const Wishlist = () => {
                 </div>
                 
                 <div>
+                  <Select value={destinationFilter} onValueChange={setDestinationFilter}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <MapPin className="mr-2 h-4 w-4" />
+                      <SelectValue placeholder="Destination" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="">All Destinations</SelectItem>
+                      {uniqueDestinations.map((destination) => (
+                        <SelectItem key={destination} value={destination}>{destination}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -454,7 +485,7 @@ const Wishlist = () => {
               </div>
               
               {/* Reset Filters Button */}
-              {(activityTypeFilter || selectedDate || selectedMonth || selectedYear || budgetFilter || travelTypeFilter || tagFilter) && (
+              {(activityTypeFilter || selectedDate || selectedMonth || selectedYear || budgetFilter || travelTypeFilter || tagFilter || destinationFilter) && (
                 <div className="flex justify-end mt-2">
                   <Button variant="outline" size="sm" onClick={resetFilters}>
                     Reset Filters
@@ -471,7 +502,7 @@ const Wishlist = () => {
               </div>
               <h3 className="text-lg font-semibold mb-1">No items found</h3>
               <p className="text-gray-500 mb-4">
-                {(activityTypeFilter || selectedDate || selectedMonth || selectedYear || budgetFilter || travelTypeFilter || tagFilter)
+                {(activityTypeFilter || selectedDate || selectedMonth || selectedYear || budgetFilter || travelTypeFilter || tagFilter || destinationFilter)
                   ? "Try adjusting your filters"
                   : activeTab === "all"
                   ? "Add your first bucket list item to get started"
@@ -479,7 +510,7 @@ const Wishlist = () => {
                   ? "You haven't completed any bucket list items yet"
                   : "You don't have any active bucket list items"}
               </p>
-              {(activityTypeFilter || selectedDate || selectedMonth || selectedYear || budgetFilter || travelTypeFilter || tagFilter) && (
+              {(activityTypeFilter || selectedDate || selectedMonth || selectedYear || budgetFilter || travelTypeFilter || tagFilter || destinationFilter) && (
                 <Button variant="outline" onClick={resetFilters}>
                   Reset Filters
                 </Button>
@@ -569,3 +600,4 @@ const Wishlist = () => {
 };
 
 export default Wishlist;
+
