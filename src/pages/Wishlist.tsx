@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { WishlistItem } from "@/types/wishlist";
 import { Button } from "@/components/ui/button";
-import { Plus, FolderHeart, Search, CalendarRange, Tag, Users, DollarSign, Activity, ChevronDown, ChevronUp, Trophy } from "lucide-react";
+import { Plus, FolderHeart, Search, CalendarRange, Tag, Users, DollarSign, Activity, ChevronDown, ChevronUp, Trophy, ChevronLeft, ChevronRight } from "lucide-react";
 import WishlistListItem from "@/components/wishlist/WishlistListItem";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -45,8 +44,12 @@ const Wishlist = () => {
   const [travelTypeFilter, setTravelTypeFilter] = useState<string>("");
   const [tagFilter, setTagFilter] = useState<string>("");
   
-  // Add state for collapsible filters
-  const [isFiltersOpen, setIsFiltersOpen] = useState(true);
+  // Add state for collapsible filters - default to collapsed
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   
   useEffect(() => {
     const loadItems = async () => {
@@ -57,6 +60,11 @@ const Wishlist = () => {
     
     loadItems();
   }, [fetchItems]);
+  
+  // Reset pagination when filters or tab changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activityTypeFilter, selectedDate, selectedMonth, selectedYear, budgetFilter, travelTypeFilter, tagFilter, activeTab]);
   
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
@@ -175,6 +183,30 @@ const Wishlist = () => {
   };
   
   const filteredItems = items.filter(filterItemsByTab).filter(filterItems);
+  
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  
+  // Pagination navigation functions
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+  
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+  
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
   
   // Calculate stats for the progress widget
   const totalItems = items.length;
@@ -431,7 +463,7 @@ const Wishlist = () => {
               )}
             </CollapsibleContent>
           </Collapsible>
-
+          
           {filteredItems.length === 0 ? (
             <div className="text-center py-8">
               <div className="bg-gray-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
@@ -454,17 +486,81 @@ const Wishlist = () => {
               )}
             </div>
           ) : (
-            <div className="space-y-3">
-              {filteredItems.map((item) => (
-                <WishlistListItem
-                  key={item.id}
-                  item={item}
-                  onToggleComplete={handleToggleComplete}
-                  isSelected={selectedItems.some(i => i.id === item.id)}
-                  onSelect={() => handleSelectItem(item)}
-                />
-              ))}
-            </div>
+            <>
+              <div className="space-y-3">
+                {paginatedItems.map((item) => (
+                  <WishlistListItem
+                    key={item.id}
+                    item={item}
+                    onToggleComplete={handleToggleComplete}
+                    isSelected={selectedItems.some(i => i.id === item.id)}
+                    onSelect={() => handleSelectItem(item)}
+                  />
+                ))}
+              </div>
+              
+              {/* Pagination controls */}
+              {totalPages > 1 && (
+                <div className="mt-6">
+                  <div className="text-sm text-center text-gray-500 mb-2">
+                    Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredItems.length)} of {filteredItems.length} items
+                  </div>
+                  
+                  <div className="flex justify-center items-center space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Previous
+                    </Button>
+                    
+                    <div className="flex items-center">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(page => {
+                          return totalPages <= 5 || 
+                                 page === 1 || 
+                                 page === totalPages || 
+                                 Math.abs(page - currentPage) <= 1;
+                        })
+                        .map((page, index, array) => {
+                          // Add ellipsis for gaps
+                          const showEllipsisBefore = index > 0 && page - array[index - 1] > 1;
+                          
+                          return (
+                            <div key={page} className="flex items-center">
+                              {showEllipsisBefore && (
+                                <span className="mx-1 text-gray-400">...</span>
+                              )}
+                              
+                              <Button
+                                variant={currentPage === page ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => handlePageChange(page)}
+                                className="w-8 h-8 p-0 mx-0.5"
+                              >
+                                {page}
+                              </Button>
+                            </div>
+                          );
+                        })}
+                    </div>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
