@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import WishlistForm from "@/components/wishlist/WishlistForm";
 import { useUserStore } from "@/store/userStore";
@@ -19,7 +18,7 @@ const CreateWishlistItem = () => {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-500">
+      <div className="min-h-screen flex flex-col bg-[#90D5FF]">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-0 left-[10%] w-72 h-72 rounded-full bg-pink-400/20 mix-blend-overlay blur-3xl"></div>
           <div className="absolute bottom-0 right-[10%] w-96 h-96 rounded-full bg-blue-400/20 mix-blend-overlay blur-3xl"></div>
@@ -39,7 +38,7 @@ const CreateWishlistItem = () => {
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-500 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-[#90D5FF] relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-10 left-[10%] w-72 h-72 rounded-full bg-pink-400/20 mix-blend-overlay blur-3xl animate-float"></div>
@@ -146,4 +145,5 @@ styleTag.textContent = `
 `;
 document.head.appendChild(styleTag);
 
-export default CreateWishlistItem;
+export default CreateWishlistItem
+
