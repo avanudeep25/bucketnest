@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useSharingStore } from "@/store/sharingStore";
@@ -54,7 +53,10 @@ const SharedCollection = () => {
           console.log("Collection data received from edge function:", data);
           
           if (data && Object.keys(data).length > 0) {
-            setCollection(data);
+            // Normalize the data to ensure creatorName is properly set
+            const normalizedData = normalizeCollectionData(data);
+            console.log("Normalized collection data:", normalizedData);
+            setCollection(normalizedData);
           } else {
             throw new Error("Empty data received from public API");
           }
@@ -67,7 +69,9 @@ const SharedCollection = () => {
           
           if (data && Object.keys(data).length > 0) {
             console.log("Items count:", data.items ? data.items.length : 0);
-            setCollection(data);
+            // Also normalize data from the store method
+            const normalizedData = normalizeCollectionData(data);
+            setCollection(normalizedData);
           } else {
             setError("Collection not found or is no longer available");
           }
@@ -83,6 +87,27 @@ const SharedCollection = () => {
       } finally {
         setIsLoading(false);
       }
+    };
+    
+    // Helper function to normalize collection data
+    const normalizeCollectionData = (data: any) => {
+      // Check for creator name across various possible property names
+      const creatorName = 
+        data.creatorName || 
+        data.creator_name || 
+        data.creator || 
+        data.userName || 
+        data.user_name || 
+        data.username ||
+        data.author || 
+        (data.user && data.user.name) || 
+        (data.owner && data.owner.name) || 
+        null;
+      
+      return {
+        ...data,
+        creatorName // Ensure creatorName property exists with consistent naming
+      };
     };
     
     fetchCollection();
