@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useSharingStore } from "@/store/sharingStore";
@@ -40,10 +39,9 @@ const SharedCollection = () => {
         
         // First try direct public API fetch using the edge function
         try {
-          // Fixed: Use the correct syntax for invoking edge functions with params
-          const { data, error } = await supabase.functions.invoke('public-collections', {
-            method: 'GET',
-            params: { slug }
+          // Fixed: Pass slug as URL query parameter instead of using params object
+          const { data, error } = await supabase.functions.invoke(`public-collections?slug=${encodeURIComponent(slug)}`, {
+            method: 'GET'
           });
           
           if (error) {
