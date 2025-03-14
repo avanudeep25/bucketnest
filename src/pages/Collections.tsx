@@ -14,15 +14,12 @@ import {
 import { Loader2, Plus, Share, Edit, Trash2, Copy, Check, Link as LinkIcon } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import ShareDialog from "@/components/sharing/ShareDialog";
 
 const Collections = () => {
   const { collections, fetchCollections, deleteCollection } = useSharingStore();
   const { items, fetchItems } = useWishlistStore();
   const [isLoading, setIsLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [selectedItems, setSelectedItems] = useState([]);
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -72,19 +69,8 @@ const Collections = () => {
     window.open(`/share/${slug}`, "_blank");
   };
   
-  const openShareDialog = () => {
-    setIsShareDialogOpen(true);
-  };
-  
-  const handleSelectItem = (item) => {
-    setSelectedItems(prev => {
-      const isSelected = prev.some(i => i.id === item.id);
-      if (isSelected) {
-        return prev.filter(i => i.id !== item.id);
-      } else {
-        return [...prev, item];
-      }
-    });
+  const createNewCollection = () => {
+    navigate("/collections/new");
   };
   
   return (
@@ -98,7 +84,7 @@ const Collections = () => {
         </div>
         
         <Button 
-          onClick={openShareDialog}
+          onClick={createNewCollection}
           className="bg-blue-500 hover:bg-blue-600"
         >
           <Plus className="mr-2 h-4 w-4" />
@@ -204,7 +190,7 @@ const Collections = () => {
             Create your first collection to share your bucket list items with friends and family.
           </p>
           <Button
-            onClick={openShareDialog}
+            onClick={createNewCollection}
             className="bg-blue-500 hover:bg-blue-600"
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -212,14 +198,6 @@ const Collections = () => {
           </Button>
         </div>
       )}
-      
-      <ShareDialog 
-        items={items}
-        selectedItems={selectedItems}
-        onSelect={handleSelectItem}
-        isOpen={isShareDialogOpen}
-        onOpenChange={setIsShareDialogOpen}
-      />
     </div>
   );
 };
