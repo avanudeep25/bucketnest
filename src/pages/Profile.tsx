@@ -41,6 +41,7 @@ const Profile = () => {
   // Update form values when currentUser changes
   useEffect(() => {
     if (currentUser) {
+      console.log("Current user in Profile:", currentUser);
       form.reset({
         name: currentUser.name || "",
         bio: currentUser.bio || "",
