@@ -322,3 +322,4 @@ styleTag.textContent = `
 document.head.appendChild(styleTag);
 
 export default Index;
+
