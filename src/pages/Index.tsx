@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, MapPin, Share2, FolderHeart, CheckCircle, Compass } from "lucide-react";
+import { Plus, MapPin, Share2, FolderHeart, CheckCircle } from "lucide-react";
 import { useUserStore } from "@/store/userStore";
 
 const Index = () => {
@@ -44,17 +44,11 @@ const Index = () => {
               From dream vacations to weekend getaways, from culinary explorations to life goals — BucketNest keeps all your bucket-list items organized in one beautiful place.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 mt-2">
+            <div className="mt-2">
               <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all">
                 <Link to="/create">
                   <Plus className="mr-2 h-5 w-5" />
                   Start Your Journey
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="border-2 border-blue-200 text-blue-700 hover:bg-blue-50 text-lg px-8 py-6 rounded-full">
-                <Link to="/explore">
-                  <Compass className="mr-2 h-5 w-5" />
-                  Explore Ideas
                 </Link>
               </Button>
             </div>
@@ -129,47 +123,9 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Social proof section */}
+      {/* Final CTA section */}
       <section className="py-20 bg-gradient-to-b from-blue-50 to-white relative">
         <div className="container px-4 md:px-6 mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-12">Join Thousands Creating Memories</h2>
-          
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            <div className="flex -space-x-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="w-12 h-12 rounded-full border-2 border-white overflow-hidden bg-gray-200">
-                  <img 
-                    src={`https://randomuser.me/api/portraits/men/${i + 10}.jpg`} 
-                    alt="User avatar" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-              <div className="w-12 h-12 rounded-full border-2 border-white bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
-                +2K
-              </div>
-            </div>
-          </div>
-          
-          <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-8 mb-12">
-            <p className="text-xl italic text-gray-700 mb-6">
-              "BucketNest changed how I plan my adventures. I've completed 15 bucket list items this year alone, and sharing them with friends has made the experiences even better!"
-            </p>
-            <div className="flex items-center justify-center">
-              <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
-                <img 
-                  src="https://randomuser.me/api/portraits/women/44.jpg" 
-                  alt="Sarah Johnson" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="text-left">
-                <p className="font-bold">Sarah Johnson</p>
-                <p className="text-gray-600 text-sm">Adventure Enthusiast</p>
-              </div>
-            </div>
-          </div>
-          
           <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all">
             <Link to="/create">
               <Plus className="mr-2 h-5 w-5" />
