@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useSharingStore } from "@/store/sharingStore";
-import { useAuth } from "@/auth/AuthContext"; // Added auth context import
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +12,7 @@ import {
   Tag, 
   ExternalLink, 
   DollarSign, 
-  Users,
-  Share2, // Added for share functionality
-  Check // Added for copied confirmation
+  Users
 } from "lucide-react";
 import { format } from "date-fns";
 import { WishlistItem } from "@/types/wishlist";
@@ -25,34 +22,9 @@ import { supabase } from "@/integrations/supabase/client";
 const SharedCollection = () => {
   const { slug } = useParams<{ slug: string }>();
   const { getCollectionBySlug, isLoading: storeLoading } = useSharingStore();
-  const { user } = useAuth(); // Get current user to check login status
   const [isLoading, setIsLoading] = useState(true);
   const [collection, setCollection] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false); // For tracking copy status
-  
-  // Function to copy URL to clipboard
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(window.location.href)
-      .then(() => {
-        setCopied(true);
-        toast({
-          title: "Link copied!",
-          description: "Collection URL has been copied to clipboard",
-          variant: "success"
-        });
-        
-        // Reset copy state after 2 seconds
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch((err) => {
-        toast({
-          title: "Copy failed",
-          description: "Could not copy link to clipboard",
-          variant: "destructive"
-        });
-      });
-  };
   
   useEffect(() => {
     const fetchCollection = async () => {
@@ -161,36 +133,16 @@ const SharedCollection = () => {
             </div>
             
             <div className="flex gap-3">
-              {/* Share button - always visible for all users */}
-              <Button onClick={copyToClipboard} variant="outline" className="flex items-center gap-2">
-                {copied ? (
-                  <>
-                    <Check className="h-4 w-4" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Share2 className="h-4 w-4" />
-                    Share
-                  </>
-                )}
+              <Button asChild variant="outline">
+                <Link to="/">
+                  Explore BucketNest
+                </Link>
               </Button>
-              
-              {/* Only show these buttons for non-logged in users */}
-              {!user && (
-                <>
-                  <Button asChild variant="outline">
-                    <Link to="/">
-                      Explore BucketNest
-                    </Link>
-                  </Button>
-                  <Button asChild>
-                    <Link to="/login">
-                      Sign Up Free
-                    </Link>
-                  </Button>
-                </>
-              )}
+              <Button asChild>
+                <Link to="/login">
+                  Sign Up Free
+                </Link>
+              </Button>
             </div>
           </div>
           
@@ -323,20 +275,17 @@ const SharedCollection = () => {
           )}
         </div>
         
-        {/* Only show this section for non-logged in users */}
-        {!user && (
-          <div className="mt-12 py-8 border-t text-center">
-            <h2 className="text-xl font-semibold mb-2">Create Your Own Bucket Nest</h2>
-            <p className="text-gray-600 mb-6 max-w-lg mx-auto">
-              Plan your adventures, organize your bucket list, and share it with friends and family.
-            </p>
-            <Button asChild size="lg" className="bg-blue-500 hover:bg-blue-600">
-              <Link to="/login">
-                Sign Up Free
-              </Link>
-            </Button>
-          </div>
-        )}
+        <div className="mt-12 py-8 border-t text-center">
+          <h2 className="text-xl font-semibold mb-2">Create Your Own Bucket Nest</h2>
+          <p className="text-gray-600 mb-6 max-w-lg mx-auto">
+            Plan your adventures, organize your bucket list, and share it with friends and family.
+          </p>
+          <Button asChild size="lg" className="bg-blue-500 hover:bg-blue-600">
+            <Link to="/login">
+              Sign Up Free
+            </Link>
+          </Button>
+        </div>
       </main>
     </div>
   );
