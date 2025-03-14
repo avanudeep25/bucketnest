@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useSharingStore } from "@/store/sharingStore";
@@ -17,6 +18,7 @@ import {
 import { format } from "date-fns";
 import { WishlistItem } from "@/types/wishlist";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const SharedCollection = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -36,16 +38,18 @@ const SharedCollection = () => {
       try {
         console.log("Fetching collection with slug:", slug);
         
-        // First try direct public API fetch without authentication
+        // First try direct public API fetch using the edge function
         try {
-          const response = await fetch(`/api/public/collections/${slug}`);
+          const { data, error } = await supabase.functions.invoke('public-collections', {
+            method: 'GET',
+            path: `/${slug}`
+          });
           
-          if (!response.ok) {
-            throw new Error(`Server responded with status: ${response.status}`);
+          if (error) {
+            throw new Error(error.message || "Error fetching from public API");
           }
           
-          const data = await response.json();
-          console.log("Collection data received from public API:", data);
+          console.log("Collection data received from edge function:", data);
           
           if (data && Object.keys(data).length > 0) {
             setCollection(data);
@@ -53,7 +57,7 @@ const SharedCollection = () => {
             throw new Error("Empty data received from public API");
           }
         } catch (publicFetchError) {
-          console.warn("Public API fetch failed, trying store method:", publicFetchError);
+          console.warn("Edge function fetch failed, trying store method:", publicFetchError);
           
           // Fall back to the store method if public fetch fails
           const data = await getCollectionBySlug(slug);
