@@ -26,11 +26,15 @@ const Profile = () => {
   const { currentUser, createUser } = useUserStore();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   // Redirect if not logged in
   useEffect(() => {
     if (!currentUser) {
       navigate("/login");
+    } else {
+      // Check if this is a new user (no name set yet)
+      setIsNewUser(!currentUser.name || currentUser.name.trim() === '');
     }
   }, [currentUser, navigate]);
 
@@ -91,6 +95,15 @@ const Profile = () => {
       });
       
       console.log("Profile updated successfully with:", data);
+      
+      // If this was a new user filling out their profile for the first time,
+      // redirect them to the create page
+      if (isNewUser) {
+        console.log("New user completed profile setup, redirecting to create page");
+        setTimeout(() => {
+          navigate("/create", { replace: true });
+        }, 1000); // Small delay to ensure UI updates and toast appears
+      }
     } catch (error) {
       console.error("Error updating profile:", error);
       toast({
@@ -129,7 +142,9 @@ const Profile = () => {
           <div>
             <CardTitle>Profile Settings</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Update your personal information
+              {isNewUser 
+                ? "Complete your profile to get started" 
+                : "Update your personal information"}
             </p>
           </div>
         </CardHeader>
@@ -176,7 +191,7 @@ const Profile = () => {
               </div>
 
               <Button type="submit" disabled={loading}>
-                {loading ? "Updating..." : "Update Profile"}
+                {loading ? "Updating..." : isNewUser ? "Complete Profile" : "Update Profile"}
               </Button>
             </form>
           </Form>

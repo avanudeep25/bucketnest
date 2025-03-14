@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -105,11 +106,9 @@ const Login = () => {
           
           toast.success('Signed up successfully');
           
-          // DIRECT NAVIGATION - don't rely on state updates and useEffect
-          console.log("Redirecting to profile page directly");
-          setTimeout(() => {
-            navigate("/profile", { replace: true });
-          }, 500); // Small delay to ensure UI updates
+          // Always redirect new users to profile page first
+          console.log("Redirecting new user to profile page");
+          navigate("/profile", { replace: true });
         } else {
           toast.success('Please check your email to confirm your account');
         }
