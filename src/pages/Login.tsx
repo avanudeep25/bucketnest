@@ -54,9 +54,15 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // Get current URL to use for redirects
+      const redirectTo = `${window.location.origin}/create`;
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          redirectTo,
+        }
       });
 
       if (error) throw error;
@@ -86,9 +92,15 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // Get current URL to use for redirects
+      const redirectTo = `${window.location.origin}/profile`;
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: redirectTo,
+        }
       });
 
       if (error) throw error;
