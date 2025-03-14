@@ -128,7 +128,7 @@ const SharedCollection = () => {
               </Link>
               <h1 className="text-2xl font-bold mt-2">{collection.title}</h1>
               <p className="text-gray-500 mt-1">
-                {collection.creatorName}'s Bucket Nest
+                {collection.creatorName ? `${collection.creatorName}'s Bucket Nest` : "Bucket Nest"}
               </p>
             </div>
             
