@@ -18,7 +18,6 @@ const Login = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
-  const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   
   const { currentUser, setCurrentUser, ensureUserHasProfile } = useUserStore();
 
@@ -91,13 +90,6 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Validate passwords match
-    if (signupPassword !== signupConfirmPassword) {
-      toast.error('Passwords do not match');
-      setIsLoading(false);
-      return;
-    }
-
     try {
       // Get current URL to use for redirects
       const redirectUrl = `${window.location.origin}/profile`;
@@ -151,6 +143,7 @@ const Login = () => {
                 : 'text-gray-500 hover:text-gray-700'
             }`}
             onClick={() => setActiveTab('login')}
+            type="button"
           >
             Login
           </button>
@@ -161,6 +154,7 @@ const Login = () => {
                 : 'text-gray-500 hover:text-gray-700'
             }`}
             onClick={() => setActiveTab('signup')}
+            type="button"
           >
             Sign Up
           </button>
@@ -234,16 +228,6 @@ const Login = () => {
                   type="password"
                   value={signupPassword}
                   onChange={(e) => setSignupPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="signup-confirm-password">Confirm Password</Label>
-                <Input
-                  id="signup-confirm-password"
-                  type="password"
-                  value={signupConfirmPassword}
-                  onChange={(e) => setSignupConfirmPassword(e.target.value)}
                   required
                 />
               </div>
