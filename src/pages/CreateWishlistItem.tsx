@@ -4,7 +4,6 @@ import { useUserStore } from "@/store/userStore";
 import { Loader2, Sparkles, Edit3 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useWishlistStore } from "@/store/wishlistStore";
-import { motion } from "framer-motion"; // Note: You might need to install framer-motion
 
 const CreateWishlistItem = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -54,12 +53,7 @@ const CreateWishlistItem = () => {
       
       <div className="container px-4 py-8 md:px-6 max-w-4xl mx-auto relative z-10">
         {currentUser && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-8"
-          >
+          <div className="mb-8 opacity-0 translate-y-[-20px] animate-fade-in-down">
             <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20">
               <div className="flex items-start md:items-center gap-4 flex-col md:flex-row">
                 <div className="flex-1">
@@ -93,20 +87,14 @@ const CreateWishlistItem = () => {
                 )}
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
         
         {/* Form container with glass effect */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-        >
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl border border-white/20">
-            {/* Custom styling will need to be added to the WishlistForm component */}
-            <WishlistForm editItem={wishlistItem} />
-          </div>
-        </motion.div>
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl border border-white/20 opacity-0 translate-y-[20px] animate-fade-in-up">
+          {/* Custom styling will need to be added to the WishlistForm component */}
+          <WishlistForm editItem={wishlistItem} />
+        </div>
         
         {/* Decorative element */}
         <div className="absolute bottom-10 right-10 text-white/10 text-8xl font-black select-none">
@@ -117,7 +105,7 @@ const CreateWishlistItem = () => {
   );
 };
 
-// CSS for the animation
+// Add CSS animations directly in the component
 const styleTag = document.createElement('style');
 styleTag.textContent = `
   @keyframes float {
@@ -128,6 +116,36 @@ styleTag.textContent = `
   
   .animate-float {
     animation: float 15s ease-in-out infinite;
+  }
+  
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in-down {
+    animation: fadeInDown 0.5s ease-out forwards;
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out 0.1s forwards;
   }
 `;
 document.head.appendChild(styleTag);
