@@ -35,10 +35,25 @@ const SharedCollection = () => {
       
       try {
         console.log("Fetching collection with slug:", slug);
-        const data = await getCollectionBySlug(slug);
+        
+        // Direct API fetch for public access (bypassing authentication requirements)
+        // This is the key fix - using a direct fetch to a public endpoint instead of relying on the store
+        let data;
+        try {
+          const response = await fetch(`/api/public/collections/${slug}`);
+          if (!response.ok) {
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+          }
+          data = await response.json();
+        } catch (fetchErr) {
+          console.warn("Direct API fetch failed, falling back to store:", fetchErr);
+          // Fallback to store method if direct fetch fails
+          data = await getCollectionBySlug(slug);
+        }
+        
         console.log("Collection data received:", data);
         
-        if (data) {
+        if (data && Object.keys(data).length > 0) {
           console.log("Items count:", data.items ? data.items.length : 0);
           console.log("Collection data:", data);
           setCollection(data);
@@ -47,7 +62,7 @@ const SharedCollection = () => {
         }
       } catch (err) {
         console.error("Error fetching collection:", err);
-        setError("Failed to load the collection");
+        setError("Failed to load the collection. This might be because the collection is private or requires login.");
         toast({
           title: "Error",
           description: "Failed to load the collection",
@@ -92,7 +107,7 @@ const SharedCollection = () => {
   }
   
   const filteredItems = collection.items || [];
-
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b">
