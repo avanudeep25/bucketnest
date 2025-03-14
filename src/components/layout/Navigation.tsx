@@ -50,6 +50,23 @@ const Navigation = () => {
     if (currentUser) {
       navigate("/create");
     } else {
+      toast.info("Please log in to add experiences");
+      navigate("/login");
+    }
+  };
+  
+  const handleNavigateToWishlist = (e) => {
+    if (!currentUser) {
+      e.preventDefault();
+      toast.info("Please log in to view your bucket list");
+      navigate("/login");
+    }
+  };
+  
+  const handleNavigateToCollections = (e) => {
+    if (!currentUser) {
+      e.preventDefault();
+      toast.info("Please log in to view your collections");
       navigate("/login");
     }
   };
@@ -66,11 +83,19 @@ const Navigation = () => {
           <Link to="/" className="text-sm font-medium transition-colors hover:text-blue-500">
             Home
           </Link>
-          <Link to="/wishlist" className="text-sm font-medium transition-colors hover:text-blue-500">
+          <Link 
+            to="/wishlist" 
+            className="text-sm font-medium transition-colors hover:text-blue-500"
+            onClick={handleNavigateToWishlist}
+          >
             My BucketNest
           </Link>
           {currentUser && (
-            <Link to="/collections" className="text-sm font-medium transition-colors hover:text-blue-500">
+            <Link 
+              to="/collections" 
+              className="text-sm font-medium transition-colors hover:text-blue-500"
+              onClick={handleNavigateToCollections}
+            >
               Collections
             </Link>
           )}
@@ -116,12 +141,20 @@ const Navigation = () => {
             <Home className="h-5 w-5 mb-1" />
             Home
           </Link>
-          <Link to="/wishlist" className="flex flex-col items-center justify-center text-xs font-medium">
+          <Link 
+            to="/wishlist" 
+            className="flex flex-col items-center justify-center text-xs font-medium"
+            onClick={handleNavigateToWishlist}
+          >
             <List className="h-5 w-5 mb-1" />
             BucketNest
           </Link>
           {currentUser && (
-            <Link to="/collections" className="flex flex-col items-center justify-center text-xs font-medium">
+            <Link 
+              to="/collections" 
+              className="flex flex-col items-center justify-center text-xs font-medium"
+              onClick={handleNavigateToCollections}
+            >
               <FolderHeart className="h-5 w-5 mb-1" />
               Collections
             </Link>

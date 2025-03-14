@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, MapPin, Share2, FolderHeart, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { useUserStore } from "@/store/userStore";
+import { toast } from "sonner";
 
 const Index = () => {
   const { currentUser } = useUserStore();
   const [userName, setUserName] = useState("");
+  const navigate = useNavigate();
   
   useEffect(() => {
     if (currentUser?.name) {
@@ -65,7 +67,15 @@ const Index = () => {
     setCurrentIndex(index);
   };
   
-  // Auto-play functionality
+  const handleStartJourney = () => {
+    if (currentUser) {
+      navigate("/create");
+    } else {
+      toast.info("Please log in to start your journey");
+      navigate("/login");
+    }
+  };
+
   useEffect(() => {
     autoPlayRef.current = nextSlide;
   });
@@ -96,18 +106,15 @@ const Index = () => {
             </div>
             
             {userName ? (
-              // User-specific greeting with reduced spacing
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 mb-3">
                 <span>Hello <span className="text-blue-600">{userName}</span>,</span>
               </h1>
             ) : (
-              // Default heading with normal spacing
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 mb-6">
                 <span>Discover, Plan, and Share<br />Your Life Adventures</span>
               </h1>
             )}
             
-            {/* Secondary heading when username exists */}
             {userName && (
               <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">
                 Your Next Adventure Awaits
@@ -119,25 +126,23 @@ const Index = () => {
             </p>
             
             <div className={userName ? "mb-6" : "mt-2"}>
-              <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all">
-                <Link to="/create">
-                  <Plus className="mr-2 h-5 w-5" />
-                  Start Your Journey
-                </Link>
+              <Button 
+                size="lg" 
+                className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all"
+                onClick={handleStartJourney}
+              >
+                <Plus className="mr-2 h-5 w-5" />
+                Start Your Journey
               </Button>
             </div>
           </div>
           
-          {/* Memories Carousel - positioned higher when username is present */}
           <div className={`${userName ? "mt-8" : "mt-16"} max-w-4xl mx-auto`}>
             <div className="relative">
-              {/* Carousel container with Polaroid-style */}
               <div className="relative h-[450px] w-full max-w-3xl mx-auto overflow-hidden" ref={carouselRef}>
                 <div className="absolute top-0 left-0 w-full h-full bg-gray-100/50 backdrop-blur-sm rounded-lg z-0"></div>
                 
-                {/* Main carousel wrapper */}
                 <div className="carousel-wrapper relative h-full w-full flex items-center justify-center py-8 px-4">
-                  {/* Previous memories - shown dimmed */}
                   {currentIndex > 0 && (
                     <div className="absolute left-4 top-1/2 transform -translate-y-1/2 -rotate-6 w-48 h-64 z-10 opacity-60 transition-all duration-300">
                       <div className="w-full h-full p-2 bg-white shadow-md rounded">
@@ -147,13 +152,11 @@ const Index = () => {
                           className="w-full h-48 object-cover rounded"
                         />
                         <div className="p-2 text-center">
-                          {/* Text removed */}
                         </div>
                       </div>
                     </div>
                   )}
                   
-                  {/* Current memory - center and larger */}
                   <div className="memory-card relative z-20 transform transition-all duration-500 rotate-2">
                     <div className="w-64 h-80 p-3 bg-white shadow-lg rounded">
                       <img 
@@ -166,32 +169,29 @@ const Index = () => {
                         <p className="text-xs text-gray-500 mt-1">Add this to your Bucket List</p>
                       </div>
                       
-                      {/* Decorative elements */}
                       <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full"></div>
                       <div className="absolute top-[30%] left-0 transform -translate-x-1/2 w-6 h-2 bg-yellow-300 rounded"></div>
                     </div>
                   </div>
                   
-                  {/* Next memories - shown dimmed */}
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 rotate-6 w-48 h-64 z-10 opacity-60 transition-all duration-300">
-                    <div className="w-full h-full p-2 bg-white shadow-md rounded">
-                      <img 
-                        src={memories[(currentIndex + 1) % memories.length].src} 
-                        alt="Next memory"
-                        className="w-full h-48 object-cover rounded"
-                      />
-                      <div className="p-2 text-center">
-                        {/* Text removed */}
+                  {currentIndex < memories.length - 1 && (
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 rotate-6 w-48 h-64 z-10 opacity-60 transition-all duration-300">
+                      <div className="w-full h-full p-2 bg-white shadow-md rounded">
+                        <img 
+                          src={memories[(currentIndex + 1) % memories.length].src} 
+                          alt="Next memory"
+                          className="w-full h-48 object-cover rounded"
+                        />
+                        <div className="p-2 text-center">
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 
-                {/* Memory pile decoration */}
                 <div className="absolute bottom-4 right-4 w-32 h-40 bg-white rounded shadow-sm transform rotate-12 z-0"></div>
                 <div className="absolute bottom-6 right-8 w-32 h-40 bg-white rounded shadow-sm transform -rotate-6 z-0"></div>
                 
-                {/* Navigation arrows */}
                 <button 
                   onClick={prevSlide}
                   className="absolute left-8 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white/90 rounded-full p-3 shadow-lg transition-all duration-200 z-30"
@@ -208,7 +208,6 @@ const Index = () => {
                 </button>
               </div>
               
-              {/* Indicators */}
               <div className="flex justify-center mt-6">
                 {memories.map((_, index) => (
                   <button
@@ -224,7 +223,6 @@ const Index = () => {
                 ))}
               </div>
               
-              {/* Decorative tape */}
               <div className="absolute -top-3 left-1/4 w-16 h-6 bg-yellow-300/60 rounded-sm transform rotate-6"></div>
               <div className="absolute -top-2 right-1/3 w-12 h-4 bg-blue-300/60 rounded-sm transform -rotate-3"></div>
             </div>
@@ -232,7 +230,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Features section - center aligned with three columns */}
       <section className="py-20 md:py-28 bg-white relative">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="text-center mb-16">
@@ -276,14 +273,15 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Final CTA section */}
       <section className="py-20 bg-gradient-to-b from-blue-50 to-white relative">
         <div className="container px-4 md:px-6 mx-auto text-center">
-          <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all">
-            <Link to="/create">
-              <Plus className="mr-2 h-5 w-5" />
-              Create Your Bucket List
-            </Link>
+          <Button 
+            size="lg" 
+            className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all"
+            onClick={handleStartJourney}
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            Create Your Bucket List
           </Button>
           
           <p className="mt-8 text-xl font-medium italic text-blue-600">
