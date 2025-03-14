@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -22,12 +21,20 @@ interface ShareDialogProps {
   items: WishlistItem[];
   selectedItems: WishlistItem[];
   onSelect: (item: WishlistItem) => void;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-const ShareDialog = ({ items, selectedItems, onSelect }: ShareDialogProps) => {
+const ShareDialog = ({ 
+  items, 
+  selectedItems, 
+  onSelect, 
+  isOpen, 
+  onOpenChange 
+}: ShareDialogProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [step, setStep] = useState<"select" | "details" | "preview">("select");
   const [collectionUrl, setCollectionUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -35,8 +42,18 @@ const ShareDialog = ({ items, selectedItems, onSelect }: ShareDialogProps) => {
   const { createCollection } = useSharingStore();
   const navigate = useNavigate();
   
+  // Use either the controlled or uncontrolled open state
+  const dialogOpen = isOpen !== undefined ? isOpen : internalIsOpen;
+  const setDialogOpen = (open: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(open);
+    } else {
+      setInternalIsOpen(open);
+    }
+  };
+  
   const handleClose = () => {
-    setIsOpen(false);
+    setDialogOpen(false);
     setStep("select");
     setTitle("");
     setDescription("");
@@ -114,17 +131,18 @@ const ShareDialog = ({ items, selectedItems, onSelect }: ShareDialogProps) => {
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {!isOpen && (
         <Button 
           variant="outline" 
           className="flex items-center gap-2"
           disabled={items.length === 0}
+          onClick={() => setDialogOpen(true)}
         >
           <Share className="h-4 w-4" />
           Share
         </Button>
-      </DialogTrigger>
+      )}
       
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

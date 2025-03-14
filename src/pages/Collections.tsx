@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSharingStore } from "@/store/sharingStore";
@@ -97,12 +96,6 @@ const Collections = () => {
             Create and manage shareable collections of your bucket list items
           </p>
         </div>
-        
-        <ShareDialog 
-          items={items}
-          selectedItems={selectedItems}
-          onSelect={handleSelectItem}
-        />
         
         <Button 
           onClick={openShareDialog}
@@ -219,6 +212,14 @@ const Collections = () => {
           </Button>
         </div>
       )}
+      
+      <ShareDialog 
+        items={items}
+        selectedItems={selectedItems}
+        onSelect={handleSelectItem}
+        isOpen={isShareDialogOpen}
+        onOpenChange={setIsShareDialogOpen}
+      />
     </div>
   );
 };
