@@ -11,13 +11,27 @@ const Index = () => {
   const [isAuthReady, setIsAuthReady] = useState(false);
   const navigate = useNavigate();
   
+  // Initial effect to check localStorage for saved username
   useEffect(() => {
-    // Mark auth as ready once we've checked for currentUser
-    setIsAuthReady(true);
+    // Check if we have a saved username in localStorage
+    const savedUserName = localStorage.getItem('bucketNestUserName');
+    if (savedUserName) {
+      setUserName(savedUserName);
+    }
     
+    // Mark auth as ready
+    setIsAuthReady(true);
+  }, []);
+  
+  // Effect to handle currentUser changes
+  useEffect(() => {
     if (currentUser?.name) {
       setUserName(currentUser.name);
-    } else {
+      // Save to localStorage for persistence
+      localStorage.setItem('bucketNestUserName', currentUser.name);
+    } else if (currentUser === null) {
+      // Only clear when explicitly logged out (not on initial load)
+      localStorage.removeItem('bucketNestUserName');
       setUserName("");
     }
   }, [currentUser]);
@@ -322,4 +336,5 @@ styleTag.textContent = `
 document.head.appendChild(styleTag);
 
 export default Index;
+
 
