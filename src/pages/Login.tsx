@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -83,9 +82,9 @@ const Login = () => {
           toast.success('Please check your email to confirm your account');
         } else {
           toast.success('Signed up successfully');
-          // Immediate navigation in addition to the useEffect
-          console.log("Signup successful, redirecting to:", from);
-          navigate(from, { replace: true });
+          // CHANGED: Redirect to profile page instead of "from"
+          console.log("Signup successful, redirecting to profile page");
+          navigate("/profile", { replace: true });
         }
       }
     } catch (error: any) {
