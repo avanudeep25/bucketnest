@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSharingStore } from "@/store/sharingStore";
+import { useWishlistStore } from "@/store/wishlistStore";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,22 +15,27 @@ import {
 import { Loader2, Plus, Share, Edit, Trash2, Copy, Check, Link as LinkIcon } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import ShareDialog from "@/components/sharing/ShareDialog";
 
 const Collections = () => {
   const { collections, fetchCollections, deleteCollection } = useSharingStore();
+  const { items, fetchItems } = useWishlistStore();
   const [isLoading, setIsLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const navigate = useNavigate();
   
   useEffect(() => {
     const loadCollections = async () => {
       setIsLoading(true);
       await fetchCollections();
+      await fetchItems();
       setIsLoading(false);
     };
     
     loadCollections();
-  }, [fetchCollections]);
+  }, [fetchCollections, fetchItems]);
   
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -67,6 +73,21 @@ const Collections = () => {
     window.open(`/share/${slug}`, "_blank");
   };
   
+  const openShareDialog = () => {
+    setIsShareDialogOpen(true);
+  };
+  
+  const handleSelectItem = (item) => {
+    setSelectedItems(prev => {
+      const isSelected = prev.some(i => i.id === item.id);
+      if (isSelected) {
+        return prev.filter(i => i.id !== item.id);
+      } else {
+        return [...prev, item];
+      }
+    });
+  };
+  
   return (
     <div className="container px-4 py-8 md:px-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -77,8 +98,14 @@ const Collections = () => {
           </p>
         </div>
         
+        <ShareDialog 
+          items={items}
+          selectedItems={selectedItems}
+          onSelect={handleSelectItem}
+        />
+        
         <Button 
-          onClick={() => navigate("/wishlist")}
+          onClick={openShareDialog}
           className="bg-blue-500 hover:bg-blue-600"
         >
           <Plus className="mr-2 h-4 w-4" />
@@ -184,7 +211,7 @@ const Collections = () => {
             Create your first collection to share your bucket list items with friends and family.
           </p>
           <Button
-            onClick={() => navigate("/wishlist")}
+            onClick={openShareDialog}
             className="bg-blue-500 hover:bg-blue-600"
           >
             <Plus className="mr-2 h-4 w-4" />

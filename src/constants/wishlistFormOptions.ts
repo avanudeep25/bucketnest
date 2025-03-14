@@ -35,6 +35,7 @@ export const timeframeTypes: TimeframeType[] = [
 ];
 
 export const budgetRanges: BudgetRange[] = [
+  'No Expense',
   'Below INR 5000',
   'INR 5000 - INR 10,000',
   'INR 10,000 - INR 50,000',

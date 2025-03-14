@@ -16,7 +16,7 @@ export type ActivityType =
 
 export type TravelType = 'Solo' | 'Couple' | 'Friends' | 'Family' | 'Work' | 'Other';
 export type TimeframeType = 'Specific Date' | 'Week' | 'Month' | 'Year' | 'Someday';
-export type BudgetRange = 'Below INR 5000' | 'INR 5000 - INR 10,000' | 'INR 10,000 - INR 50,000' | 'Above INR 50,000';
+export type BudgetRange = 'No Expense' | 'Below INR 5000' | 'INR 5000 - INR 10,000' | 'INR 10,000 - INR 50,000' | 'Above INR 50,000';
 
 export interface WishlistItem {
   id?: string;

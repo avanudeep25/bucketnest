@@ -1,9 +1,20 @@
 
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, MapPin, Share2, FolderHeart, Calendar, CheckCircle, Tag } from "lucide-react";
+import { useUserStore } from "@/store/userStore";
 
 const Index = () => {
+  const { currentUser } = useUserStore();
+  const [userName, setUserName] = useState("");
+  
+  useEffect(() => {
+    if (currentUser?.name) {
+      setUserName(currentUser.name);
+    }
+  }, [currentUser]);
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Hero section */}
@@ -24,7 +35,9 @@ const Index = () => {
                   Your Personal Bucket List Planner
                 </div>
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-gray-900">
-                  <span className="font-normal italic">Your Next Adventure Awaits!</span>
+                  <span className="font-normal italic">
+                    {userName ? `${userName}, Your Next Adventure Awaits!` : 'Your Next Adventure Awaits!'}
+                  </span>
                 </h1>
                 <p className="mt-4 text-gray-700 md:text-xl">
                   From your next vacation to your next friends' outing, from tasting a new whisky to fixing a place to meet your girlfriend—BucketNest keeps all your bucket-list items small to big all in one place.
