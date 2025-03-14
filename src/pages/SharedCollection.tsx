@@ -4,6 +4,12 @@ import { useSharingStore } from "@/store/sharingStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { 
   Loader2, 
   ArrowLeft, 
@@ -176,24 +182,29 @@ const SharedCollection = () => {
             </div>
             
             <div className="flex gap-3">
-              <Button 
-                onClick={handleCopyLink} 
-                variant="outline" 
-                className={isCopied ? "bg-green-50 text-green-600 border-green-200" : ""}
-              >
-                <Share className="h-4 w-4 mr-2" />
-                {isCopied ? "Copied!" : "Share"}
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      onClick={handleCopyLink} 
+                      variant="outline" 
+                      className={isCopied ? "bg-green-50 text-green-600 border-green-200" : "bg-blue-500 text-white hover:bg-blue-600"}
+                    >
+                      <Share className="h-4 w-4 mr-2" />
+                      {isCopied ? "Copied!" : "Share"}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Share with your Friends and Family!</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <Button asChild variant="outline">
                 <Link to="/">
                   Explore BucketNest
                 </Link>
               </Button>
-              <Button asChild>
-                <Link to="/login">
-                  Sign Up Free
-                </Link>
-              </Button>
+              {/* Sign Up Free button removed from here */}
             </div>
           </div>
           
