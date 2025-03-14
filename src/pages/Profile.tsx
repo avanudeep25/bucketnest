@@ -97,11 +97,11 @@ const Profile = () => {
       console.log("Profile updated successfully with:", data);
       
       // If this was a new user filling out their profile for the first time,
-      // redirect them to the create page
+      // redirect them to the home page
       if (isNewUser) {
-        console.log("New user completed profile setup, redirecting to create page");
+        console.log("New user completed profile setup, redirecting to home page");
         setTimeout(() => {
-          navigate("/create", { replace: true });
+          navigate("/", { replace: true });
         }, 1000); // Small delay to ensure UI updates and toast appears
       }
     } catch (error) {

@@ -1,7 +1,7 @@
 
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PenLine, LogOut, User, Home, List, Plus, Settings, FolderHeart } from "lucide-react";
+import { PenLine, LogOut, User, Home, List, Settings, FolderHeart } from "lucide-react";
 import { useUserStore } from "@/store/userStore";
 import { toast } from "sonner";
 import { useEffect } from "react";
@@ -71,6 +71,16 @@ const Navigation = () => {
     }
   };
 
+  const handleNavigateToSettings = (e) => {
+    if (!currentUser) {
+      e.preventDefault();
+      toast.info("Please log in to access settings");
+      navigate("/login");
+    } else {
+      navigate("/profile");
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm border-b">
       <div className="container flex h-16 items-center justify-between">
@@ -136,7 +146,7 @@ const Navigation = () => {
       
       {/* Mobile navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background z-50">
-        <div className="grid grid-cols-4 py-2">
+        <div className="grid grid-cols-3 py-2">
           <Link to="/" className="flex flex-col items-center justify-center text-xs font-medium">
             <Home className="h-5 w-5 mb-1" />
             Home
@@ -149,22 +159,12 @@ const Navigation = () => {
             <List className="h-5 w-5 mb-1" />
             BucketNest
           </Link>
-          {currentUser && (
-            <Link 
-              to="/collections" 
-              className="flex flex-col items-center justify-center text-xs font-medium"
-              onClick={handleNavigateToCollections}
-            >
-              <FolderHeart className="h-5 w-5 mb-1" />
-              Collections
-            </Link>
-          )}
           <button 
-            onClick={handleAddExperience} 
+            onClick={handleNavigateToSettings} 
             className="flex flex-col items-center justify-center text-xs font-medium"
           >
-            <Plus className="h-5 w-5 mb-1 text-blue-500" />
-            Add
+            <Settings className="h-5 w-5 mb-1 text-blue-500" />
+            Settings
           </button>
         </div>
       </div>
