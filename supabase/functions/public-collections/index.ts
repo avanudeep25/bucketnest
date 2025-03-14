@@ -10,8 +10,8 @@ Deno.serve(async (req) => {
 
   try {
     const url = new URL(req.url)
-    const pathParts = url.pathname.split('/')
-    const slug = pathParts[pathParts.length - 1]
+    // Use query parameter instead of path parameter
+    const slug = url.searchParams.get('slug')
 
     if (!slug) {
       return new Response(

@@ -40,9 +40,10 @@ const SharedCollection = () => {
         
         // First try direct public API fetch using the edge function
         try {
+          // Fixed: Use the correct syntax for invoking edge functions
           const { data, error } = await supabase.functions.invoke('public-collections', {
             method: 'GET',
-            path: `/${slug}`
+            query: { slug }
           });
           
           if (error) {
