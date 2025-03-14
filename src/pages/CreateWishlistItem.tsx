@@ -18,19 +18,19 @@ const CreateWishlistItem = () => {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#90D5FF]">
+      <div className="min-h-screen flex flex-col bg-[#f3e9ff]">
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 left-[10%] w-72 h-72 rounded-full bg-pink-400/20 mix-blend-overlay blur-3xl"></div>
-          <div className="absolute bottom-0 right-[10%] w-96 h-96 rounded-full bg-blue-400/20 mix-blend-overlay blur-3xl"></div>
+          <div className="absolute top-0 left-[10%] w-72 h-72 rounded-full bg-purple-400/10 mix-blend-multiply blur-3xl"></div>
+          <div className="absolute bottom-0 right-[10%] w-96 h-96 rounded-full bg-blue-400/10 mix-blend-multiply blur-3xl"></div>
         </div>
         
         <div className="flex justify-center items-center flex-1 relative z-10">
-          <div className="flex flex-col items-center gap-4 p-8 rounded-2xl bg-white/10 backdrop-blur-lg shadow-xl border border-white/20">
+          <div className="flex flex-col items-center gap-4 p-8 rounded-2xl bg-white/30 backdrop-blur-lg shadow-xl border border-purple-200">
             <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 blur-md opacity-70 animate-pulse"></div>
-              <Loader2 className="h-12 w-12 animate-spin text-white relative" />
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 blur-md opacity-70 animate-pulse"></div>
+              <Loader2 className="h-12 w-12 animate-spin text-purple-800 relative" />
             </div>
-            <p className="text-white text-lg font-medium">Creating Magic...</p>
+            <p className="text-purple-800 text-lg font-medium">Creating Magic...</p>
           </div>
         </div>
       </div>
@@ -38,37 +38,37 @@ const CreateWishlistItem = () => {
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-[#90D5FF] relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-[#f3e9ff] relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-10 left-[10%] w-72 h-72 rounded-full bg-pink-400/20 mix-blend-overlay blur-3xl animate-float"></div>
-        <div className="absolute -bottom-20 right-[5%] w-96 h-96 rounded-full bg-cyan-400/20 mix-blend-overlay blur-3xl animate-float" style={{ animationDelay: "1s" }}></div>
-        <div className="absolute top-[30%] right-[20%] w-64 h-64 rounded-full bg-yellow-400/10 mix-blend-overlay blur-3xl animate-float" style={{ animationDelay: "2s" }}></div>
+        <div className="absolute top-10 left-[10%] w-72 h-72 rounded-full bg-purple-400/10 mix-blend-multiply blur-3xl animate-float"></div>
+        <div className="absolute -bottom-20 right-[5%] w-96 h-96 rounded-full bg-blue-400/10 mix-blend-multiply blur-3xl animate-float" style={{ animationDelay: "1s" }}></div>
+        <div className="absolute top-[30%] right-[20%] w-64 h-64 rounded-full bg-pink-400/10 mix-blend-multiply blur-3xl animate-float" style={{ animationDelay: "2s" }}></div>
         
         {/* Decorative patterns */}
-        <div className="absolute top-20 right-20 w-20 h-20 border-4 border-white/10 rounded-full"></div>
-        <div className="absolute bottom-20 left-20 w-32 h-32 border-4 border-white/10 rounded-lg transform rotate-12"></div>
-        <div className="absolute top-1/3 left-1/4 w-16 h-16 border-4 border-white/10 rounded-lg transform -rotate-12"></div>
+        <div className="absolute top-20 right-20 w-20 h-20 border-4 border-purple-200 rounded-full"></div>
+        <div className="absolute bottom-20 left-20 w-32 h-32 border-4 border-purple-200 rounded-lg transform rotate-12"></div>
+        <div className="absolute top-1/3 left-1/4 w-16 h-16 border-4 border-purple-200 rounded-lg transform -rotate-12"></div>
       </div>
       
       <div className="container px-4 py-8 md:px-6 max-w-4xl mx-auto relative z-10">
         {currentUser && (
           <div className="mb-8 opacity-0 translate-y-[-20px] animate-fade-in-down">
-            <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20">
+            <div className="bg-white/40 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-purple-200">
               <div className="flex items-start md:items-center gap-4 flex-col md:flex-row">
                 <div className="flex-1">
-                  <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-cyan-300 to-pink-300 text-transparent bg-clip-text">
+                  <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-700 to-blue-700 text-transparent bg-clip-text">
                     {id ? "Transform Your Dream" : "Imagine Your Next Adventure"}
                   </h1>
-                  <p className="text-blue-100 mt-2 text-lg">
+                  <p className="text-purple-800 mt-2 text-lg">
                     {id ? (
                       <span className="flex items-center gap-2">
-                        <Edit3 className="h-5 w-5 text-pink-300" />
+                        <Edit3 className="h-5 w-5 text-purple-600" />
                         Refine your bucket list goal
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        <Sparkles className="h-5 w-5 text-cyan-300" />
+                        <Sparkles className="h-5 w-5 text-blue-600" />
                         From dream to reality – add your next bucket list item
                       </span>
                     )}
@@ -77,7 +77,7 @@ const CreateWishlistItem = () => {
                 
                 {/* User info circle - optional */}
                 {currentUser.avatar_url && (
-                  <div className="h-14 w-14 rounded-full overflow-hidden border-2 border-cyan-300 shadow-lg shadow-cyan-500/20">
+                  <div className="h-14 w-14 rounded-full overflow-hidden border-2 border-purple-400 shadow-lg shadow-purple-500/20">
                     <img 
                       src={currentUser.avatar_url} 
                       alt={currentUser.name} 
@@ -91,7 +91,7 @@ const CreateWishlistItem = () => {
         )}
         
         {/* Form container with glass effect */}
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl border border-white/20 opacity-0 translate-y-[20px] animate-fade-in-up">
+        <div className="bg-white/40 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl border border-purple-200 opacity-0 translate-y-[20px] animate-fade-in-up">
           {/* Custom styling will need to be added to the WishlistForm component */}
           <WishlistForm editItem={wishlistItem} />
         </div>
@@ -146,4 +146,3 @@ styleTag.textContent = `
 document.head.appendChild(styleTag);
 
 export default CreateWishlistItem
-
