@@ -8,9 +8,13 @@ import { toast } from "sonner";
 const Index = () => {
   const { currentUser } = useUserStore();
   const [userName, setUserName] = useState("");
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const navigate = useNavigate();
   
   useEffect(() => {
+    // Mark auth as ready once we've checked for currentUser
+    setIsAuthReady(true);
+    
     if (currentUser?.name) {
       setUserName(currentUser.name);
     } else {
@@ -68,11 +72,18 @@ const Index = () => {
   };
   
   const handleStartJourney = () => {
+    // Only proceed if auth state is determined
+    if (!isAuthReady) {
+      toast.info("Checking authentication status...");
+      return;
+    }
+    
     if (currentUser) {
       navigate("/create");
     } else {
       toast.info("Please log in to start your journey");
-      navigate("/login");
+      // Use replace: true to avoid the intermediate step in history
+      navigate("/login", { replace: true });
     }
   };
 
@@ -152,6 +163,7 @@ const Index = () => {
                           className="w-full h-48 object-cover rounded"
                         />
                         <div className="p-2 text-center">
+                          {/* Empty div for spacing */}
                         </div>
                       </div>
                     </div>
@@ -183,6 +195,7 @@ const Index = () => {
                           className="w-full h-48 object-cover rounded"
                         />
                         <div className="p-2 text-center">
+                          {/* Empty div for spacing */}
                         </div>
                       </div>
                     </div>
@@ -292,5 +305,20 @@ const Index = () => {
     </div>
   );
 };
+
+// Add CSS for the float animation
+const styleTag = document.createElement('style');
+styleTag.textContent = `
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0px); }
+  }
+  
+  .animate-float {
+    animation: float 15s ease-in-out infinite;
+  }
+`;
+document.head.appendChild(styleTag);
 
 export default Index;
