@@ -36,33 +36,39 @@ const SharedCollection = () => {
       try {
         console.log("Fetching collection with slug:", slug);
         
-        // Direct API fetch for public access (bypassing authentication requirements)
-        // This is the key fix - using a direct fetch to a public endpoint instead of relying on the store
-        let data;
+        // First try direct public API fetch without authentication
         try {
           const response = await fetch(`/api/public/collections/${slug}`);
+          
           if (!response.ok) {
-            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+            throw new Error(`Server responded with status: ${response.status}`);
           }
-          data = await response.json();
-        } catch (fetchErr) {
-          console.warn("Direct API fetch failed, falling back to store:", fetchErr);
-          // Fallback to store method if direct fetch fails
-          data = await getCollectionBySlug(slug);
-        }
-        
-        console.log("Collection data received:", data);
-        
-        if (data && Object.keys(data).length > 0) {
-          console.log("Items count:", data.items ? data.items.length : 0);
-          console.log("Collection data:", data);
-          setCollection(data);
-        } else {
-          setError("Collection not found or is no longer available");
+          
+          const data = await response.json();
+          console.log("Collection data received from public API:", data);
+          
+          if (data && Object.keys(data).length > 0) {
+            setCollection(data);
+          } else {
+            throw new Error("Empty data received from public API");
+          }
+        } catch (publicFetchError) {
+          console.warn("Public API fetch failed, trying store method:", publicFetchError);
+          
+          // Fall back to the store method if public fetch fails
+          const data = await getCollectionBySlug(slug);
+          console.log("Collection data received from store:", data);
+          
+          if (data && Object.keys(data).length > 0) {
+            console.log("Items count:", data.items ? data.items.length : 0);
+            setCollection(data);
+          } else {
+            setError("Collection not found or is no longer available");
+          }
         }
       } catch (err) {
         console.error("Error fetching collection:", err);
-        setError("Failed to load the collection. This might be because the collection is private or requires login.");
+        setError("Failed to load the collection. This collection might be private or require login.");
         toast({
           title: "Error",
           description: "Failed to load the collection",
