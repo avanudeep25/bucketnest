@@ -343,5 +343,3 @@ const SharedCollection = () => {
 };
 
 export default SharedCollection;
-
-
