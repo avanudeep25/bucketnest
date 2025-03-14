@@ -147,7 +147,7 @@ const Index = () => {
                           className="w-full h-48 object-cover rounded"
                         />
                         <div className="p-2 text-center">
-                          <p className="text-xs text-gray-600 truncate">Previous memory</p>
+                          {/* Text removed */}
                         </div>
                       </div>
                     </div>
@@ -163,7 +163,7 @@ const Index = () => {
                       />
                       <div className="p-2 text-center">
                         <p className="font-medium text-sm">{memories[currentIndex].caption}</p>
-                        <p className="text-xs text-gray-500 mt-1">Add this to your memories</p>
+                        <p className="text-xs text-gray-500 mt-1">Add this to your Bucket List</p>
                       </div>
                       
                       {/* Decorative elements */}
@@ -181,7 +181,7 @@ const Index = () => {
                         className="w-full h-48 object-cover rounded"
                       />
                       <div className="p-2 text-center">
-                        <p className="text-xs text-gray-600 truncate">Next memory</p>
+                        {/* Text removed */}
                       </div>
                     </div>
                   </div>
