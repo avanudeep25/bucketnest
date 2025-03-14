@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import WishlistForm from "@/components/wishlist/WishlistForm";
 import { useUserStore } from "@/store/userStore";
@@ -76,10 +77,10 @@ const CreateWishlistItem = () => {
                 </div>
                 
                 {/* User info circle - optional */}
-                {currentUser.photoURL && (
+                {currentUser.avatar_url && (
                   <div className="h-14 w-14 rounded-full overflow-hidden border-2 border-cyan-300 shadow-lg shadow-cyan-500/20">
                     <img 
-                      src={currentUser.photoURL} 
+                      src={currentUser.avatar_url} 
                       alt={currentUser.name} 
                       className="h-full w-full object-cover"
                     />
