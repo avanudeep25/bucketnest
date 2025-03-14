@@ -92,12 +92,6 @@ const Navigation = () => {
                     Profile
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/collections">
-                    <FolderHeart className="h-4 w-4 mr-2" />
-                    Collections
-                  </Link>
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
                   Logout

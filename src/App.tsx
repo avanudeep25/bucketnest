@@ -49,7 +49,6 @@ function App() {
               <WishlistDetail />
             </>
           } />
-          {/* Add the edit route */}
           <Route path="/wishlist/edit/:id" element={
             <>
               <Navigation />
