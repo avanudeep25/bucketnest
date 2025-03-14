@@ -13,27 +13,40 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // Track if the user just signed up
-  const [isNewSignup, setIsNewSignup] = useState(false); 
   const { currentUser, setCurrentUser, ensureUserHasProfile } = useUserStore();
 
   // Get the intended destination from location state, or default to "/create"
   const from = location.state?.from || "/create";
 
-  // Handle redirections based on auth state and signup status
+  // Redirect if user is already logged in
   useEffect(() => {
-    if (currentUser) {
-      if (isNewSignup) {
-        // New signup - redirect to profile page
-        console.log("New signup detected, redirecting to profile page");
-        navigate("/profile", { replace: true });
-      } else {
-        // Regular login - redirect to from (default is /create)
-        console.log("Login detected, redirecting to:", from);
+    const checkAuth = async () => {
+      console.log("Checking auth state, currentUser:", currentUser);
+      
+      // If we already have the user in store
+      if (currentUser) {
+        console.log("User already in store, redirecting to:", from);
         navigate(from, { replace: true });
+        return;
       }
-    }
-  }, [currentUser, isNewSignup, navigate, from]);
+      
+      // Double-check with Supabase directly
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        console.log("Session found but no currentUser, fetching user data");
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData.user) {
+          console.log("User found from session");
+          setCurrentUser(userData.user);
+          navigate(from, { replace: true });
+        }
+      } else {
+        console.log("No session found, staying on login page");
+      }
+    };
+    
+    checkAuth();
+  }, [currentUser, navigate, from, setCurrentUser]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,10 +67,11 @@ const Login = () => {
         // Ensure user has a profile with username
         await ensureUserHasProfile(data.user);
         
-        // Make sure we're NOT in signup mode
-        setIsNewSignup(false);
-        
         toast.success('Logged in successfully');
+        
+        // Direct navigation - don't rely on useEffect
+        console.log("Login successful, redirecting to:", from);
+        navigate(from, { replace: true });
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to log in');
@@ -79,20 +93,25 @@ const Login = () => {
       if (error) throw error;
 
       if (data.user) {
+        console.log("Signup successful, user data:", data.user);
+        console.log("Session data:", data.session);
+        
         // Explicitly set the current user in the store
         setCurrentUser(data.user);
         
         // Ensure the user has a profile with username immediately
         if (data.session) {
           await ensureUserHasProfile(data.user);
-        }
-        
-        if (data.session === null) {
-          toast.success('Please check your email to confirm your account');
-        } else {
-          // Set the flag to indicate this is a new signup
-          setIsNewSignup(true);
+          
           toast.success('Signed up successfully');
+          
+          // DIRECT NAVIGATION - don't rely on state updates and useEffect
+          console.log("Redirecting to profile page directly");
+          setTimeout(() => {
+            navigate("/profile", { replace: true });
+          }, 500); // Small delay to ensure UI updates
+        } else {
+          toast.success('Please check your email to confirm your account');
         }
       }
     } catch (error: any) {
