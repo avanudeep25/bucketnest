@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, MapPin, Share2, FolderHeart, CheckCircle } from "lucide-react";
+import { Plus, MapPin, Share2, FolderHeart, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { useUserStore } from "@/store/userStore";
 
 const Index = () => {
@@ -15,6 +15,44 @@ const Index = () => {
       setUserName("");
     }
   }, [currentUser]);
+
+  // Adventure image gallery
+  const adventureImages = [
+    {
+      src: "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
+      alt: "Mountain landscape at sunset",
+      location: "Mountain Range"
+    },
+    {
+      src: "https://images.unsplash.com/photo-1527004013197-933c4bb611b3",
+      alt: "Camping under starry night sky",
+      location: "Night Camp"
+    },
+    {
+      src: "https://images.unsplash.com/photo-1503220317375-aaad61436b1b",
+      alt: "Hiking through misty forest",
+      location: "Wilderness Trail"
+    },
+    {
+      src: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4",
+      alt: "Person kayaking in crystal clear water",
+      location: "Clear Lake"
+    }
+  ];
+  
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  const nextImage = () => {
+    setCurrentImageIndex((prevIndex) => 
+      prevIndex === adventureImages.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+  
+  const prevImage = () => {
+    setCurrentImageIndex((prevIndex) => 
+      prevIndex === 0 ? adventureImages.length - 1 : prevIndex - 1
+    );
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -54,25 +92,92 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Hero image - centered with enhanced presentation */}
-          <div className="mt-16 max-w-4xl mx-auto">
+          {/* Adventure image showcase */}
+          <div className="mt-16 max-w-5xl mx-auto">
             <div className="relative">
               <div className="absolute -top-4 -left-4 w-32 h-32 bg-blue-300 rounded-full blur-xl opacity-20"></div>
               <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-pink-300 rounded-full blur-xl opacity-20"></div>
+              
+              {/* Main featured image */}
               <div className="p-3 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl">
-                <div className="aspect-[16/9] rounded-xl overflow-hidden">
+                <div className="aspect-[16/9] rounded-xl overflow-hidden relative">
                   <img
-                    src="https://images.unsplash.com/photo-1469474968028-56623f02e42e"
-                    alt="Breathtaking landscape view of mountains at sunset"
+                    src={adventureImages[currentImageIndex].src}
+                    alt={adventureImages[currentImageIndex].alt}
                     className="w-full h-full object-cover transition-transform hover:scale-105 duration-700"
                   />
-                </div>
-                <div className="absolute bottom-6 left-6 bg-white/80 backdrop-blur-md rounded-lg px-4 py-2 shadow-lg">
-                  <div className="flex items-center text-sm font-medium text-gray-800">
-                    <MapPin className="h-4 w-4 text-blue-600 mr-1" />
-                    Add this to your bucket list
+                  <div className="absolute bottom-6 left-6 bg-white/80 backdrop-blur-md rounded-lg px-4 py-2 shadow-lg">
+                    <div className="flex items-center text-sm font-medium text-gray-800">
+                      <MapPin className="h-4 w-4 text-blue-600 mr-1" />
+                      {adventureImages[currentImageIndex].location}
+                    </div>
                   </div>
+                  
+                  {/* Navigation arrows */}
+                  <button 
+                    onClick={prevImage}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white/90 rounded-full p-2 shadow-lg transition-all duration-200"
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft className="h-6 w-6 text-gray-700" />
+                  </button>
+                  <button 
+                    onClick={nextImage}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white/90 rounded-full p-2 shadow-lg transition-all duration-200"
+                    aria-label="Next image"
+                  >
+                    <ChevronRight className="h-6 w-6 text-gray-700" />
+                  </button>
                 </div>
+                
+                {/* Thumbnail navigation */}
+                <div className="flex justify-center mt-4 gap-2">
+                  {adventureImages.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`w-16 h-12 rounded-md overflow-hidden border-2 transition-all ${
+                        index === currentImageIndex 
+                          ? "border-blue-500 scale-110" 
+                          : "border-transparent opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      <img 
+                        src={image.src} 
+                        alt={`Thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Additional adventure images */}
+            <div className="grid grid-cols-3 gap-4 mt-6">
+              <div className="bg-white/90 p-2 rounded-xl shadow-lg overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1533240332313-0db49b459ad6" 
+                  alt="Hiking on mountain trail"
+                  className="w-full h-32 object-cover rounded-lg hover:scale-105 transition-transform duration-300"
+                />
+                <p className="text-xs text-center mt-1 font-medium">Mountain Trails</p>
+              </div>
+              <div className="bg-white/90 p-2 rounded-xl shadow-lg overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1516939884455-1445c8652f83" 
+                  alt="Beach sunset adventure"
+                  className="w-full h-32 object-cover rounded-lg hover:scale-105 transition-transform duration-300"
+                />
+                <p className="text-xs text-center mt-1 font-medium">Ocean Getaways</p>
+              </div>
+              <div className="bg-white/90 p-2 rounded-xl shadow-lg overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1517411032315-54ef2cb783bb" 
+                  alt="Campsite by the lake"
+                  className="w-full h-32 object-cover rounded-lg hover:scale-105 transition-transform duration-300"
+                />
+                <p className="text-xs text-center mt-1 font-medium">Wilderness Camping</p>
               </div>
             </div>
           </div>
