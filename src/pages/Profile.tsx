@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserStore } from "@/store/userStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -24,6 +25,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 const Profile = () => {
   const { currentUser, createUser } = useUserStore();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -40,27 +42,64 @@ const Profile = () => {
     },
   });
 
-  // Update form values when currentUser changes
+  // Fetch latest user data directly from Supabase
   useEffect(() => {
-    if (currentUser) {
-      console.log("Current user in Profile:", currentUser);
-      
-      // Make sure we're setting form values with data that exists
-      form.reset({
-        name: currentUser.name || "",
-        bio: currentUser.bio || "",
-      });
-    }
+    const fetchCurrentUser = async () => {
+      try {
+        if (!currentUser) return;
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          console.log("Current user data from Supabase:", user);
+          
+          // Make sure we're setting form values with data that exists
+          form.reset({
+            name: user.user_metadata?.name || "",
+            bio: user.user_metadata?.bio || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+    
+    fetchCurrentUser();
   }, [currentUser, form]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
+      setLoading(true);
+      // Update user metadata directly with Supabase
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          name: data.name,
+          bio: data.bio,
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Also update local state through the store
       await createUser(data.name, data.bio);
-      toast.success("Profile updated successfully");
+      
+      toast({
+        title: "Profile updated successfully",
+        description: "Your changes have been saved",
+      });
+      
       console.log("Profile updated successfully with:", data);
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error("Failed to update profile");
+      toast({
+        title: "Failed to update profile",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -136,7 +175,9 @@ const Profile = () => {
                 />
               </div>
 
-              <Button type="submit">Update Profile</Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Updating..." : "Update Profile"}
+              </Button>
             </form>
           </Form>
         </CardContent>

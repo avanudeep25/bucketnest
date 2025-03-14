@@ -1,6 +1,5 @@
 
 import { Routes, Route } from 'react-router-dom';
-import { Toaster } from 'sonner';
 import Navigation from '@/components/layout/Navigation';
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
@@ -12,6 +11,7 @@ import NotFound from '@/pages/NotFound';
 import Collections from '@/pages/Collections';
 import CollectionEditor from '@/components/sharing/CollectionEditor';
 import SharedCollection from '@/pages/SharedCollection';
+import { Toaster } from "@/components/ui/toaster";
 
 function App() {
   return (
@@ -72,7 +72,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      <Toaster position="top-right" />
+      <Toaster />
     </div>
   );
 }

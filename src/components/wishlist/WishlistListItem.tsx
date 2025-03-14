@@ -1,5 +1,5 @@
 
-import { Calendar, MapPin, Tag, CheckCircle, ChevronRight, DollarSign, Users } from "lucide-react";
+import { Calendar, MapPin, Tag, CheckCircle, ChevronRight, DollarSign, Users, Activity } from "lucide-react";
 import { WishlistItem } from "@/types/wishlist";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -27,7 +27,11 @@ const WishlistListItem = ({ item, onToggleComplete, isSelected, onSelect }: Wish
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
           <h3 className="font-semibold">{item.title}</h3>
           <div className="flex flex-wrap gap-1">
-            <Badge className="capitalize">{item.itemType}</Badge>
+            {item.activityType ? (
+              <Badge className="capitalize">{item.activityType}</Badge>
+            ) : (
+              <Badge className="capitalize">{item.itemType}</Badge>
+            )}
             {isCompleted && (
               <Badge className="bg-green-500 hover:bg-green-600">
                 Completed
@@ -69,6 +73,13 @@ const WishlistListItem = ({ item, onToggleComplete, isSelected, onSelect }: Wish
             <div className="flex items-center">
               <CheckCircle className="h-3.5 w-3.5 mr-2 text-green-500" />
               <span>Completed: {format(new Date(item.completedAt), 'MMM d, yyyy')}</span>
+            </div>
+          )}
+          
+          {item.activityType && (
+            <div className="flex items-center">
+              <Activity className="h-3.5 w-3.5 mr-2 text-wishwise-500" />
+              <span>{item.activityType}</span>
             </div>
           )}
         </div>
