@@ -314,7 +314,11 @@ export const useSharingStore = create<SharingState>((set, get) => ({
       const { data: session } = await supabase.auth.getSession();
       
       if (!session.session) {
-        toast.error("You must be logged in to create a collection");
+        toast({
+          title: "Error",
+          description: "You must be logged in to create a collection",
+          variant: "destructive"
+        });
         set({ isLoading: false });
         return null;
       }
@@ -323,7 +327,11 @@ export const useSharingStore = create<SharingState>((set, get) => ({
       const user = userData?.user;
       
       if (!user) {
-        toast.error("User data not found");
+        toast({
+          title: "Error",
+          description: "User data not found",
+          variant: "destructive"
+        });
         set({ isLoading: false });
         return null;
       }
@@ -356,7 +364,11 @@ export const useSharingStore = create<SharingState>((set, get) => ({
       
       if (error) {
         console.error("Error creating collection:", error);
-        toast.error("Failed to create collection");
+        toast({
+          title: "Error",
+          description: "Failed to create collection",
+          variant: "destructive"
+        });
         set({ error: error.message, isLoading: false });
         return null;
       }
@@ -384,7 +396,11 @@ export const useSharingStore = create<SharingState>((set, get) => ({
       return collection.id;
     } catch (error: any) {
       console.error("Error in createCollection:", error);
-      toast.error("An error occurred while creating the collection");
+      toast({
+        title: "Error",
+        description: "An error occurred while creating the collection",
+        variant: "destructive"
+      });
       set({ error: error.message, isLoading: false });
       return null;
     }
