@@ -9,11 +9,14 @@ const Index = () => {
   const { currentUser } = useUserStore();
   const [userName, setUserName] = useState("");
   
-  useEffect(() => {
-    if (currentUser?.name) {
-      setUserName(currentUser.name);
-    }
-  }, [currentUser]);
+useEffect(() => {
+  if (currentUser?.name) {
+    setUserName(currentUser.name);
+  } else {
+    setUserName(""); // Ensure userName is empty if no name in profile
+  }
+}, [currentUser]);
+
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -35,10 +38,10 @@ const Index = () => {
                   Your Personal Bucket List Planner
                 </div>
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-gray-900">
-                  <span className="font-normal italic">
-                    {userName ? `${userName}, Your Next Adventure Awaits!` : 'Your Next Adventure Awaits!'}
-                  </span>
-                </h1>
+  <span className="font-normal italic" style={{ fontFamily: 'cursive' }}>
+    {userName ? `${userName}, Your Next Adventure Awaits!` : 'Your Next Adventure Awaits!'}
+  </span>
+</h1>
                 <p className="mt-4 text-gray-700 md:text-xl">
                   From your next vacation to your next friends' outing, from tasting a new whisky to fixing a place to meet your girlfriend—BucketNest keeps all your bucket-list items small to big all in one place.
                 </p>
