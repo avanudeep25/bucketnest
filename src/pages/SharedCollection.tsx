@@ -40,6 +40,65 @@ const SharedCollection = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
+  // Define these variables based on the collection state
+  const filteredItems = collection?.items || [];
+  
+  // Calculate paginated items
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  
+  // Handle page navigation
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+  
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+  
+  // Implement handleToggleComplete function
+  const handleToggleComplete = (itemId: string) => {
+    console.log("Toggle complete:", itemId);
+    // This is a shared view, so we don't actually change anything
+    toast({
+      title: "Read-only view",
+      description: "You're viewing a shared collection in read-only mode.",
+    });
+  };
+  
+  // Implement copy link functionality
+  const copyLinkToClipboard = () => {
+    navigator.clipboard.writeText(window.location.href).then(
+      () => {
+        setIsCopied(true);
+        toast({
+          title: "Link copied",
+          description: "Collection link copied to clipboard!",
+        });
+        
+        // Reset the copied state after 2 seconds
+        setTimeout(() => setIsCopied(false), 2000);
+      },
+      (err) => {
+        console.error("Could not copy link: ", err);
+        toast({
+          title: "Error",
+          description: "Failed to copy link to clipboard",
+          variant: "destructive"
+        });
+      }
+    );
+  };
+  
   useEffect(() => {
     const fetchCollection = async () => {
       if (!slug) {
@@ -133,14 +192,101 @@ const SharedCollection = () => {
     fetchCollection();
   }, [slug, getCollectionBySlug]);
   
-  // ... rest of the component code remains the same
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-lg">Loading collection...</span>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="text-gray-700 mb-6">{error}</p>
+          <Link to="/" className="inline-flex items-center text-primary hover:underline">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Return to homepage
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ... header code remains the same */}
+      <header className="bg-white border-b sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4 max-w-4xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <Link to="/" className="text-gray-500 hover:text-gray-700 flex items-center">
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                <span>Back to app</span>
+              </Link>
+              <h1 className="text-2xl font-bold mt-1">{collection?.name || "Shared Collection"}</h1>
+            </div>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={copyLinkToClipboard}
+                    className="flex items-center gap-1"
+                  >
+                    {isCopied ? "Copied!" : "Share"}
+                    <Share className="h-4 w-4 ml-1" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Copy collection link</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          
+          {collection?.description && (
+            <p className="text-gray-600 mt-1 mb-2">{collection.description}</p>
+          )}
+          
+          <div className="flex flex-wrap gap-2 mt-2">
+            {collection?.creatorName && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                <Users className="h-3 w-3" />
+                Created by {collection.creatorName}
+              </Badge>
+            )}
+            
+            {collection?.createdAt && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {format(new Date(collection.createdAt), "MMM d, yyyy")}
+              </Badge>
+            )}
+            
+            {collection?.location && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {collection.location}
+              </Badge>
+            )}
+            
+            {Array.isArray(collection?.tags) && collection.tags.length > 0 && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                <Tag className="h-3 w-3" />
+                {collection.tags.join(", ")}
+              </Badge>
+            )}
+          </div>
+        </div>
+      </header>
       
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        {filteredItems && filteredItems.length > 0 ? (
+        {filteredItems?.length > 0 ? (
           <>
             <div className="mb-4 text-sm text-gray-500">
               Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredItems.length)} of {filteredItems.length} items
@@ -154,13 +300,37 @@ const SharedCollection = () => {
                   onToggleComplete={handleToggleComplete}
                   hideCompleteButton={true}
                   hideViewButton={true}
-                  // No need for hideActivityBadge or other hiding props
-                  // All item details will be shown by default
                 />
               ))}
             </div>
             
-            {/* ... pagination code remains the same */}
+            {totalPages > 1 && (
+              <div className="flex justify-between items-center mt-6">
+                <Button 
+                  variant="outline" 
+                  onClick={handlePrevPage} 
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                
+                <span className="text-sm text-gray-500">
+                  Page {currentPage} of {totalPages}
+                </span>
+                
+                <Button 
+                  variant="outline" 
+                  onClick={handleNextPage} 
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </>
         ) : (
           <div className="col-span-2 text-center py-12 border border-dashed rounded-lg">
@@ -168,7 +338,14 @@ const SharedCollection = () => {
           </div>
         )}
         
-        {/* ... footer code remains the same */}
+        <footer className="mt-12 text-center text-sm text-gray-500">
+          <p>
+            This shared collection is provided as a read-only view. 
+            <Link to="/" className="text-primary hover:underline ml-1">
+              Sign in
+            </Link> to create your own collections.
+          </p>
+        </footer>
       </main>
     </div>
   );
