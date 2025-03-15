@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSharingStore } from "@/store/sharingStore";
@@ -15,7 +14,7 @@ import {
 import { Loader2, Plus, Share, Edit, Trash2, Copy, Check, Link as LinkIcon } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import CollectionShareDialog from "@/components/sharing/CollectionShareDialog";
+import CollectionShareDialog, { CollectionShareDialogRef } from "@/components/sharing/CollectionShareDialog";
 
 const Collections = () => {
   const { collections, fetchCollections, deleteCollection } = useSharingStore();
@@ -24,8 +23,7 @@ const Collections = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const navigate = useNavigate();
   
-  // Create a ref to the CollectionShareDialog to control it
-  const shareDialogRef = useRef<HTMLButtonElement>(null);
+  const shareDialogRef = useRef<CollectionShareDialogRef>(null);
   
   useEffect(() => {
     const loadCollections = async () => {
@@ -75,9 +73,8 @@ const Collections = () => {
   };
   
   const createNewCollection = () => {
-    // Trigger the share dialog when "Create New Collection" is clicked
     if (shareDialogRef.current) {
-      shareDialogRef.current.click();
+      shareDialogRef.current.openDialog();
     }
   };
   
@@ -100,22 +97,7 @@ const Collections = () => {
             Create New Collection
           </Button>
           
-          {/* Hidden button that will be programmatically clicked */}
-          <button 
-            ref={shareDialogRef} 
-            className="hidden"
-            onClick={() => {
-              const shareDialogElement = document.querySelector('[data-share-dialog-trigger]') as HTMLButtonElement;
-              if (shareDialogElement) {
-                shareDialogElement.click();
-              }
-            }}
-          />
-          
-          {/* Share Dialog component */}
-          <div data-share-dialog-trigger>
-            <CollectionShareDialog />
-          </div>
+          <CollectionShareDialog ref={shareDialogRef} />
         </div>
       </div>
       

@@ -1,13 +1,23 @@
 
-import { useState } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import { WishlistItem } from "@/types/wishlist";
 import { useWishlistStore } from "@/store/wishlistStore";
 import ShareDialog from "./ShareDialog";
 
-const CollectionShareDialog = () => {
+// Define a type for the ref methods
+export interface CollectionShareDialogRef {
+  openDialog: () => void;
+}
+
+const CollectionShareDialog = forwardRef<CollectionShareDialogRef, {}>((props, ref) => {
   const [selectedItems, setSelectedItems] = useState<WishlistItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const { items } = useWishlistStore();
+  
+  // Expose the openDialog method through the ref
+  useImperativeHandle(ref, () => ({
+    openDialog: () => setIsOpen(true)
+  }));
   
   const handleSelectItem = (item: WishlistItem) => {
     setSelectedItems(prev => {
@@ -30,6 +40,8 @@ const CollectionShareDialog = () => {
       openShareDialog={() => setIsOpen(true)}
     />
   );
-};
+});
+
+CollectionShareDialog.displayName = "CollectionShareDialog";
 
 export default CollectionShareDialog;
