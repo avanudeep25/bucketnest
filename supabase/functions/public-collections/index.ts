@@ -63,12 +63,37 @@ Deno.serve(async (req) => {
         )
       }
 
+      // Map database field names to frontend field names
+      const mappedItems = items ? items.map(item => ({
+        id: item.id,
+        userId: item.user_id,
+        title: item.title,
+        description: item.description,
+        destination: item.destination,
+        itemType: item.item_type,
+        activityType: item.activity_type,
+        travelType: item.travel_type,
+        timeframeType: item.timeframe_type,
+        targetDate: item.target_date,
+        targetWeek: item.target_week,
+        targetMonth: item.target_month,
+        targetYear: item.target_year,
+        budgetRange: item.budget_range,
+        link: item.link,
+        notes: item.notes,
+        tags: item.tags,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+        completedAt: item.completed_at,
+        imageUrl: item.image_url
+      })) : [];
+
       // Order the items according to the collection's item_order
       const orderedItems = data.item_order && data.item_order.length > 0
         ? data.item_order
-            .map(id => items.find(item => item.id === id))
+            .map(id => mappedItems.find(item => item.id === id))
             .filter(Boolean)
-        : items || []
+        : mappedItems || []
 
       // Return the collection with its items
       return new Response(

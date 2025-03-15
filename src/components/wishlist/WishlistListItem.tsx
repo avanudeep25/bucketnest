@@ -36,9 +36,10 @@ const WishlistListItem = ({
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
           <h3 className="font-semibold">{item.title}</h3>
           <div className="flex flex-wrap gap-1">
-            {item.activityType ? (
+            {item.activityType && (
               <Badge className="capitalize">{item.activityType}</Badge>
-            ) : (
+            )}
+            {!item.activityType && item.itemType && (
               <Badge className="capitalize">{item.itemType}</Badge>
             )}
             {isCompleted && (
