@@ -11,9 +11,18 @@ interface WishlistListItemProps {
   onToggleComplete: (id: string, isComplete: boolean) => Promise<void>;
   isSelected?: boolean;
   onSelect?: () => void;
+  hideCompleteButton?: boolean;
+  hideViewButton?: boolean;
 }
 
-const WishlistListItem = ({ item, onToggleComplete, isSelected, onSelect }: WishlistListItemProps) => {
+const WishlistListItem = ({ 
+  item, 
+  onToggleComplete, 
+  isSelected, 
+  onSelect,
+  hideCompleteButton = false,
+  hideViewButton = false
+}: WishlistListItemProps) => {
   const isCompleted = !!item.completedAt;
   
   return (
@@ -100,26 +109,32 @@ const WishlistListItem = ({ item, onToggleComplete, isSelected, onSelect }: Wish
         )}
       </div>
       
-      <div className="flex flex-row md:flex-col gap-2 w-full md:w-auto">
-        <Button variant="outline" size="sm" asChild className="flex-1 md:flex-none">
-          <Link to={`/wishlist/${item.id}`} className="flex items-center justify-center gap-1">
-            View
-            <ChevronRight className="h-4 w-4" />
-          </Link>
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          className={`flex-1 md:flex-none ${isCompleted ? "text-red-500 hover:text-red-700 hover:bg-red-50" : "text-green-500 hover:text-green-700 hover:bg-green-50"}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleComplete(item.id, !isCompleted);
-          }}
-        >
-          {isCompleted ? 'Mark Incomplete' : 'Mark Complete'}
-        </Button>
-      </div>
+      {(!hideViewButton || !hideCompleteButton) && (
+        <div className="flex flex-row md:flex-col gap-2 w-full md:w-auto">
+          {!hideViewButton && (
+            <Button variant="outline" size="sm" asChild className="flex-1 md:flex-none">
+              <Link to={`/wishlist/${item.id}`} className="flex items-center justify-center gap-1">
+                View
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          )}
+          
+          {!hideCompleteButton && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`flex-1 md:flex-none ${isCompleted ? "text-red-500 hover:text-red-700 hover:bg-red-50" : "text-green-500 hover:text-green-700 hover:bg-green-50"}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleComplete(item.id, !isCompleted);
+              }}
+            >
+              {isCompleted ? 'Mark Incomplete' : 'Mark Complete'}
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

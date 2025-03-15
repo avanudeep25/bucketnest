@@ -37,7 +37,6 @@ const SharedCollection = () => {
   const [error, setError] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
@@ -52,9 +51,7 @@ const SharedCollection = () => {
       try {
         console.log("Fetching collection with slug:", slug);
         
-        // First try direct public API fetch using the edge function
         try {
-          // Fixed: Pass slug as URL query parameter instead of using params object
           const { data, error } = await supabase.functions.invoke(`public-collections?slug=${encodeURIComponent(slug)}`, {
             method: 'GET'
           });
@@ -66,7 +63,6 @@ const SharedCollection = () => {
           console.log("Collection data received from edge function:", data);
           
           if (data && Object.keys(data).length > 0) {
-            // Normalize the data to ensure creatorName is properly set
             const normalizedData = normalizeCollectionData(data);
             console.log("Normalized collection data:", normalizedData);
             setCollection(normalizedData);
@@ -76,13 +72,11 @@ const SharedCollection = () => {
         } catch (publicFetchError) {
           console.warn("Edge function fetch failed, trying store method:", publicFetchError);
           
-          // Fall back to the store method if public fetch fails
           const data = await getCollectionBySlug(slug);
           console.log("Collection data received from store:", data);
           
           if (data && Object.keys(data).length > 0) {
             console.log("Items count:", data.items ? data.items.length : 0);
-            // Also normalize data from the store method
             const normalizedData = normalizeCollectionData(data);
             setCollection(normalizedData);
           } else {
@@ -102,9 +96,7 @@ const SharedCollection = () => {
       }
     };
     
-    // Helper function to normalize collection data
     const normalizeCollectionData = (data: any) => {
-      // Check for creator name across various possible property names
       const creatorName = 
         data.creatorName || 
         data.creator_name || 
@@ -119,7 +111,7 @@ const SharedCollection = () => {
       
       return {
         ...data,
-        creatorName // Ensure creatorName property exists with consistent naming
+        creatorName
       };
     };
     
@@ -135,16 +127,13 @@ const SharedCollection = () => {
       description: "Collection link copied to clipboard",
     });
     
-    // Reset the copied state after 3 seconds
     setTimeout(() => {
       setIsCopied(false);
     }, 3000);
   };
   
-  // Pagination navigation functions
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // Scroll to top of item list for better UX
     window.scrollTo({ top: 400, behavior: 'smooth' });
   };
   
@@ -162,9 +151,7 @@ const SharedCollection = () => {
     }
   };
   
-  // Placeholder toggle complete function that does nothing
   const handleToggleComplete = async () => {
-    // This is intentionally empty as we don't need to toggle complete status in shared view
     return Promise.resolve();
   };
   
@@ -200,7 +187,6 @@ const SharedCollection = () => {
   
   const filteredItems = collection.items || [];
   
-  // Pagination calculations
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const paginatedItems = filteredItems.slice(
     (currentPage - 1) * itemsPerPage,
@@ -259,7 +245,6 @@ const SharedCollection = () => {
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         {filteredItems && filteredItems.length > 0 ? (
           <>
-            {/* Item count and pagination info */}
             <div className="mb-4 text-sm text-gray-500">
               Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredItems.length)} of {filteredItems.length} items
             </div>
@@ -276,7 +261,6 @@ const SharedCollection = () => {
               ))}
             </div>
             
-            {/* Pagination controls */}
             {totalPages > 1 && (
               <div className="mt-8">
                 <div className="flex justify-center items-center space-x-2">
@@ -299,7 +283,6 @@ const SharedCollection = () => {
                               Math.abs(page - currentPage) <= 1;
                       })
                       .map((page, index, array) => {
-                        // Add ellipsis for gaps
                         const showEllipsisBefore = index > 0 && page - array[index - 1] > 1;
                         
                         return (
