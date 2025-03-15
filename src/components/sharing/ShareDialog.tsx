@@ -23,6 +23,7 @@ interface ShareDialogProps {
   onSelect: (item: WishlistItem) => void;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  openShareDialog?: () => void;
 }
 
 const ShareDialog = ({ 
@@ -30,7 +31,8 @@ const ShareDialog = ({
   selectedItems, 
   onSelect, 
   isOpen, 
-  onOpenChange 
+  onOpenChange,
+  openShareDialog
 }: ShareDialogProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -132,7 +134,7 @@ const ShareDialog = ({
   
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      {!isOpen && (
+      {!isOpen && !openShareDialog && (
         <Button 
           variant="outline" 
           className="flex items-center gap-2"
@@ -142,6 +144,10 @@ const ShareDialog = ({
           <Share className="h-4 w-4" />
           Share
         </Button>
+      )}
+      
+      {openShareDialog && (
+        <span className="hidden">Share Dialog Trigger</span>
       )}
       
       <DialogContent className="sm:max-w-md">

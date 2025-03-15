@@ -1,5 +1,6 @@
 
-import { Routes, Route } from 'react-router-dom';
+
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Navigation from '@/components/layout/Navigation';
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
@@ -61,6 +62,7 @@ function App() {
               <Collections />
             </>
           } />
+          <Route path="/collections/new" element={<Navigate to="/collections" />} />
           <Route path="/collections/:id" element={
             <>
               <Navigation />
