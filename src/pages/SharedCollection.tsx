@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useSharingStore } from "@/store/sharingStore";
@@ -271,6 +270,8 @@ const SharedCollection = () => {
                   key={item.id}
                   item={item}
                   onToggleComplete={handleToggleComplete}
+                  hideCompleteButton={true}
+                  hideViewButton={true}
                 />
               ))}
             </div>
