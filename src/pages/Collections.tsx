@@ -196,19 +196,13 @@ const Collections = () => {
           </div>
           <h2 className="text-xl font-semibold mb-2">No Collections Yet</h2>
           <p className="text-gray-500 mb-6 max-w-md mx-auto">
-            Create your first collection to share your bucket list items with friends and family.
+            Create your first collection to share your bucket list items with friends and family. 
+            Click the "Create New Collection" button at the top to get started.
           </p>
-          <Button
-            onClick={createNewCollection}
-            className="bg-blue-500 hover:bg-blue-600"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Your First Collection
-          </Button>
         </div>
       )}
     </div>
   );
 };
 
-export default Collections;
+export default Collections
