@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useSharingStore } from "@/store/sharingStore";
@@ -27,6 +28,7 @@ import { format } from "date-fns";
 import { WishlistItem } from "@/types/wishlist";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import WishlistListItem from "@/components/wishlist/WishlistListItem";
 
 const SharedCollection = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -161,6 +163,12 @@ const SharedCollection = () => {
     }
   };
   
+  // Placeholder toggle complete function that does nothing
+  const handleToggleComplete = async () => {
+    // This is intentionally empty as we don't need to toggle complete status in shared view
+    return Promise.resolve();
+  };
+  
   if (isLoading || storeLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -257,117 +265,13 @@ const SharedCollection = () => {
               Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredItems.length)} of {filteredItems.length} items
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
               {paginatedItems.map((item: WishlistItem) => (
-                <Card key={item.id} className="overflow-hidden">
-                  {item.imageUrl && (
-                    <div className="aspect-video overflow-hidden">
-                      <img 
-                        src={item.imageUrl} 
-                        alt={item.title} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <CardContent className={`${item.imageUrl ? 'pt-4' : 'pt-6'} pb-6`}>
-                    <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                    
-                    {item.description && (
-                      <p className="text-gray-600 mb-4">{item.description}</p>
-                    )}
-                    
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {item.activityType && (
-                        <Badge className="capitalize bg-blue-500">
-                          {item.activityType}
-                        </Badge>
-                      )}
-                      
-                      {item.budgetRange && (
-                        <Badge variant="outline">
-                          {item.budgetRange}
-                        </Badge>
-                      )}
-                      
-                      {item.travelType && (
-                        <Badge variant="outline" className="bg-blue-50">
-                          {item.travelType}
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="space-y-2 text-sm">
-                      {item.destination && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-gray-500" />
-                          <span>{item.destination}</span>
-                        </div>
-                      )}
-                      
-                      {item.budgetRange && (
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-gray-500" />
-                          <span>{item.budgetRange}</span>
-                        </div>
-                      )}
-                      
-                      {item.travelType && (
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-gray-500" />
-                          <span>{item.travelType}</span>
-                        </div>
-                      )}
-                      
-                      {item.targetDate && (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-gray-500" />
-                          <span>{format(new Date(item.targetDate), 'MMMM d, yyyy')}</span>
-                        </div>
-                      )}
-                      
-                      {!item.targetDate && item.targetMonth && (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-gray-500" />
-                          <span>{format(new Date(parseInt(item.targetMonth.split('-')[0]), parseInt(item.targetMonth.split('-')[1]) - 1, 1), 'MMMM yyyy')}</span>
-                        </div>
-                      )}
-                      
-                      {!item.targetDate && !item.targetMonth && item.targetYear && (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-gray-500" />
-                          <span>{item.targetYear}</span>
-                        </div>
-                      )}
-                      
-                      {item.tags && item.tags.length > 0 && (
-                        <div className="flex items-center gap-2">
-                          <Tag className="h-4 w-4 text-gray-500" />
-                          <div className="flex flex-wrap gap-1">
-                            {item.tags.map((tag: string) => (
-                              <span key={tag} className="text-blue-600">
-                                #{tag}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {item.link && (
-                        <div className="pt-2">
-                          <a 
-                            href={item.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-500 hover:text-blue-700 flex items-center gap-1"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            Learn more
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                <WishlistListItem
+                  key={item.id}
+                  item={item}
+                  onToggleComplete={handleToggleComplete}
+                />
               ))}
             </div>
             
